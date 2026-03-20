@@ -1,13 +1,9 @@
 # Test alphabet
+from alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 
 def make_test_codebook(code='basic'):
-    alphabet = [
-            "sol", "luna", "mar", "rio",
-            "fuego", "aire", "tierra", "nube",
-            "roca", "bosque", "nieve", "trueno",
-            "flor", "sombra", "luz", "viento"
-        ]
+    alphabet = AlphabetProvider.provide_alphabet('test_16bits_alph')
     return Codebook(alphabet, code)
 
 if __name__ == "__main__":

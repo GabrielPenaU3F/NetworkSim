@@ -3,6 +3,7 @@ from collections import Counter
 import numpy as np
 from matplotlib import pyplot as plt
 
+from alphabets.alphabets import AlphabetProvider
 from src.physical_layer.sources import UniformIIDSource, MarkovSource, BurstySource, ZipfIIDSource
 
 
@@ -49,13 +50,7 @@ def print_stats(sequence, alphabet, name="Source"):
         print(f"  {word}: {c}")
 
 
-alphabet = [
-    "sol", "luna", "mar", "rio",
-    "fuego", "aire", "tierra", "nube",
-    "roca", "bosque", "nieve", "trueno",
-    "flor", "sombra", "luz", "viento"
-]
-
+alphabet = AlphabetProvider.provide_alphabet('test_16bits_alph')
 L = len(alphabet)
 markov_transition = generate_markov_transition_matrix()
 

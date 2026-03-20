@@ -5,6 +5,8 @@ import numpy as np
 
 class Source(ABC):
 
+    probs = None
+
     def __init__(self, alphabet):
         np.random.shuffle(alphabet)
         self.alphabet = np.array(alphabet)
@@ -13,8 +15,16 @@ class Source(ABC):
     def generate(self, n):
         pass
 
+    def get_probs(self):
+        return dict(zip(self.alphabet, self.probs))
+
 
 class UniformIIDSource(Source):
+
+    def __init__(self, alphabet):
+        super().__init__(alphabet)
+        L = len(alphabet)
+        self.probs = np.ones(L) / L
 
     def generate(self, n):
         return np.random.choice(self.alphabet, n)
