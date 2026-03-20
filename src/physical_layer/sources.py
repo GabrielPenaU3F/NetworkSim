@@ -15,9 +15,6 @@ class Source(ABC):
     def generate(self, n):
         pass
 
-    def get_probs(self):
-        return dict(zip(self.alphabet, self.probs))
-
 
 class UniformIIDSource(Source):
 
@@ -28,6 +25,9 @@ class UniformIIDSource(Source):
 
     def generate(self, n):
         return np.random.choice(self.alphabet, n)
+
+    def get_probs(self):
+        return dict(zip(self.alphabet, self.probs))
 
 
 class ZipfIIDSource(Source): # Pareto-like distribution (heavy tailed)
@@ -40,6 +40,9 @@ class ZipfIIDSource(Source): # Pareto-like distribution (heavy tailed)
 
     def generate(self, n):
         return list(np.random.choice(self.alphabet, size=n, p=self.probs))
+
+    def get_probs(self):
+        return dict(zip(self.alphabet, self.probs))
 
 class MarkovSource(Source):
 
