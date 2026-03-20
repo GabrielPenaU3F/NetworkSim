@@ -13,6 +13,13 @@ class Code(ABC):
     def select_binary_format(self, alphabet):
         pass
 
+    @abstractmethod
+    def encode_bits(self, bits):
+        pass
+
+    @abstractmethod
+    def decode_bits(self, bits):
+        pass
 
 class BasicCode(Code):
 
@@ -31,6 +38,12 @@ class BasicCode(Code):
         n = len(alphabet)
         n_bits = int(np.ceil(np.log2(n)))
         return f'0{n_bits}b'
+
+    def encode_bits(self, bits):
+        return bits
+
+    def decode_bits(self, bits):
+        return bits
 
 
 class RepetitionCode(Code):
@@ -54,3 +67,14 @@ class RepetitionCode(Code):
 
     def select_binary_format(self, alphabet):
         pass  # no aplica
+
+    def encode_bits(self, bits):
+        return ''.join(b * self.r for b in bits)
+
+    def decode_bits(self, bits):
+        decoded = ''
+        for i in range(0, len(bits), self.r):
+            chunk = bits[i:i+self.r]
+            ones = chunk.count('1')
+            decoded += '1' if ones > self.r // 2 else '0'
+        return decoded

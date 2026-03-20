@@ -1,12 +1,13 @@
 import numpy as np
 
-from src.physical_layer.codes import BasicCode
+from src.physical_layer.codes import BasicCode, RepetitionCode
 
 
 class Codebook:
 
     available_codes = {
-        'basic': BasicCode
+        'basic': BasicCode,
+        'repetition': RepetitionCode,
     }
     alphabet = []
     codebook = []
@@ -14,8 +15,8 @@ class Codebook:
 
     def __init__(self, alphabet, code='basic'):
         self.alphabet = alphabet
-        code = self.available_codes[code]()
-        self.codebook, self.reverse_codebook = code.build_codebook(alphabet)
+        self.code = self.available_codes[code]()
+        self.codebook, self.reverse_codebook = self.code.build_codebook(alphabet)
         self.word_length = len(next(iter(self.codebook.values()))) # Valid only if every codeword has the same length
 
     def analyze_code(self):
@@ -37,6 +38,12 @@ class Codebook:
         print('Word -- Code')
         for word in self.alphabet:
             print(f'{word}: {self.codebook[word]}')
+
+    def encode_bits(self, bits):
+        return self.code.encode_bits(bits)
+
+    def decode_bits(self, bits):
+        return self.code.decode_bits(bits)
 
     def get_word_length(self):
         return self.word_length

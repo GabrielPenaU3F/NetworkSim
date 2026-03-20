@@ -5,9 +5,11 @@ class EncoderDecoder:
 
     def encode_message(self, message):
         split_msg = message.split(' ')
-        return ''.join(self.codebook.get_codebook()[word] for word in split_msg)
+        bits = ''.join(self.codebook.get_codebook()[word] for word in split_msg)
+        return self.codebook.encode_bits(bits)
 
     def decode_message(self, bits):
+        bits = self.codebook.decode_bits(bits)
         len_word = self.codebook.get_word_length()
         words = []
         for i in range(0, len(bits), len_word):
