@@ -1,10 +1,11 @@
 import random
 from abc import abstractmethod, ABC
 
-from src.physical_layer.encoder_decoder import EncoderDecoder
-
 
 class Channel(ABC):
+
+    def __init__(self, channel_code, *args, **kwargs):
+        self.channel_code = channel_code
 
     @abstractmethod
     def transmit(self, codebook, message, **kwargs):
@@ -16,7 +17,8 @@ class Channel(ABC):
 
 class BinarySymmetricChannel(Channel):
 
-    def __init__(self, probability):
+    def __init__(self, channel_code, probability, *args, **kwargs):
+        super().__init__(channel_code, *args, **kwargs)
         self.probability = probability
 
     def apply_noise(self, msg_bits):
@@ -27,13 +29,24 @@ class BinarySymmetricChannel(Channel):
         return ''.join(bits)
 
     def transmit(self, codebook, message, mode=''):
-        ed = EncoderDecoder(codebook)
-        bits = ed.encode_message(message)
+
+        # Source encoding
+        source_bits = codebook.encode_message(message)
+
+        # Channel encoding
+        bits = self.channel_code.encode_bits(source_bits)
+
+        # Transmission
         transmitted_bits = self.apply_noise(bits)
+
+        # Channel decoding
+        received_bits = self.channel_code.decode_bits(transmitted_bits)
+
         if mode == 'raw':
-            return transmitted_bits
+            return received_bits
         else:
-            return ed.decode_message(transmitted_bits)
+            # Source decoding - optional
+            return codebook.decode_message(received_bits)
 
     def invert_bit(self, b):
         return str(int(not int(b)))

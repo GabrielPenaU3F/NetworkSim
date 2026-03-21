@@ -1,13 +1,13 @@
 import numpy as np
 
-from src.physical_layer.codes import BasicCode, RepetitionCode
+from src.physical_layer.codes.source_codes import BasicSourceCode
 
 
 class Codebook:
 
+    # These must be source codes
     available_codes = {
-        'basic': BasicCode,
-        'repetition': RepetitionCode,
+        'basic': BasicSourceCode,
     }
     alphabet = []
     codebook = []
@@ -39,17 +39,18 @@ class Codebook:
         for word in self.alphabet:
             print(f'{word}: {self.codebook[word]}')
 
-    def encode_bits(self, bits):
-        return self.code.encode_bits(bits)
+    def encode_message(self, message):
+        split_msg = message.split(' ')
+        bits = ''.join(self.codebook[word] for word in split_msg)
+        encoded_bits = self.code.encode_bits(bits)
+        return encoded_bits
 
-    def decode_bits(self, bits):
-        return self.code.decode_bits(bits)
-
-    def get_word_length(self):
-        return self.word_length
-
-    def get_codebook(self):
-        return self.codebook
-
-    def get_reverse_codebook(self):
-        return self.reverse_codebook
+    def decode_message(self, message):
+        bits = self.code.decode_bits(message)
+        len_word = self.word_length
+        words = []
+        for i in range(0, len(bits), len_word):
+            word_bits = bits[i:i+len_word]
+            word = self.reverse_codebook.get(word_bits, '???')
+            words.append(word)
+        return ' '.join(words)
