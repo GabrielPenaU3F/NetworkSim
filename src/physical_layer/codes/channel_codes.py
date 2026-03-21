@@ -23,6 +23,8 @@ class NoChannelCode(ChannelCode):
 class RepetitionChannelCode(ChannelCode):
 
     def __init__(self, r=3):
+        if r % 2 == 0:
+            raise ValueError("Repetition factor must be odd")
         self.r = r # Adjust as desired
 
     def encode_bits(self, bits):
