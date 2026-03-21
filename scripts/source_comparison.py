@@ -3,7 +3,7 @@ from collections import Counter
 import numpy as np
 from matplotlib import pyplot as plt
 
-from alphabets.alphabets import AlphabetProvider
+from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.sources import UniformIIDSource, MarkovSource, BurstySource, ZipfIIDSource
 
 

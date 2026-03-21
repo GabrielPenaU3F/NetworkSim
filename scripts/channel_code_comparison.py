@@ -8,7 +8,7 @@ channel_code = NoChannelCode()
 simple_channel = BinarySymmetricChannel(channel_code, probability=0.1)
 hamming_channel = BinarySymmetricChannel(channel_code, probability=0.1)
 
-msg = "sol mar luz bosque"
+msg = "1100111100000011"
 msg_simple = simple_channel.transmit(codebook, msg)
 msg_hamming = hamming_channel.transmit(codebook, msg)
 

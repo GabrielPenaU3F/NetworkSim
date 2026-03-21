@@ -5,7 +5,7 @@ from test_codebook_settings import make_test_codebook
 
 codebook = make_test_codebook()
 channel = BinarySymmetricChannel(NoChannelCode(), 0.1)
-message = 'sombra luz'
+message = '1101'
 
 received = channel.transmit(codebook, message)
 print(received)

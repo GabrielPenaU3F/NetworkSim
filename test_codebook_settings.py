@@ -1,5 +1,5 @@
 # Test alphabet
-from alphabets.alphabets import AlphabetProvider
+from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 
 def make_test_codebook(code='basic'):

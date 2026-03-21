@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from alphabets.alphabets import AlphabetProvider
-from src.physical_layer.sources import UniformIIDSource, ZipfIIDSource
+from src.physical_layer.alphabets.alphabets import AlphabetProvider
+from src.physical_layer.sources import ZipfIIDSource
 from src.physical_layer.utils import estimate_aep
 
 def plot_aep(curve, true_entropy=None, title="AEP convergence"):

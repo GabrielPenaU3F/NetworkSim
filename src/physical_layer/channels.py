@@ -8,7 +8,7 @@ class Channel(ABC):
         self.channel_code = channel_code
 
     @abstractmethod
-    def transmit(self, codebook, message, **kwargs):
+    def transmit(self, codebook, message):
         pass
 
     @abstractmethod
@@ -28,25 +28,18 @@ class BinarySymmetricChannel(Channel):
                 bits[idx] = self.invert_bit(b)
         return ''.join(bits)
 
-    def transmit(self, codebook, message, mode=''):
-
-        # Source encoding
-        source_bits = codebook.encode_message(message)
+    def transmit(self, codebook, bits):
 
         # Channel encoding
-        bits = self.channel_code.encode_bits(source_bits)
+        encoded_bits = self.channel_code.encode_bits(bits)
 
         # Transmission
-        transmitted_bits = self.apply_noise(bits)
+        transmitted_bits = self.apply_noise(encoded_bits)
 
         # Channel decoding
         received_bits = self.channel_code.decode_bits(transmitted_bits)
 
-        if mode == 'raw':
-            return received_bits
-        else:
-            # Source decoding - optional
-            return codebook.decode_message(received_bits)
+        return received_bits
 
     def invert_bit(self, b):
         return str(int(not int(b)))
