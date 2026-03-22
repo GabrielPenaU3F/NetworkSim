@@ -3,25 +3,23 @@ from src.errors import LinkError
 
 class Link:
 
-    def __init__(self, channel, block_size=8, max_retries=5):
+    def __init__(self, channel, checksum, block_size=8, max_retries=5):
         self.channel = channel
+        self.checksum = checksum
         self.block_size = block_size
         self.max_retries = max_retries
 
     def split_blocks(self, bits):
         return [bits[i:i + self.block_size] for i in range(0, len(bits), self.block_size)]
 
-    def checksum(self, bits):
-        return sum(int(b) for b in bits) % 2
-
     def transmit_block(self, bits):
 
+        cs = self.checksum.compute(bits)
         for _ in range(self.max_retries):
-            cs = self.checksum(bits)
-            received = self.channel.apply_noise(bits) #TODO: refactorizar canal
 
-            if self.checksum(received) == cs:
-                return received
+            received_bits = self.channel.transmit(bits)
+            if self.checksum.compute(received_bits) == cs:
+                return received_bits
 
         raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
@@ -49,5 +47,5 @@ class Link:
             received_bits = ''.join(received_blocks)
             return self.unpad_bits(received_bits, padding)
 
-        finally:
+        except LinkError:
             print('Transmission error. Closing link.')

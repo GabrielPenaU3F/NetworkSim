@@ -1,3 +1,8 @@
+from src.link_layer.checksum import ParityChecksum
+from src.physical_layer.channels import BinarySymmetricChannel
+from src.physical_layer.codes.channel_codes import NoChannelCode
+
+
 def parse_args(config, **kwargs):
     for key, value in kwargs.items():
         if key in config:
@@ -7,12 +12,14 @@ class Config:
 
     default_physical_configs = {
         'error_prob' : 0.05,
-        'channel_code': 'hamming'
+        'channel': BinarySymmetricChannel,
+        'channel_code': NoChannelCode
     }
 
     default_link_configs = {
         'block_size': 8,
         'max_retries': 5,
+        'checksum': ParityChecksum
     }
 
     def __init__(self, **kwargs):
@@ -30,3 +37,6 @@ class Config:
 
     def get_physical_layer_configs(self):
         return self.physical_configs
+
+    def get_link_layer_configs(self):
+        return self.link_configs
