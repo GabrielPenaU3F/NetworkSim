@@ -1,6 +1,6 @@
 import pytest
 
-from src.link_layer.checksum import ParityChecksum, SumChecksum
+from src.link_layer.checksum import ParityChecksum, SumChecksum, CRCChecksum
 
 
 @pytest.fixture
@@ -10,6 +10,10 @@ def parity_checksum():
 @pytest.fixture
 def sum_checksum():
     return SumChecksum()
+
+@pytest.fixture
+def crc_checksum():
+    return CRCChecksum("1101")
 
 class TestParityChecksum:
 
@@ -34,3 +38,18 @@ class TestSumChecksum:
 
     def test_sum_checksum_limit_permutation(self, sum_checksum):
         assert sum_checksum.compute("1010") == sum_checksum.compute("0101")
+
+
+class TestCRCChecksum:
+
+    def test_crc_detects_error(self, crc_checksum):
+        crc = CRCChecksum("1101")
+        original = "1011001"
+        corrupted = "1010001"
+        assert crc.compute(original) != crc.compute(corrupted)
+
+    def test_crc_stronger_than_parity(self, crc_checksum, parity_checksum):
+        a = "1010"
+        b = "0101"
+        assert parity_checksum.compute(a) == parity_checksum.compute(b)
+        assert crc_checksum.compute(a) != crc_checksum.compute(b)

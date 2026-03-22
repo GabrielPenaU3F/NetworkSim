@@ -2,7 +2,7 @@ import pytest
 
 from src.physical_layer.codes.channel_codes import (
     NoChannelCode,
-    RepetitionChannelCode
+    RepetitionChannelCode, HammingChannelCode
 )
 
 
@@ -19,6 +19,10 @@ def no_code():
 @pytest.fixture
 def repetition_code():
     return RepetitionChannelCode(r=3)
+
+@pytest.fixture
+def hamming_code():
+    return HammingChannelCode()
 
 
 class TestNoChannelCode:
@@ -67,3 +71,29 @@ class TestRepetitionChannelCode:
         with pytest.raises(ValueError):
             RepetitionChannelCode(r=4)
 
+
+class TestHammingChannelCode:
+
+    def test_hamming_no_error(self, hamming_code):
+        bits = "10110011"
+        decoded = hamming_code.decode_bits(hamming_code.encode_bits(bits))
+        assert decoded[:len(bits)] == bits
+
+    def test_hamming_corrects_single_error(self, hamming_code):
+        bits = "1011"
+        encoded = hamming_code.encode_bits(bits)
+        corrupted = list(encoded)
+        corrupted[2] = '1' if corrupted[2] == '0' else '0'
+        corrupted = ''.join(corrupted)
+        decoded = hamming_code.decode_bits(corrupted)
+        assert decoded[:len(bits)] == bits
+
+    def test_hamming_fails_double_error(self, hamming_code):
+        bits = "1011"
+        encoded = hamming_code.encode_bits(bits)
+        corrupted = list(encoded)
+        corrupted[1] = '1' if corrupted[1] == '0' else '0'
+        corrupted[2] = '1' if corrupted[2] == '0' else '0'
+        corrupted = ''.join(corrupted)
+        decoded = hamming_code.decode_bits(corrupted)
+        assert decoded[:len(bits)] != bits
