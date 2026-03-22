@@ -1,5 +1,6 @@
-import random
 from abc import abstractmethod, ABC
+
+import numpy as np
 
 
 class Channel(ABC):
@@ -8,27 +9,27 @@ class Channel(ABC):
         self.channel_code = channel_code
 
     @abstractmethod
-    def transmit(self, codebook, message):
+    def transmit(self, bits):
         pass
 
     @abstractmethod
-    def apply_noise(self, msg_bits):
+    def apply_noise(self, bits):
         pass
 
 class BinarySymmetricChannel(Channel):
 
-    def __init__(self, channel_code, probability, *args, **kwargs):
+    def __init__(self, channel_code, probability, rng=None, *args, **kwargs):
         super().__init__(channel_code, *args, **kwargs)
         self.probability = probability
+        self.rng = rng if rng is not None else np.random.default_rng()
 
-    def apply_noise(self, msg_bits):
-        bits = list(msg_bits)
-        for idx, b in enumerate(bits):
-            if random.random() < self.probability:
-                bits[idx] = self.invert_bit(b)
-        return ''.join(bits)
+    def apply_noise(self, bits):
+        bits = np.array([int(b) for b in bits], dtype=np.uint8)
+        noise = self.rng.random(len(bits)) < self.probability
+        flipped = bits ^ noise.astype(np.uint8)
+        return ''.join(flipped.astype(str))
 
-    def transmit(self, codebook, bits):
+    def transmit(self, bits):
 
         # Channel encoding
         encoded_bits = self.channel_code.encode_bits(bits)
@@ -40,6 +41,3 @@ class BinarySymmetricChannel(Channel):
         received_bits = self.channel_code.decode_bits(transmitted_bits)
 
         return received_bits
-
-    def invert_bit(self, b):
-        return str(int(not int(b)))

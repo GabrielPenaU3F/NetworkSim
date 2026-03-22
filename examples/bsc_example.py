@@ -7,5 +7,5 @@ codebook = make_test_codebook()
 channel = BinarySymmetricChannel(NoChannelCode(), 0.1)
 message = '1101'
 
-received = channel.transmit(codebook, message)
+received = channel.transmit(message)
 print(received)
