@@ -19,7 +19,7 @@ class CommSystem:
         return message
 
     def build_stack(self, config):
-        top = config.default_system_configs.get('top_layer')
+        top = config.get_system_configs().get('top_layer')
         order = LayerHub.order
         builders = LayerHub.builders
         if top not in order:

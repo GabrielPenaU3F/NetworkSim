@@ -1,10 +1,11 @@
+from src.communications_system.layer import Layer
 from src.errors import LinkError
 
 
-class Link:
+class Link(Layer):
 
     def __init__(self, channel, checksum, block_size=8, max_retries=5):
-        self.channel = channel
+        self.lower_layer = channel
         self.checksum = checksum
         self.block_size = block_size
         self.max_retries = max_retries
@@ -17,7 +18,7 @@ class Link:
         cs = self.checksum.compute(bits)
         for _ in range(self.max_retries):
 
-            received_bits = self.channel.transmit(bits)
+            received_bits = self.lower_layer.transmit(bits)
             if self.checksum.compute(received_bits) == cs:
                 return received_bits
 

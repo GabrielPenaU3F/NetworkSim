@@ -1,16 +1,14 @@
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 
 import numpy as np
 
+from src.communications_system.layer import Layer
 
-class Channel(ABC):
+
+class Channel(Layer):
 
     def __init__(self, channel_code, *args, **kwargs):
         self.channel_code = channel_code
-
-    @abstractmethod
-    def transmit(self, bits):
-        pass
 
     @abstractmethod
     def apply_noise(self, bits):
