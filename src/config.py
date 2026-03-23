@@ -10,6 +10,10 @@ def parse_args(config, **kwargs):
 
 class Config:
 
+    default_system_configs = {
+        'top_layer': 'link'
+    }
+
     default_physical_configs = {
         'error_prob' : 0.05,
         'channel': BinarySymmetricChannel,

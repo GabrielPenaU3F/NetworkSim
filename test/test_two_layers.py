@@ -1,8 +1,7 @@
 import pytest
 
-from src.comm_system import CommSystem
+from src.communications_system.comm_system import CommSystem
 from src.config import Config
-from src.errors import LinkError
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
