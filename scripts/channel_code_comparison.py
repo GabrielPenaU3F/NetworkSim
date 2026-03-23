@@ -4,8 +4,8 @@ from src.physical_layer.codes.channel_codes import NoChannelCode, RepetitionChan
 no_channel_code = NoChannelCode()
 repetition_channel_code = RepetitionChannelCode(r=3)
 
-simple_channel = BinarySymmetricChannel(no_channel_code, probability=0.1)
-repetition_channel = BinarySymmetricChannel(repetition_channel_code, probability=0.1)
+simple_channel = BinarySymmetricChannel(no_channel_code, error_prob=0.1)
+repetition_channel = BinarySymmetricChannel(repetition_channel_code, error_prob=0.1)
 
 msg = "1100111100000011"
 msg_simple = simple_channel.transmit(msg)

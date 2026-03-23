@@ -6,21 +6,35 @@ class LayerHub:
 
     @staticmethod
     def build_physical_layer(config):
-        physical_configs = config.get_physical_layer_configs()
-        error_prob = physical_configs.get('error_prob')
-        channel = physical_configs.get('channel')(error_prob)
-        channel_code = physical_configs.get('channel_code')()
-        physical_layer = PhysicalLayer(channel, channel_code)
-        return physical_layer
+        cfg = config.get_physical_layer_configs()
+
+        # Channel
+        channel_cfg = cfg['channel']
+        channel = channel_cfg['class'](**channel_cfg['params'])
+
+        # Channel code (encoder/decoder)
+        code_cfg = cfg['channel_code']
+        channel_code = code_cfg['class'](**code_cfg['params'])
+
+        # Physical layer
+        return PhysicalLayer(
+            channel=channel,
+            channel_code=channel_code
+        )
 
     @staticmethod
-    def build_link_layer(config, channel):
-        link_configs = config.get_link_layer_configs()
-        block_size = link_configs.get('block_size')
-        max_retries = link_configs.get('max_retries')
-        checksum = link_configs.get('checksum')()
-        link = Link(channel, checksum, block_size, max_retries)
-        return link
+    def build_link_layer(config, lower):
+        cfg = config.get_link_layer_configs()
+
+        checksum_cfg = cfg['checksum']
+        checksum = checksum_cfg['class'](**checksum_cfg['params'])
+
+        return Link(
+            lower,
+            checksum,
+            cfg['block_size'],
+            cfg['max_retries']
+        )
 
     order = ['physical', 'link']
     builders = {'physical': build_physical_layer,

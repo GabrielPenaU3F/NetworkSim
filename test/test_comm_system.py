@@ -43,7 +43,7 @@ class TestCommSystemPhysicalLayer:
         channel_code = system.stack.channel_code
         channel = system.stack.channel
 
-        assert channel.probability == 0.2
+        assert channel.error_prob == 0.2
         assert isinstance(channel_code, NoChannelCode)
 
 
