@@ -5,6 +5,7 @@ from src.config import Config
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
+from src.physical_layer.codes.physical_layer import PhysicalLayer
 
 
 @pytest.fixture
@@ -27,10 +28,7 @@ class TestCommSystemPhysicalLayer:
     def test_build_stack_physical_layer(self):
         config = Config(top_layer='physical')
         system = CommSystem(config)
-
-        from src.physical_layer.channels import BinarySymmetricChannel
-
-        assert isinstance(system.stack, BinarySymmetricChannel)
+        assert isinstance(system.stack, PhysicalLayer)
 
     def test_channel_configuration(self):
         from src.physical_layer.codes.channel_codes import NoChannelCode
@@ -42,10 +40,11 @@ class TestCommSystemPhysicalLayer:
         )
 
         system = CommSystem(config)
-        channel = system.stack
+        channel_code = system.stack.channel_code
+        channel = system.stack.channel
 
         assert channel.probability == 0.2
-        assert isinstance(channel.channel_code, NoChannelCode)
+        assert isinstance(channel_code, NoChannelCode)
 
 
 class TestCommSystemLinkLayer:
@@ -74,10 +73,9 @@ class TestCommSystemLinkLayer:
         system = CommSystem(config)
 
         from src.link_layer.link import Link
-        from src.physical_layer.channels import BinarySymmetricChannel
 
         assert isinstance(system.stack, Link)
-        assert isinstance(system.stack.lower_layer, BinarySymmetricChannel)
+        assert isinstance(system.stack.lower_layer, PhysicalLayer)
 
     def test_stack_order_is_correct(self):
         config = Config(top_layer='link')

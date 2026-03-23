@@ -1,4 +1,5 @@
 from src.link_layer.link import Link
+from src.physical_layer.codes.physical_layer import PhysicalLayer
 
 
 class LayerHub:
@@ -6,10 +7,11 @@ class LayerHub:
     @staticmethod
     def build_physical_layer(config):
         physical_configs = config.get_physical_layer_configs()
-        channel_code = physical_configs.get('channel_code')()
         error_prob = physical_configs.get('error_prob')
-        channel = physical_configs.get('channel')(channel_code, error_prob)
-        return channel
+        channel = physical_configs.get('channel')(error_prob)
+        channel_code = physical_configs.get('channel_code')()
+        physical_layer = PhysicalLayer(channel, channel_code)
+        return physical_layer
 
     @staticmethod
     def build_link_layer(config, channel):
