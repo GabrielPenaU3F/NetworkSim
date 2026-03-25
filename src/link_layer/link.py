@@ -1,11 +1,13 @@
+import numpy as np
+
 from src.communications_system.layer import Layer
 from src.errors import LinkError
 
 
 class Link(Layer):
 
-    def __init__(self, channel, checksum, block_size=8, max_retries=5):
-        self.lower_layer = channel
+    def __init__(self, physical_layer, checksum, block_size=8, max_retries=5):
+        self.lower_layer = physical_layer
         self.checksum = checksum
         self.block_size = block_size
         self.max_retries = max_retries
@@ -26,7 +28,7 @@ class Link(Layer):
 
     def pad_bits(self, bits):
         padding = (self.block_size - len(bits) % self.block_size) % self.block_size
-        return bits + '0' * padding, padding
+        return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
 
     def unpad_bits(self, bits, padding):
         if padding == 0:
@@ -45,7 +47,7 @@ class Link(Layer):
                 rb = self.transmit_block(b)
                 received_blocks.append(rb)
 
-            received_bits = ''.join(received_blocks)
+            received_bits = np.array(received_blocks).reshape(-1)
             return self.unpad_bits(received_bits, padding)
 
         except LinkError:

@@ -8,13 +8,13 @@ from src.physical_layer.codes.physical_layer import PhysicalLayer
 
 @pytest.fixture
 def bits():
-    return "0101010101010101"
+    return np.tile([0, 1], 8)
 
 @pytest.fixture
 def layer_factory():
     def _make(channel_code, p, seed=0):
         rng = np.random.default_rng(seed)
-        channel = BinarySymmetricChannel(p, rng=rng)
+        channel = BinarySymmetricChannel(p, channel_rng=rng)
         return PhysicalLayer(channel, channel_code)
     return _make
 
@@ -28,16 +28,16 @@ class TestPhysicalLayer:
     def test_no_noise(self, bits, layer_factory):
         physical = layer_factory(NoChannelCode(), 0.0)
         received = physical.transmit(bits)
-        assert received == bits
+        np.testing.assert_array_equal(received, bits)
 
     def test_full_noise(self, bits, layer_factory):
         physical = layer_factory(NoChannelCode(), 1.0)
         received = physical.transmit(bits)
-        expected = ''.join('1' if b == '0' else '0' for b in bits)
-        assert received == expected
+        expected = bits ^ 1
+        np.testing.assert_array_equal(received, expected)
 
     def test_error_rate(self, layer_factory):
-        bits = "0" * 10000
+        bits = np.zeros(10000, dtype=np.uint8)
         p = 0.1
         physical = layer_factory(NoChannelCode(), p)
         received = physical.transmit(bits)
@@ -46,7 +46,7 @@ class TestPhysicalLayer:
         assert abs(empirical_p - p) < 0.02
 
     def test_repetition_improves_error(self, layer_factory):
-        bits = "0" * 5000
+        bits = np.zeros(5000, dtype=np.uint8)
         p = 0.2
 
         # codeless

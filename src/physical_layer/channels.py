@@ -11,13 +11,12 @@ class Channel:
 
 class BinarySymmetricChannel(Channel):
 
-    def __init__(self, error_prob, rng=None, *args, **kwargs):
+    def __init__(self, error_prob, channel_rng=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.error_prob = error_prob
-        self.rng = rng if rng is not None else np.random.default_rng()
+        self.rng = channel_rng if channel_rng is not None else np.random.default_rng()
 
     def apply_noise(self, bits):
-        bits = np.array([int(b) for b in bits], dtype=np.uint8)
         noise = self.rng.random(len(bits)) < self.error_prob
         flipped = bits ^ noise.astype(np.uint8)
-        return ''.join(flipped.astype(str))
+        return flipped

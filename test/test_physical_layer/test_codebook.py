@@ -1,7 +1,10 @@
+import numpy as np
 import pytest
 
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
+from src.physical_layer.utils import str_to_bits
+
 
 @pytest.fixture
 def alphabet():
@@ -32,13 +35,12 @@ def test_unique_codes(codebook):
 def test_encode_message(codebook):
     message = "sol mar luz"
     bits = codebook.encode_message(message)
-
-    expected = (
+    expected = str_to_bits(
         codebook.codebook["sol"] +
         codebook.codebook["mar"] +
         codebook.codebook["luz"]
     )
-    assert bits == expected
+    np.testing.assert_array_equal(bits, expected)
 
 def test_decode_message(codebook):
     words = ["sol", "mar", "luz"]

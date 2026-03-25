@@ -7,8 +7,9 @@ from copy import deepcopy
 PARAM_MAP = {
     'top_layer': ('system', 'top_layer'),
 
-    'error_prob': ('physical', 'channel', 'params', 'error_prob'),
     'channel': ('physical', 'channel', 'class'),
+    'error_prob': ('physical', 'channel', 'params', 'error_prob'),
+    'channel_rng': ('physical', 'channel', 'params', 'rng'),
     'channel_code': ('physical', 'channel_code', 'class'),
 
     'block_size': ('link', 'block_size'),
@@ -53,7 +54,8 @@ class Config:
         'channel': {
             'class': BinarySymmetricChannel,
             'params': {
-                'error_prob': 0.05
+                'error_prob': 0.05,
+                'channel_rng': None
             }
         },
         'channel_code': {

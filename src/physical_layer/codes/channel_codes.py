@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 
 class ChannelCode(ABC):
 
@@ -28,15 +30,15 @@ class RepetitionChannelCode(ChannelCode):
         self.r = r # Adjust as desired
 
     def encode_bits(self, bits):
-        return ''.join(b * self.r for b in bits)
+        return np.repeat(bits, self.r)
 
     def decode_bits(self, bits):
-        decoded = ''
-        for i in range(0, len(bits), self.r):
-            chunk = bits[i:i+self.r]
-            ones = chunk.count('1')
-            zeros = chunk.count('0')
-            decoded += '1' if ones > zeros else '0'
+        bits = np.asarray(bits, dtype=np.uint8)
+        n = len(bits) // self.r * self.r
+        bits = bits[:n]
+        blocks = bits.reshape(-1, self.r)
+        ones = np.sum(blocks, axis=1)
+        decoded = (ones > self.r/2).astype(np.uint8)
         return decoded
 
 
@@ -48,42 +50,55 @@ class HammingChannelCode(ChannelCode):
         self.total_bits = 7
 
     def encode_bits(self, bits):
-        encoded = ""
-        padding = (-len(bits)) % self.data_bits
-        bits = bits + '0' * padding
-        for i in range(0, len(bits), self.data_bits):
-            d = [int(b) for b in bits[i:i + 4]]
+        bits = np.asarray(bits, dtype=np.uint8)
 
-            # Positions:
-            # p1 p2 d1 p3 d2 d3 d4
+        # padding
+        padding = (-len(bits)) % self.data_bits
+        if padding > 0:
+            bits = np.concatenate([bits, np.zeros(padding, dtype=np.uint8)])
+
+        encoded_blocks = []
+
+        for i in range(0, len(bits), self.data_bits):
+            d = bits[i:i + 4]
+
+            # syndromes
             p1 = d[0] ^ d[1] ^ d[3]
             p2 = d[0] ^ d[2] ^ d[3]
             p3 = d[1] ^ d[2] ^ d[3]
 
-            block = [p1, p2, d[0], p3, d[1], d[2], d[3]]
-            encoded += ''.join(str(b) for b in block)
+            block = np.array([p1, p2, d[0], p3, d[1], d[2], d[3]], dtype=np.uint8)
+            encoded_blocks.append(block)
 
-        return encoded
+        return np.concatenate(encoded_blocks)
 
     def decode_bits(self, bits):
-        decoded = ""
+        bits = np.asarray(bits, dtype=np.uint8)
+
+        decoded_blocks = []
+
         for i in range(0, len(bits), self.total_bits):
-            block = [int(b) for b in bits[i:i + 7]]
+            block = bits[i:i + 7].copy()
+
             if len(block) < 7:
                 continue
 
-            # syndrome
+            # síndrome
             s1 = block[0] ^ block[2] ^ block[4] ^ block[6]
             s2 = block[1] ^ block[2] ^ block[5] ^ block[6]
             s3 = block[3] ^ block[4] ^ block[5] ^ block[6]
 
             error_pos = s1 + (s2 << 1) + (s3 << 2)
+
             if error_pos != 0:
                 error_index = error_pos - 1
                 block[error_index] ^= 1  # correct
 
-            # extract actual data
-            data = [block[2], block[4], block[5], block[6]]
-            decoded += ''.join(str(b) for b in data)
+            # datos
+            data = block[[2, 4, 5, 6]]
+            decoded_blocks.append(data)
 
-        return decoded
+        if not decoded_blocks:
+            return np.array([], dtype=np.uint8)
+
+        return np.concatenate(decoded_blocks)

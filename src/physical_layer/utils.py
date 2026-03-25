@@ -1,5 +1,11 @@
 import numpy as np
 
+def str_to_bits(string, dtype=np.uint8):
+    return np.fromiter((int(c) for c in string), dtype=dtype)
+
+def bits_to_str(bits):
+    return ''.join(str(int(b)) for b in bits)
+
 def hamming_distance(a, b):
     return sum(x != y for x, y in zip(a, b))
 

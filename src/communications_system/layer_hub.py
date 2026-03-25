@@ -26,9 +26,11 @@ class LayerHub:
     def build_link_layer(config, lower):
         cfg = config.get_link_layer_configs()
 
+        # Checksum
         checksum_cfg = cfg['checksum']
         checksum = checksum_cfg['class'](**checksum_cfg['params'])
 
+        # Link layer
         return Link(
             lower,
             checksum,

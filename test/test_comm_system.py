@@ -32,13 +32,11 @@ class TestCommSystemPhysicalLayer:
 
     def test_channel_configuration(self):
         from src.physical_layer.codes.channel_codes import NoChannelCode
-
         config = Config(
             error_prob=0.2,
             channel_code=NoChannelCode,
             top_layer='physical'
         )
-
         system = CommSystem(config)
         channel_code = system.stack.channel_code
         channel = system.stack.channel
@@ -71,9 +69,7 @@ class TestCommSystemLinkLayer:
     def test_build_stack_link_layer(self):
         config = Config(top_layer='link')
         system = CommSystem(config)
-
         from src.link_layer.link import Link
-
         assert isinstance(system.stack, Link)
         assert isinstance(system.stack.lower_layer, PhysicalLayer)
 
@@ -87,13 +83,10 @@ class TestCommSystemLinkLayer:
 
     def test_link_has_checksum(self):
         from src.link_layer.checksum import ParityChecksum
-
         config = Config(
             checksum=ParityChecksum,
             top_layer='link'
         )
-
         system = CommSystem(config)
         link = system.stack
-
         assert isinstance(link.checksum, ParityChecksum)

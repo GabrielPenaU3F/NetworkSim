@@ -1,4 +1,5 @@
 from src.physical_layer.codes.source_codes import BasicSourceCode
+from src.physical_layer.utils import str_to_bits, bits_to_str
 
 
 class Codebook:
@@ -25,10 +26,11 @@ class Codebook:
         split_msg = message.split(' ')
         bits = ''.join(self.codebook[word] for word in split_msg)
         encoded_bits = self.code.encode_bits(bits)
-        return encoded_bits
+        return str_to_bits(encoded_bits)
 
     def decode_message(self, message):
-        bits = self.code.decode_bits(message)
+        bits = bits_to_str(message)
+        bits = self.code.decode_bits(bits)
         len_word = self.word_length
         words = []
         for i in range(0, len(bits), len_word):
