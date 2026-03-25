@@ -6,6 +6,12 @@ def str_to_bits(string, dtype=np.uint8):
 def bits_to_str(bits):
     return ''.join(str(int(b)) for b in bits)
 
+def int_to_bits(value, num_bits):
+    return np.array(
+        [(value >> i) & 1 for i in reversed(range(num_bits))],
+        dtype=np.uint8
+    )
+
 def hamming_distance(a, b):
     return sum(x != y for x, y in zip(a, b))
 

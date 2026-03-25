@@ -1,5 +1,5 @@
 from src.link_layer.link import Link
-from src.physical_layer.codes.physical_layer import PhysicalLayer
+from src.physical_layer.physical_layer import PhysicalLayer
 
 
 class LayerHub:

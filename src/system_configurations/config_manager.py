@@ -3,42 +3,11 @@ from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode
 from copy import deepcopy
 
+from src.system_configurations.config import PhysicalConfig
+from src.system_configurations.parameter_routing import route_param
 
-PARAM_MAP = {
-    'top_layer': ('system', 'top_layer'),
 
-    'channel': ('physical', 'channel', 'class'),
-    'error_prob': ('physical', 'channel', 'params', 'error_prob'),
-    'channel_rng': ('physical', 'channel', 'params', 'rng'),
-    'channel_code': ('physical', 'channel_code', 'class'),
-
-    'block_size': ('link', 'block_size'),
-    'max_retries': ('link', 'max_retries'),
-    'checksum': ('link', 'checksum', 'class'),
-}
-
-def route_param(config_obj, key, value):
-    if key not in PARAM_MAP:
-        raise KeyError(f"Unknown config parameter: {key}")
-
-    path = PARAM_MAP[key]
-    section = path[0]
-
-    try:
-        attr_name = config_obj.CONFIG_SECTIONS[section]
-    except KeyError:
-        raise KeyError(f"Unknown config section: {section}")
-
-    target = getattr(config_obj, attr_name)
-
-    for p in path[1:-1]:
-        if p not in target:
-            raise KeyError(f"Invalid config path: {path}")
-        target = target[p]
-
-    target[path[-1]] = value
-
-class Config:
+class ConfigManager:
 
     CONFIG_SECTIONS = {
         'system': 'system_configs',
@@ -65,12 +34,16 @@ class Config:
     }
 
     default_link_configs = {
-        'block_size': 8,
+        'frame': {
+            'payload_size': 8,
+            'seq_size': 8,
+            'checksum_size': 4,
+        },
         'max_retries': 5,
         'checksum': {
             'class': ParityChecksum,
             'params': {}
-        }
+        },
     }
 
     system_configs = {}
@@ -78,12 +51,32 @@ class Config:
     link_configs = {}
 
     def __init__(self, **kwargs):
+
+        # Determine the default value of each configuration
         for section_attr in self.CONFIG_SECTIONS.values():
             default_arg = f'default_{section_attr}'
             setattr(self, section_attr, deepcopy(getattr(self, default_arg)))
 
+        # Update those which are provided by parameter
         for key, value in kwargs.items():
             route_param(self, key, value)
+
+        # Build configuration objects
+        self.physical_config = self._build_physical_config()
+        self.link_config = self._build_link_config()
+
+
+    def _build_physical_config(self):
+        cfg = self.physical_configs
+        return PhysicalConfig(
+            channel_cls=cfg['channel']['class'],
+            channel_params=cfg['channel']['params'],
+            code_cls=cfg['channel_code']['class'],
+            code_params=cfg['channel_code']['params']
+        )
+
+    def _build_link_config(self):
+        pass
 
     def get_system_configs(self):
         return self.system_configs

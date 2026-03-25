@@ -1,11 +1,11 @@
 import pytest
 
 from src.communications_system.comm_system import CommSystem
-from src.config import Config
+from src.system_configurations.config import Config
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
-from src.physical_layer.codes.physical_layer import PhysicalLayer
+from src.physical_layer.physical_layer import PhysicalLayer
 
 
 @pytest.fixture

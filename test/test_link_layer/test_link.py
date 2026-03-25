@@ -48,7 +48,7 @@ def test_transmit_block_no_error(parity_checksum):
     blocks = [[1, 0, 1, 0]] # A single block
     physical_layer = DummyPhysicalLayer(blocks)
     link = Link(physical_layer, parity_checksum, block_size=4)
-    result = link.transmit_block(blocks)
+    result = link.transmit_frame(blocks)
     assert np.all(result == [1, 0, 1, 0])
     assert physical_layer.calls == 1
 
@@ -59,7 +59,7 @@ def test_retry_success(parity_checksum):
     ]
     physical_layer = DummyPhysicalLayer(blocks)
     link = Link(physical_layer, parity_checksum, block_size=4, max_retries=2)
-    result = link.transmit_block([1, 0, 1, 0])
+    result = link.transmit_frame([1, 0, 1, 0])
     assert np.all(result == [1, 0, 1, 0])
     assert physical_layer.calls == 2
 
@@ -72,7 +72,7 @@ def test_complete_failure(parity_checksum):
     physical_layer = DummyPhysicalLayer(blocks)
     link = Link(physical_layer, parity_checksum, block_size=4, max_retries=3)
     with pytest.raises(LinkError):
-        link.transmit_block([1, 0, 1, 0])
+        link.transmit_frame([1, 0, 1, 0])
 
 def test_multiple_blocks(parity_checksum, bits_2):
     blocks = [

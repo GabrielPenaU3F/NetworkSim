@@ -3,7 +3,7 @@ import pytest
 
 from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode, RepetitionChannelCode
-from src.physical_layer.codes.physical_layer import PhysicalLayer
+from src.physical_layer.physical_layer import PhysicalLayer
 
 
 @pytest.fixture
