@@ -8,17 +8,19 @@ from src.physical_layer.utils import int_to_bits
 
 class Link(Layer):
 
-    def __init__(self, physical_layer, checksum, block_size=8, max_retries=5):
-        self.lower_layer = physical_layer
+    def __init__(self, physical_layer, checksum, max_retries=5, payload_size=8, seq_size=8, checksum_size=4):
         self.checksum = checksum
-        self.block_size = block_size
+        self.lower_layer = physical_layer
         self.max_retries = max_retries
+        self.payload_size = payload_size
+        self.seq_size = seq_size
+        self.checksum_size = checksum_size
 
     def build_frames(self, bits):
         frames = []
-        for i in range(0, len(bits), self.block_size):
-            payload = bits[i:i + self.block_size]
-            seq = i // self.block_size
+        for i in range(0, len(bits), self.payload_size):
+            payload = bits[i:i + self.payload_size]
+            seq = i // self.payload_size
             cs = self.checksum.compute(payload)
             frames.append(Frame(payload, seq, cs))
         return frames
@@ -35,7 +37,7 @@ class Link(Layer):
         raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
     def pad_bits(self, bits):
-        padding = (self.block_size - len(bits) % self.block_size) % self.block_size
+        padding = (self.payload_size - len(bits) % self.payload_size) % self.payload_size
         return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
 
     def unpad_bits(self, bits, padding):
@@ -61,7 +63,7 @@ class Link(Layer):
             print('Transmission error. Closing link.')
 
     def serialize(self, frame):
-        seq_bits = int_to_bits(frame.get_seq(), self.seq_bits)
+        seq_bits = int_to_bits(frame.get_seq(), self.seq_size)
         payload = frame.get_payload()
         checksum = frame.get_checksum()
         return np.concatenate([seq_bits, payload, checksum])
