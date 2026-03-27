@@ -15,6 +15,11 @@ def int_to_bits(value, num_bits):
 def hamming_distance(a, b):
     return sum(x != y for x, y in zip(a, b))
 
+def select_binary_format(alphabet):
+    n = len(alphabet)
+    n_bits = int(np.ceil(np.log2(n)))
+    return f'0{n_bits}b'
+
 def estimate_aep(sequence, prob_dict):
     log_probs = []
 

@@ -1,6 +1,6 @@
 import pytest
 
-from src.link_layer.checksum import ParityChecksum
+from src.link_layer.checksum import ParityChecksum, CRCChecksum
 from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode
 from src.system_configurations.config_manager import ConfigManager
@@ -47,9 +47,11 @@ class TestLinkLayerConfig:
         assert link.checksum_params == {}
 
     def test_link_config_override(self):
-        manager = ConfigManager(max_retries=10)
+        manager = ConfigManager(max_retries=10, checksum=CRCChecksum, crc_generator=[1, 0, 0, 1])
         link = manager.get_link_layer_config()
         assert link.max_retries == 10
+        assert link.checksum_cls is CRCChecksum
+        assert link.checksum_params['crc_generator'] == [1, 0, 0, 1]
 
     def test_physical_config_override_does_not_affect_other_parameters(self):
         manager = ConfigManager(payload_size=16, seq_size=16, checksum_size=8)

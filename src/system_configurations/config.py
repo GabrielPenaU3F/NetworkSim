@@ -45,6 +45,8 @@ class PhysicalConfig(Config):
         self.code_cls = code_cls
         self.code_params = code_params
 
+    def validate(self):
+        self.code_cls.validate(self.code_params)
 
 
 class LinkConfig(Config):

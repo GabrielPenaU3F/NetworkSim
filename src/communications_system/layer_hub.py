@@ -7,6 +7,7 @@ class LayerHub:
 
     @staticmethod
     def build_physical_layer(config: PhysicalConfig):
+        config.validate()
         channel = config.channel_cls(**config.channel_params)
         code = config.code_cls(**config.code_params)
         return PhysicalLayer(channel, code)

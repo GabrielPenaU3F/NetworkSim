@@ -18,7 +18,7 @@ def no_code():
 
 @pytest.fixture
 def repetition_code():
-    return RepetitionChannelCode(r=3)
+    return RepetitionChannelCode(repetition=3)
 
 @pytest.fixture
 def hamming_code():
@@ -38,13 +38,19 @@ class TestNoChannelCode:
         decoded = no_code.decode_bits(encoded)
         assert decoded == bits
 
+    def test_no_channel_code_validate_ok(self):
+        NoChannelCode.validate(params={})
+
+    def test_no_channel_code_validate_with_params_raises_exception(self):
+        with pytest.raises(ValueError):
+            NoChannelCode.validate(params={'anything': 1})
+
 
 class TestRepetitionChannelCode:
 
     def test_encoding_length(self, repetition_code, bits):
         encoded = repetition_code.encode_bits(bits)
         assert len(encoded) == len(bits) * repetition_code.r
-
 
     def test_encoding_structure(self, repetition_code):
         bits = [0, 1]
@@ -62,13 +68,20 @@ class TestRepetitionChannelCode:
         decoded = repetition_code.decode_bits(noisy) # Vote decoding should decide on 1
         assert decoded == [1]
 
-    def test_repetition_r_is_odd(self):
-        code = RepetitionChannelCode(r=3)
-        assert code.r % 2 == 1
+    def test_repetition_validate_ok(self):
+        RepetitionChannelCode.validate({'repetition': 3})
+
+    def test_repetition_validate_missing_param(self):
+        with pytest.raises(ValueError):
+            RepetitionChannelCode.validate(params={})
+
+    def test_repetition_validate_non_positive(self):
+        with pytest.raises(ValueError):
+            RepetitionChannelCode.validate({'repetition': 0})
 
     def test_repetition_r_is_not_odd(self):
         with pytest.raises(ValueError):
-            RepetitionChannelCode(r=4)
+            RepetitionChannelCode.validate({'repetition': 4})
 
 
 class TestHammingChannelCode:

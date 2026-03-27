@@ -54,3 +54,26 @@ class TestCRCChecksum:
         b = [0, 1, 0, 1]
         assert np.all(parity_checksum.compute(a) == parity_checksum.compute(b))
         assert np.any(crc_checksum.compute(a) != crc_checksum.compute(b))
+
+    def test_crc_validate_ok(self):
+        CRCChecksum.validate({'crc_generator': [1, 0, 1, 1]})
+
+    def test_crc_validate_missing_generator(self):
+        with pytest.raises(ValueError):
+            CRCChecksum.validate({})
+
+    def test_crc_validate_non_binary(self):
+        with pytest.raises(ValueError):
+            CRCChecksum.validate({'crc_generator': [1, 2, 1]})
+
+    def test_crc_validate_too_short(self):
+        with pytest.raises(ValueError):
+            CRCChecksum.validate({'crc_generator': [1]})
+
+    def test_crc_validate_leading_zero(self):
+        with pytest.raises(ValueError):
+            CRCChecksum.validate({'crc_generator': [0, 1, 1]})
+
+    def test_crc_validate_trailing_zero(self):
+        with pytest.raises(ValueError):
+            CRCChecksum.validate({'crc_generator': [1, 1, 0]})

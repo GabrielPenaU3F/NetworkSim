@@ -13,6 +13,10 @@ class ChannelCode(ABC):
     def decode_bits(self, bits):
         pass
 
+    @classmethod
+    def validate(cls, params):
+        pass
+
 
 class NoChannelCode(ChannelCode):
 
@@ -22,12 +26,15 @@ class NoChannelCode(ChannelCode):
     def decode_bits(self, bits):
         return bits
 
+    @classmethod
+    def validate(cls, params):
+        if params:
+            raise ValueError("NoChannelCode does not accept parameters")
+
 class RepetitionChannelCode(ChannelCode):
 
-    def __init__(self, r=3):
-        if r % 2 == 0:
-            raise ValueError("Repetition factor must be odd")
-        self.r = r # Adjust as desired
+    def __init__(self, repetition=3):
+        self.r = repetition
 
     def encode_bits(self, bits):
         return np.repeat(bits, self.r)
@@ -40,6 +47,15 @@ class RepetitionChannelCode(ChannelCode):
         ones = np.sum(blocks, axis=1)
         decoded = (ones > self.r/2).astype(np.uint8)
         return decoded
+
+    @classmethod
+    def validate(cls, params):
+        if 'repetition' not in params:
+            raise ValueError("RepetitionChannelCode requires 'r'")
+        if not isinstance(params['repetition'], int) or params['repetition'] <= 0:
+            raise ValueError("'repetition' must be a positive integer")
+        if params['repetition'] % 2 == 0:
+            raise ValueError("Repetition factor must be odd")
 
 
 class HammingChannelCode(ChannelCode):
@@ -94,7 +110,6 @@ class HammingChannelCode(ChannelCode):
                 error_index = error_pos - 1
                 block[error_index] ^= 1  # correct
 
-            # datos
             data = block[[2, 4, 5, 6]]
             decoded_blocks.append(data)
 
