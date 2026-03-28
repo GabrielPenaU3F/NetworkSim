@@ -3,6 +3,9 @@ import pytest
 
 from src.link_layer.checksum import ParityChecksum, SumChecksum, CRCChecksum
 
+@pytest.fixture
+def bits():
+    return [1, 0, 1, 1]
 
 @pytest.fixture
 def parity_checksum():
@@ -14,9 +17,16 @@ def sum_checksum():
 
 @pytest.fixture
 def crc_checksum():
-    return CRCChecksum([1, 1, 0, 1])
+    return CRCChecksum([1, 1, 0, 1]) # x^3 + x + 1
 
 class TestParityChecksum:
+
+    def test_parity_checksum_returns_binary_ndarray(self, parity_checksum, bits):
+        cs = parity_checksum.compute(bits)
+        assert isinstance(cs, np.ndarray)
+        assert cs.dtype == np.uint8
+        assert cs.size == parity_checksum.size
+        assert np.all((cs == 0) | (cs == 1)) # is binary
 
     def test_parity_checksum(self, parity_checksum):
         assert parity_checksum.compute([1, 1, 1, 0]) != parity_checksum.compute([1, 1, 0, 0])
@@ -27,6 +37,13 @@ class TestParityChecksum:
 
 
 class TestSumChecksum:
+
+    def test_sum_checksum_returns_binary_ndarray(self, sum_checksum, bits):
+        cs = sum_checksum.compute(bits)
+        assert isinstance(cs, np.ndarray)
+        assert cs.dtype == np.uint8
+        assert cs.size == sum_checksum.size
+        assert np.all((cs == 0) | (cs == 1)) # is binary
 
     def test_sum_checksum_basic(self, sum_checksum):
         assert sum_checksum.compute([1, 1, 1, 0]) == 3
@@ -42,6 +59,26 @@ class TestSumChecksum:
 
 
 class TestCRCChecksum:
+
+    def test_sum_checksum_returns_binary_ndarray(self, crc_checksum, bits):
+        cs = crc_checksum.compute(bits)
+        assert isinstance(cs, np.ndarray)
+        assert cs.dtype == np.uint8
+        assert cs.size == crc_checksum.size
+        assert np.all((cs == 0) | (cs == 1)) # is binary
+
+    def test_crc_divisibility(self, crc_checksum):
+        bits = np.array([1, 0, 1, 1, 0, 1], dtype=np.uint8)
+        cs = crc_checksum.compute(bits)
+        codeword = np.concatenate([bits, cs])
+        remainder = crc_checksum._mod2div(codeword)
+        assert np.all(remainder == 0)
+
+    def test_crc_size(self):
+        crc = CRCChecksum(np.array([1, 0, 1, 1]))
+        bits = np.array([1, 1, 0, 1], dtype=np.uint8)
+        cs = crc.compute(bits)
+        assert len(cs) == crc.degree
 
     def test_crc_detects_error(self, crc_checksum):
         crc = CRCChecksum([1, 1, 0, 1])
@@ -77,3 +114,4 @@ class TestCRCChecksum:
     def test_crc_validate_trailing_zero(self):
         with pytest.raises(ValueError):
             CRCChecksum.validate({'crc_generator': [1, 1, 0]})
+

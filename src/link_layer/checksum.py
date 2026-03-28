@@ -1,12 +1,20 @@
 from abc import abstractmethod, ABC
+from numpy import typing as npt
 
 import numpy as np
+
+from src.physical_layer.utils import int_to_bits
 
 
 class Checksum(ABC):
 
     @abstractmethod
-    def compute(self, bits):
+    def compute(self, bits) -> npt.NDArray[np.uint8]:
+        pass
+
+    @property
+    @abstractmethod
+    def size(self):
         pass
 
     @classmethod
@@ -16,17 +24,28 @@ class Checksum(ABC):
 
 class ParityChecksum(Checksum):
 
-    def compute(self, bits):
-        return np.sum(bits) % 2
+    def compute(self, bits) -> npt.NDArray[np.uint8]:
+        cs = np.sum(bits) % 2
+        return np.array([cs], dtype=np.uint8)
+
+    @property
+    def size(self):
+        return 1
 
 
 class SumChecksum(Checksum):
 
     def compute(self, bits):
-        return np.sum(bits) % 256
+        cs = np.sum(bits) % 256
+        cs = int_to_bits(cs, self.size)
+        return np.array(cs, dtype=np.uint8)
+
+    @property
+    def size(self):
+        return 8
 
 
-class CRCChecksum:
+class CRCChecksum(Checksum):
 
     def __init__(self, crc_generator=np.array([1, 1, 0, 1])):
         self.generator = np.array(crc_generator, dtype=np.uint8)
@@ -34,8 +53,12 @@ class CRCChecksum:
 
     def compute(self, bits):
         padded = np.concatenate([bits, np.zeros(self.degree, dtype=np.uint8)])
-        remainder = self._mod2div(padded)
-        return remainder
+        remainder = self._mod2div(padded).astype(np.uint8)
+        return remainder[-self.degree:]
+
+    @property
+    def size(self):
+        return self.degree
 
     def _mod2div(self, dividend):
         divisor = self.generator

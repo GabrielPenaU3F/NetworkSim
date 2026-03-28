@@ -6,6 +6,17 @@ from src.link_layer.frame import Frame
 from src.physical_layer.utils import int_to_bits
 
 
+def pad_bits(bits, size):
+    padding = (size - len(bits) % size) % size
+    return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
+
+
+def unpad_bits(bits, padding):
+    if padding == 0:
+        return bits
+    return bits[:-padding]
+
+
 class Link(Layer):
 
     def __init__(self, physical_layer, checksum, max_retries=5, payload_size=8, seq_size=8, checksum_size=4):
@@ -21,7 +32,7 @@ class Link(Layer):
         for i in range(0, len(bits), self.payload_size):
             payload = bits[i:i + self.payload_size]
             seq = i // self.payload_size
-            cs = self.checksum.compute(payload)
+            cs = self._compute_checksum(payload)
             frames.append(Frame(payload, seq, cs))
         return frames
 
@@ -36,19 +47,10 @@ class Link(Layer):
 
         raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
-    def pad_bits(self, bits):
-        padding = (self.payload_size - len(bits) % self.payload_size) % self.payload_size
-        return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
-
-    def unpad_bits(self, bits, padding):
-        if padding == 0:
-            return bits
-        return bits[:-padding]
-
     # Main transmission method
     def transmit(self, bits):
 
-        bits, padding = self.pad_bits(bits)
+        bits, padding = pad_bits(bits, self.payload_size)
         frames = self.build_frames(bits)
         received_frames = []
         try:
@@ -57,7 +59,7 @@ class Link(Layer):
                 received_frames.append(rf)
 
             received_bits = np.array(received_frames).reshape(-1)
-            return self.unpad_bits(received_bits, padding)
+            return unpad_bits(received_bits, padding)
 
         except LinkError:
             print('Transmission error. Closing link.')
@@ -67,3 +69,10 @@ class Link(Layer):
         payload = frame.get_payload()
         checksum = frame.get_checksum()
         return np.concatenate([seq_bits, payload, checksum])
+
+    def _compute_checksum(self, payload):
+        raw_cs = self.checksum.compute(payload)
+        if self.checksum.size > self.checksum_size:
+            raise ValueError("Checksum is too large to be represented with these protocol settings")
+
+        return pad_bits(raw_cs, self.checksum_size)

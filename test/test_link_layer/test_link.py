@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from src.link_layer.checksum import ParityChecksum
-from src.link_layer.link import Link
+from src.link_layer.link import Link, pad_bits, unpad_bits
 from src.errors import LinkError
 
 class DummyPhysicalLayer:
@@ -28,21 +28,39 @@ def parity_checksum():
     return ParityChecksum()
 
 
-def test_padding(parity_checksum):
-    link = Link(None, checksum=parity_checksum, payload_size=4)
-    padded, padding = link.pad_bits([1, 0, 1, 0, 1])
+def test_padding():
+    padded, padding = pad_bits([1, 0, 1, 0, 1], 4)
     assert np.all(padded == [1, 0, 1, 0, 1, 0, 0, 0])
     assert padding == 3
 
-def test_unpadding(parity_checksum):
-    link = Link(None, checksum=parity_checksum, payload_size=4)
-    result = link.unpad_bits([1, 0, 1, 0, 1, 0, 0, 0], 3)
+def test_unpadding():
+    result = unpad_bits([1, 0, 1, 0, 1, 0, 0, 0], 3)
     assert np.all(result == [1, 0, 1, 0, 1])
 
-def test_split_blocks(parity_checksum):
+def test_compute_checksum_parity(parity_checksum):
+    link = Link(None, parity_checksum, checksum_size=4)
+    bits = [1, 0, 1, 1]
+    raw_cs = parity_checksum.compute(bits)
+    expected_cs = np.concatenate((raw_cs, np.zeros(3)))
+    actual_cs = link._compute_checksum(raw_cs)
+    assert np.all(actual_cs == expected_cs)
+
+
+def test_build_frames(parity_checksum):
     link = Link(None, checksum=parity_checksum, payload_size=4)
-    blocks = link.split_blocks([1, 0, 1, 0, 1, 0, 0, 0])
-    assert np.all(blocks == [[1, 0, 1, 0], [1, 0, 0, 0]])
+    bits = np.tile([0, 1], 4)
+    frames = link.build_frames(bits)
+    assert len(frames) == 2
+    assert np.all(frames[0].get_payload() == [0, 1, 0, 1])
+    assert frames[0].get_seq() == 0
+    assert np.all(frames[1].get_payload() == [0, 1, 0, 1])
+    assert frames[1].get_seq() == 1
+
+def test_build_a_single_frame(parity_checksum):
+    link = Link(None, checksum=parity_checksum, payload_size=8)
+    bits = np.tile([0, 1], 4)
+    frames = link.build_frames(bits)
+    assert np.all(frames[0].get_payload() == bits)
 
 def test_transmit_block_no_error(parity_checksum):
     blocks = [[1, 0, 1, 0]] # A single block
