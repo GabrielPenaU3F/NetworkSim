@@ -12,6 +12,10 @@ def int_to_bits(value, num_bits):
         dtype=np.uint8
     )
 
+def bits_to_int(bits):
+    n = len(bits)
+    return np.sum([bits[k] * np.pow(2, n - k) for k in range(n)])
+
 def hamming_distance(a, b):
     return sum(x != y for x, y in zip(a, b))
 

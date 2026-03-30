@@ -46,16 +46,16 @@ class TestSumChecksum:
         assert np.all((cs == 0) | (cs == 1)) # is binary
 
     def test_sum_checksum_basic(self, sum_checksum):
-        assert sum_checksum.compute([1, 1, 1, 0]) == 3
-        assert sum_checksum.compute([0, 0, 0, 0]) == 0
+        assert np.all(sum_checksum.compute([1, 1, 1, 0]) == [0, 0, 0, 0, 0, 0, 1, 1])
+        assert np.all(sum_checksum.compute([0, 0, 0, 0]) == np.zeros(8))
 
     def test_sum_checksum_detects_bit_flip(self, sum_checksum):
         original = [1, 1, 1, 0]
         corrupted = [1, 1, 0, 0]
-        assert sum_checksum.compute(original) != sum_checksum.compute(corrupted)
+        assert np.any(sum_checksum.compute(original) != sum_checksum.compute(corrupted))
 
     def test_sum_checksum_limit_permutation(self, sum_checksum):
-        assert sum_checksum.compute([1, 0, 1, 0]) == sum_checksum.compute([0, 1, 0, 1])
+        assert np.all(sum_checksum.compute([1, 0, 1, 0]) == sum_checksum.compute([0, 1, 0, 1]))
 
 
 class TestCRCChecksum:

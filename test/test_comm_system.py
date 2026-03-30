@@ -1,11 +1,11 @@
 import pytest
 
 from src.communications_system.comm_system import CommSystem
-from src.system_configurations.config import Config
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
+from src.system_configurations.config_manager import ConfigManager
 
 
 @pytest.fixture
@@ -19,20 +19,20 @@ def message():
 class TestCommSystemPhysicalLayer:
 
     def test_comm_system_no_noise(self, alphabet, message):
-        config = Config(error_prob=0.0, top_layer='physical')
+        config = ConfigManager(error_prob=0.0, top_layer='physical')
         system = CommSystem(config)
         codebook = Codebook(alphabet)
         received = system.transmit(codebook, message)
         assert received == message
 
     def test_build_stack_physical_layer(self):
-        config = Config(top_layer='physical')
+        config = ConfigManager(top_layer='physical')
         system = CommSystem(config)
         assert isinstance(system.stack, PhysicalLayer)
 
     def test_channel_configuration(self):
         from src.physical_layer.codes.channel_codes import NoChannelCode
-        config = Config(
+        config = ConfigManager(
             error_prob=0.2,
             channel_code=NoChannelCode,
             top_layer='physical'
