@@ -18,10 +18,6 @@ class Codebook:
         self.codebook, self.reverse_codebook = self.code.build_codebook(alphabet)
         self.word_length = len(next(iter(self.codebook.values()))) # Valid only if every codeword has the same length
 
-    def print_codebook(self):
-        print('Word -- Code')
-        print([f'{word}: {self.codebook[word]}' for word in self.alphabet])
-
     def encode_message(self, message):
         split_msg = message.split(' ')
         bits = ''.join(self.codebook[word] for word in split_msg)

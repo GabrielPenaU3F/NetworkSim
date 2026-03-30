@@ -16,24 +16,7 @@ def bits_to_int(bits):
     n = len(bits)
     return np.sum([bits[k] * np.pow(2, n - k) for k in range(n)])
 
-def hamming_distance(a, b):
-    return sum(x != y for x, y in zip(a, b))
-
 def select_binary_format(alphabet):
     n = len(alphabet)
     n_bits = int(np.ceil(np.log2(n)))
     return f'0{n_bits}b'
-
-def estimate_aep(sequence, prob_dict):
-    log_probs = []
-
-    for x in sequence:
-        p = prob_dict[x]
-        log_probs.append(-np.log2(p))
-
-    log_probs = np.array(log_probs)
-
-    # promedio acumulado
-    cumulative_avg = np.cumsum(log_probs) / np.arange(1, len(log_probs)+1)
-
-    return cumulative_avg

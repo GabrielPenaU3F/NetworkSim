@@ -3,8 +3,8 @@ from src.communications_system.layer_hub import LayerHub
 
 class CommSystem:
 
-    def __init__(self, config):
-        self.stack = self.build_stack(config)
+    def __init__(self, cfg_manager):
+        self.stack = self._build_stack(cfg_manager)
 
     def transmit(self, codebook, message):
 
@@ -18,22 +18,12 @@ class CommSystem:
         message = codebook.decode_message(received_bits)
         return message
 
-    def build_stack(self, config):
-        top = config.get_system_config().get('top_layer')
-        order = LayerHub.order
+    def _build_stack(self, cfg_manager):
+        top = cfg_manager.get_system_config().top_layer
         builders = LayerHub.builders
-        if top not in order:
+        if top not in builders:
             raise ValueError(f"Unknown top layer: {top}")
 
-        layers_to_build = order[:order.index(top) + 1]
-        lower = None
-        for layer_name in layers_to_build:
-            builder = builders.get(layer_name)
-
-            if lower is None: # The physical layer receives only the configuration file
-                lower = builder(config)
-            else: # Each higher layer receives its immediate bottom one
-                lower = builder(config, lower)
-
-        # At this step, the variable 'lower' contains the highest layer
-        return lower
+        top_builder = builders.get(top)
+        top_layer = top_builder(cfg_manager)
+        return top_layer

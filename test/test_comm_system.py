@@ -7,7 +7,6 @@ from src.physical_layer.codes.channel_codes import RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.system_configurations.config_manager import ConfigManager
 
-
 @pytest.fixture
 def alphabet():
     return AlphabetProvider.provide_alphabet('test_16bits_alph')
@@ -19,25 +18,25 @@ def message():
 class TestCommSystemPhysicalLayer:
 
     def test_comm_system_no_noise(self, alphabet, message):
-        config = ConfigManager(error_prob=0.0, top_layer='physical')
-        system = CommSystem(config)
+        cfg_manager = ConfigManager(error_prob=0.0, top_layer='physical')
+        system = CommSystem(cfg_manager)
         codebook = Codebook(alphabet)
         received = system.transmit(codebook, message)
         assert received == message
 
     def test_build_stack_physical_layer(self):
-        config = ConfigManager(top_layer='physical')
-        system = CommSystem(config)
+        cfg_manager = ConfigManager(top_layer='physical')
+        system = CommSystem(cfg_manager)
         assert isinstance(system.stack, PhysicalLayer)
 
     def test_channel_configuration(self):
         from src.physical_layer.codes.channel_codes import NoChannelCode
-        config = ConfigManager(
+        cfg_manager = ConfigManager(
             error_prob=0.2,
             channel_code=NoChannelCode,
             top_layer='physical'
         )
-        system = CommSystem(config)
+        system = CommSystem(cfg_manager)
         channel_code = system.stack.channel_code
         channel = system.stack.channel
 
@@ -48,34 +47,35 @@ class TestCommSystemPhysicalLayer:
 class TestCommSystemLinkLayer:
 
     def test_comm_system_no_noise(self, alphabet, message):
-        config = Config(error_prob=0.0, top_layer='link')
-        system = CommSystem(config)
+        cfg_manager = ConfigManager(error_prob=0.0, top_layer='link')
+        system = CommSystem(cfg_manager)
         codebook = Codebook(alphabet)
         received = system.transmit(codebook, message)
         assert received == message
 
     def test_comm_system_with_noise_and_retries(self, alphabet, message):
-        config = Config(
+        cfg_manager = ConfigManager(
             error_prob=0.1,
             channel_code=RepetitionChannelCode,
+            repetition=3,
             max_retries=50,
             top_layer = 'link'
         )
-        system = CommSystem(config)
+        system = CommSystem(cfg_manager)
         codebook = Codebook(alphabet)
         received = system.transmit(codebook, message)
         assert received == message
 
     def test_build_stack_link_layer(self):
-        config = Config(top_layer='link')
-        system = CommSystem(config)
+        cfg_manager = ConfigManager(top_layer='link')
+        system = CommSystem(cfg_manager)
         from src.link_layer.link import Link
         assert isinstance(system.stack, Link)
         assert isinstance(system.stack.lower_layer, PhysicalLayer)
 
     def test_stack_order_is_correct(self):
-        config = Config(top_layer='link')
-        system = CommSystem(config)
+        cfg_manager = ConfigManager(top_layer='link')
+        system = CommSystem(cfg_manager)
         link = system.stack
         physical = link.lower_layer
 
@@ -83,10 +83,10 @@ class TestCommSystemLinkLayer:
 
     def test_link_has_checksum(self):
         from src.link_layer.checksum import ParityChecksum
-        config = Config(
+        cfg_manager = ConfigManager(
             checksum=ParityChecksum,
             top_layer='link'
         )
-        system = CommSystem(config)
+        system = CommSystem(cfg_manager)
         link = system.stack
         assert isinstance(link.checksum, ParityChecksum)

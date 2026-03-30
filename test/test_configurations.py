@@ -5,6 +5,10 @@ from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode
 from src.system_configurations.config_manager import ConfigManager
 
+def test_unknown_parameter_raises_error():
+    with pytest.raises(KeyError):
+        ConfigManager(apple=2)
+
 class TestPhysicalLayerConfig:
 
     def test_physical_config_defaults(self):

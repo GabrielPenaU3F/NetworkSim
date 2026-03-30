@@ -51,7 +51,7 @@ class RepetitionChannelCode(ChannelCode):
     @classmethod
     def validate(cls, params):
         if 'repetition' not in params:
-            raise ValueError("RepetitionChannelCode requires 'r'")
+            raise ValueError("RepetitionChannelCode requires 'repetition' parameter")
         if not isinstance(params['repetition'], int) or params['repetition'] <= 0:
             raise ValueError("'repetition' must be a positive integer")
         if params['repetition'] % 2 == 0:

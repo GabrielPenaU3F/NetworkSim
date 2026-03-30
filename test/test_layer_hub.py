@@ -8,32 +8,23 @@ from src.link_layer.link import Link
 from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
-from src.system_configurations.config import PhysicalConfig, LinkConfig, FrameConfig
+from src.system_configurations.config_manager import ConfigManager
 
 
 @pytest.fixture
-def dummy_physical_layer():
-    return PhysicalLayer(BinarySymmetricChannel, NoChannelCode)
-
-@pytest.fixture
-def link_config_fixture():
-    return LinkConfig(
+def config_manager():
+    return ConfigManager(
+            error_prob=0,
+            channel_code=NoChannelCode,
             max_retries=5,
-            frame_config=FrameConfig(payload_size=8, seq_size=4, checksum_size=4),
-            checksum_cls=CRCChecksum,
-            checksum_params={}
+            payload_size=8, seq_size=4, checksum_size=4,
+            checksum=CRCChecksum
         )
 
 class TestPhysicalLayerBuilder:
 
-    def test_build_physical_layer_basic(self):
-        config = PhysicalConfig(
-            channel_cls=BinarySymmetricChannel,
-            channel_params={'error_prob': None, 'channel_rng': None},
-            code_cls=NoChannelCode,
-            code_params={}
-        )
-        layer = LayerHub.build_physical_layer(config)
+    def test_build_physical_layer_basic(self, config_manager):
+        layer = LayerHub.build_physical_layer(config_manager)
         assert isinstance(layer, PhysicalLayer)
         assert isinstance(layer.channel, BinarySymmetricChannel)
         assert isinstance(layer.channel_code, NoChannelCode)
@@ -41,11 +32,11 @@ class TestPhysicalLayerBuilder:
     def test_build_physical_layer_channel_params(self):
         p = 0.3
         rng = np.random.default_rng(0)
-        config = PhysicalConfig(
-            channel_cls=BinarySymmetricChannel,
-            channel_params={'error_prob': p, 'channel_rng': rng},
-            code_cls=NoChannelCode,
-            code_params={}
+        config=ConfigManager(
+            channel=BinarySymmetricChannel,
+            error_prob=p,
+            channel_code=NoChannelCode,
+            channel_rng=rng
         )
         layer = LayerHub.build_physical_layer(config)
         assert layer.channel.error_prob == p
@@ -54,14 +45,14 @@ class TestPhysicalLayerBuilder:
 
 class TestLinkLayerBuilder:
 
-    def test_build_link_layer_basic(self, dummy_physical_layer, link_config_fixture):
-        layer = LayerHub.build_link_layer(link_config_fixture, dummy_physical_layer)
+    def test_build_link_layer_basic(self, config_manager):
+        layer = LayerHub.build_link_layer(config_manager)
         assert isinstance(layer, Link)
         assert isinstance(layer.lower_layer, PhysicalLayer)
         assert isinstance(layer.checksum, CRCChecksum)
 
-    def test_build_link_layer_frame_params(self, dummy_physical_layer, link_config_fixture):
-        layer = LayerHub.build_link_layer(link_config_fixture, dummy_physical_layer)
+    def test_build_link_layer_frame_params(self, config_manager):
+        layer = LayerHub.build_link_layer(config_manager)
         assert isinstance(layer, Link)
         assert isinstance(layer.lower_layer, PhysicalLayer)
         assert isinstance(layer.checksum, CRCChecksum)
