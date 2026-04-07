@@ -29,6 +29,13 @@ class TestInfrastructureConfig:
         infra_cfg = manager.get_infrastructure_config()
         assert infra_cfg.channel_params['error_prob'] == 0.2
 
+
+class TestProtocolStackConfig:
+
+    def test_default_top_layer_is_link(self, cfg_manager):
+        stack_cfg = cfg_manager.get_protocol_stack_config()
+        assert stack_cfg.top_layer == 'link'
+
 class TestPhysicalLayerConfig:
 
     def test_physical_config_defaults(self, cfg_manager):

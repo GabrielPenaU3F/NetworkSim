@@ -1,11 +1,13 @@
 PARAM_MAP = {
 
     # # # Infrastructure parameters
-    'top_layer': lambda cfg, v: cfg['infrastructure'].__setitem__('top_layer', v),
     'alphabet': lambda cfg, v: cfg['infrastructure'].__setitem__('alphabet', v),
     'channel': lambda cfg, v: cfg['infrastructure']['channel'].__setitem__('class', v),
     'error_prob': lambda cfg, v: cfg['infrastructure']['channel']['params'].__setitem__('error_prob', v),
     'channel_rng': lambda cfg, v: cfg['infrastructure']['channel']['params'].__setitem__('channel_rng', v),
+
+    # # # Protocol stack parameters
+    'top_layer': lambda cfg, v: cfg['protocol_stack'].__setitem__('top_layer', v),
 
     # # # Physical layer parameters
 

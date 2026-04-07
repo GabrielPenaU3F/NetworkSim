@@ -16,7 +16,7 @@ class Config(ABC):
 
 class InfrastructureConfig(Config):
 
-    DEFAULTS = {'top_layer': 'link',
+    DEFAULTS = {
                 'alphabet': 'test_16bits_alph',
                 'channel': {
                     'class': BinarySymmetricChannel,
@@ -27,12 +27,21 @@ class InfrastructureConfig(Config):
                 }
     }
 
-    def __init__(self, top_layer, alphabet,
+    def __init__(self, alphabet,
                  channel_cls, channel_params):
-        self.top_layer = top_layer
         self.alphabet = alphabet
         self.channel_cls = channel_cls
         self.channel_params = channel_params
+
+
+class ProtocolStackConfig(Config):
+
+    DEFAULTS = {
+        'top_layer': 'link'
+    }
+
+    def __init__(self, top_layer):
+        self.top_layer = top_layer
 
 
 class PhysicalConfig(Config):
