@@ -1,7 +1,6 @@
 import pytest
 
 from src.link_layer.link_layer import LinkLayer
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
@@ -9,20 +8,15 @@ from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 
 @pytest.fixture
-def alphabet():
-    return AlphabetProvider.provide_alphabet('test_16bits_alph')
-
-@pytest.fixture
 def message():
     return "sol mar luz bosque"
 
 class TestProtocolStackPhysicalLayer:
 
-    def test_stack_no_noise(self, alphabet, message):
+    def test_stack_no_noise(self, message):
         cfg_manager = ConfigManager(error_prob=0.0, top_layer='physical')
         stack = ProtocolStack(cfg_manager)
-        codebook = Codebook(alphabet)
-        received = stack.transmit(codebook, message)
+        received = stack.transmit(message)
         assert received == message
 
     def test_build_stack_physical_layer(self):
@@ -47,14 +41,13 @@ class TestProtocolStackPhysicalLayer:
 
 class TestProtocolStackLinkLayer:
 
-    def test_stack_no_noise(self, alphabet, message):
+    def test_stack_no_noise(self, message):
         cfg_manager = ConfigManager(error_prob=0.0, top_layer='link')
         stack = ProtocolStack(cfg_manager)
-        codebook = Codebook(alphabet)
-        received = stack.transmit(codebook, message)
+        received = stack.transmit(message)
         assert received == message
 
-    def test_stack_with_noise_and_retries(self, alphabet, message):
+    def test_stack_with_noise_and_retries(self, message):
         cfg_manager = ConfigManager(
             error_prob=0.1,
             channel_code=RepetitionChannelCode,
@@ -63,8 +56,7 @@ class TestProtocolStackLinkLayer:
             top_layer = 'link'
         )
         stack = ProtocolStack(cfg_manager)
-        codebook = Codebook(alphabet)
-        received = stack.transmit(codebook, message)
+        received = stack.transmit(message)
         assert received == message
 
     def test_build_stack_link_layer(self):

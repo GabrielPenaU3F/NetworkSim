@@ -30,6 +30,7 @@ class ConfigManager:
     def _build_system_config(self, cfg_dict):
         return SystemConfig(
             top_layer=cfg_dict['top_layer'],
+            alphabet=cfg_dict['alphabet']
         )
 
     def _build_physical_config(self, cfg_dict):

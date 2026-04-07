@@ -16,10 +16,12 @@ class Config(ABC):
 
 class SystemConfig(Config):
 
-    DEFAULTS = {'top_layer': 'link'}
+    DEFAULTS = {'top_layer': 'link',
+                'alphabet': 'test_16bits_alph'}
 
-    def __init__(self, top_layer):
+    def __init__(self, top_layer, alphabet):
         self.top_layer = top_layer
+        self.alphabet = alphabet
 
 
 class PhysicalConfig(Config):

@@ -1,22 +1,29 @@
+from src.physical_layer.alphabets.alphabets import AlphabetProvider
+from src.physical_layer.codebook import Codebook
 from src.protocol_stack.layer_hub import LayerHub
 
 
 class ProtocolStack:
 
     def __init__(self, cfg_manager):
+        alphabet_name = cfg_manager.get_system_config().alphabet
+        if alphabet_name is None:
+            alphabet_name = AlphabetProvider.provide_alphabet('test_16bits_alph')
+        alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
+        self.codebook = Codebook(alphabet)
         self.top_layer = self._build_stack(cfg_manager)
 
-    def transmit(self, codebook, message):
+    def transmit(self, message, interface=None):
+        source_bits = self.codebook.encode_message(message)
+        if interface is None:
+            received_bits = self._transmit_legacy(source_bits)
+            return self.codebook.decode_message(received_bits)
+        else:
+            self._transmit_current(source_bits, interface)
 
-        # Source encoding
-        source_bits = codebook.encode_message(message)
 
-        # Transmission
-        received_bits = self.top_layer.transmit(source_bits)
-
-        # Source decoding
-        message = codebook.decode_message(received_bits)
-        return message
+    def _transmit_legacy(self, bits):
+        return self.top_layer.transmit(bits)
 
     def _build_stack(self, cfg_manager):
         top = cfg_manager.get_system_config().top_layer
@@ -27,3 +34,9 @@ class ProtocolStack:
         top_builder = builders.get(top)
         top_layer = top_builder(cfg_manager)
         return top_layer
+
+    def _transmit_current(self, bits, interface=None):
+        self.top_layer.transmit(bits, interface)
+
+    def _on_receive_bits(self, bits):
+        self._last_received_bits = bits

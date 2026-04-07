@@ -1,5 +1,8 @@
 PARAM_MAP = {
+
+    # # # System-wide parameters
     'top_layer': lambda cfg, v: cfg['system'].__setitem__('top_layer', v),
+    'alphabet': lambda cfg, v: cfg['system'].__setitem__('alphabet', v),
 
     # # # Physical layer parameters
     'channel': lambda cfg, v: cfg['physical']['channel'].__setitem__('class', v),

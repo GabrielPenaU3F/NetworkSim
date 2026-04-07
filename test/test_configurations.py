@@ -9,6 +9,13 @@ def test_unknown_parameter_raises_error():
     with pytest.raises(KeyError):
         ConfigManager(apple=2)
 
+class TestSystemConfig:
+
+    def test_default_alphabet_is_the_test_alphpabet(self):
+        cfg = ConfigManager()
+        system_cfg = cfg.get_system_config()
+        assert system_cfg.alphabet == 'test_16bits_alph'
+
 class TestPhysicalLayerConfig:
 
     def test_physical_config_defaults(self):
