@@ -1,13 +1,13 @@
 PARAM_MAP = {
 
-    # # # System-wide parameters
-    'top_layer': lambda cfg, v: cfg['system'].__setitem__('top_layer', v),
-    'alphabet': lambda cfg, v: cfg['system'].__setitem__('alphabet', v),
+    # # # Infrastructure parameters
+    'top_layer': lambda cfg, v: cfg['infrastructure'].__setitem__('top_layer', v),
+    'alphabet': lambda cfg, v: cfg['infrastructure'].__setitem__('alphabet', v),
+    'channel': lambda cfg, v: cfg['infrastructure']['channel'].__setitem__('class', v),
+    'error_prob': lambda cfg, v: cfg['infrastructure']['channel']['params'].__setitem__('error_prob', v),
+    'channel_rng': lambda cfg, v: cfg['infrastructure']['channel']['params'].__setitem__('channel_rng', v),
 
     # # # Physical layer parameters
-    'channel': lambda cfg, v: cfg['physical']['channel'].__setitem__('class', v),
-    'error_prob': lambda cfg, v: cfg['physical']['channel']['params'].__setitem__('error_prob', v),
-    'channel_rng': lambda cfg, v: cfg['physical']['channel']['params'].__setitem__('channel_rng', v),
 
     # Channel code parameters
     'channel_code': lambda cfg, v: cfg['physical']['channel_code'].__setitem__('class', v),

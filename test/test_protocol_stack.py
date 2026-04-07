@@ -1,8 +1,7 @@
 import pytest
 
 from src.link_layer.link_layer import LinkLayer
-from src.physical_layer.codebook import Codebook
-from src.physical_layer.codes.channel_codes import RepetitionChannelCode
+from src.physical_layer.channel_codes.channel_codes import RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
@@ -25,7 +24,7 @@ class TestProtocolStackPhysicalLayer:
         assert isinstance(stack.top_layer, PhysicalLayer)
 
     def test_channel_configuration(self):
-        from src.physical_layer.codes.channel_codes import NoChannelCode
+        from src.physical_layer.channel_codes.channel_codes import NoChannelCode
         cfg_manager = ConfigManager(
             error_prob=0.2,
             channel_code=NoChannelCode,

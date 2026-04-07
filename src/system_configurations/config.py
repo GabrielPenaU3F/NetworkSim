@@ -1,8 +1,8 @@
 from abc import ABC
 
 from src.link_layer.checksum import ParityChecksum
-from src.physical_layer.channels import BinarySymmetricChannel
-from src.physical_layer.codes.channel_codes import NoChannelCode
+from src.infrastructure.channels import BinarySymmetricChannel
+from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 
 
 class Config(ABC):
@@ -14,36 +14,37 @@ class Config(ABC):
         return cls.DEFAULTS
 
 
-class SystemConfig(Config):
+class InfrastructureConfig(Config):
 
     DEFAULTS = {'top_layer': 'link',
-                'alphabet': 'test_16bits_alph'}
+                'alphabet': 'test_16bits_alph',
+                'channel': {
+                    'class': BinarySymmetricChannel,
+                    'params': {
+                        'error_prob': 0.05,
+                        'channel_rng': None
+                    }
+                }
+    }
 
-    def __init__(self, top_layer, alphabet):
+    def __init__(self, top_layer, alphabet,
+                 channel_cls, channel_params):
         self.top_layer = top_layer
         self.alphabet = alphabet
+        self.channel_cls = channel_cls
+        self.channel_params = channel_params
 
 
 class PhysicalConfig(Config):
 
     DEFAULTS = {
-        'channel': {
-            'class': BinarySymmetricChannel,
-            'params': {
-                'error_prob': 0.05,
-                'channel_rng': None
-            }
-        },
         'channel_code': {
             'class': NoChannelCode,
             'params': {}
         }
     }
 
-    def __init__(self, channel_cls, channel_params,
-                 code_cls, code_params):
-        self.channel_cls = channel_cls
-        self.channel_params = channel_params
+    def __init__(self, code_cls, code_params):
         self.code_cls = code_cls
         self.code_params = code_params
 

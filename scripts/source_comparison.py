@@ -3,8 +3,8 @@ from collections import Counter
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
-from src.physical_layer.sources import UniformIIDSource, MarkovSource, BurstySource, ZipfIIDSource
+from src.infrastructure.alphabets import AlphabetProvider
+from src.infrastructure.sources import UniformIIDSource, MarkovSource, BurstySource, ZipfIIDSource
 
 
 def generate_markov_transition_matrix():

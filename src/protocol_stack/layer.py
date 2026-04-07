@@ -9,5 +9,5 @@ class Layer(ABC):
         return self.lower_layer
 
     @abstractmethod
-    def transmit(self, bits):
+    def transmit(self, bits, interface=None):
         pass

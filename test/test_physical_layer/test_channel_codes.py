@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.physical_layer.codes.channel_codes import (
+from src.physical_layer.channel_codes.channel_codes import (
     NoChannelCode,
     RepetitionChannelCode, HammingChannelCode
 )

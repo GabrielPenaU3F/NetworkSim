@@ -1,7 +1,7 @@
 # Test alphabet
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
-from src.physical_layer.channels import BinarySymmetricChannel
-from src.physical_layer.codebook import Codebook
+from src.infrastructure.alphabets import AlphabetProvider
+from src.infrastructure.channels import BinarySymmetricChannel
+from src.infrastructure.codebook import Codebook
 
 alphabet = AlphabetProvider.provide_alphabet('test_16bits_alph')
 codebook = Codebook(alphabet)

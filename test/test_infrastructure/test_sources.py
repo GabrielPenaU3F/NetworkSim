@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
-from src.physical_layer.sources import UniformIIDSource, ZipfIIDSource, MarkovSource, BurstySource
+from src.infrastructure.alphabets import AlphabetProvider
+from src.infrastructure.sources import UniformIIDSource, ZipfIIDSource, MarkovSource, BurstySource
 
 
 @pytest.fixture

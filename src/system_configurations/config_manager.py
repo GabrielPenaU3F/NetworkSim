@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from src.system_configurations.config import PhysicalConfig, LinkConfig, FrameConfig, SystemConfig
+from src.system_configurations.config import PhysicalConfig, LinkConfig, FrameConfig, InfrastructureConfig
 from src.system_configurations.parameter_routing import route_param
 
 
@@ -9,13 +9,13 @@ class ConfigManager:
     def __init__(self, **kwargs):
 
         # Copy defaults
-        system_cfg_dict = deepcopy(SystemConfig.get_defaults())
+        infrastructure_cfg_dict = deepcopy(InfrastructureConfig.get_defaults())
         physical_cfg_dict = deepcopy(PhysicalConfig.get_defaults())
         link_cfg_dict = deepcopy(LinkConfig.get_defaults())
 
         # Update those which are provided by parameter
         config_dicts = {
-            'system': system_cfg_dict,
+            'infrastructure': infrastructure_cfg_dict,
             'physical': physical_cfg_dict,
             'link': link_cfg_dict
         }
@@ -23,20 +23,20 @@ class ConfigManager:
             route_param(config_dicts, key, value)
 
         # Build configuration objects
-        self.system_config = self._build_system_config(system_cfg_dict)
+        self.infrastructure_config = self._build_infrastructure_config(infrastructure_cfg_dict)
         self.physical_config = self._build_physical_config(physical_cfg_dict)
         self.link_config = self._build_link_config(link_cfg_dict)
 
-    def _build_system_config(self, cfg_dict):
-        return SystemConfig(
+    def _build_infrastructure_config(self, cfg_dict):
+        return InfrastructureConfig(
             top_layer=cfg_dict['top_layer'],
-            alphabet=cfg_dict['alphabet']
+            alphabet=cfg_dict['alphabet'],
+            channel_cls=cfg_dict['channel']['class'],
+            channel_params=cfg_dict['channel']['params'],
         )
 
     def _build_physical_config(self, cfg_dict):
         return PhysicalConfig(
-            channel_cls=cfg_dict['channel']['class'],
-            channel_params=cfg_dict['channel']['params'],
             code_cls=cfg_dict['channel_code']['class'],
             code_params=cfg_dict['channel_code']['params']
         )
@@ -53,8 +53,8 @@ class ConfigManager:
     def _build_frame_config(self, params):
         return FrameConfig(params['payload_size'], params['seq_size'], params['checksum_size'])
 
-    def get_system_config(self):
-        return self.system_config
+    def get_infrastructure_config(self):
+        return self.infrastructure_config
 
     def get_physical_layer_config(self):
         return self.physical_config

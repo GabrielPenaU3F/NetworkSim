@@ -4,8 +4,8 @@ from numpy.random import Generator
 
 from src.link_layer.checksum import CRCChecksum
 from src.link_layer.link_layer import LinkLayer
-from src.physical_layer.channels import BinarySymmetricChannel
-from src.physical_layer.codes.channel_codes import NoChannelCode
+from src.infrastructure.channels import BinarySymmetricChannel
+from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.layer_hub import LayerHub
 from src.system_configurations.config_manager import ConfigManager

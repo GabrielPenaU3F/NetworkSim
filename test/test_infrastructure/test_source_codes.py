@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
-from src.physical_layer.codes.source_codes import BasicSourceCode
+from src.infrastructure.alphabets import AlphabetProvider
+from src.physical_layer.channel_codes.source_codes import BasicSourceCode
 
 
 @pytest.fixture

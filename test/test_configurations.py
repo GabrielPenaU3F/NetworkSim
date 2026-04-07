@@ -1,59 +1,60 @@
 import pytest
 
 from src.link_layer.checksum import ParityChecksum, CRCChecksum
-from src.physical_layer.channels import BinarySymmetricChannel
-from src.physical_layer.codes.channel_codes import NoChannelCode
+from src.infrastructure.channels import BinarySymmetricChannel
+from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 from src.system_configurations.config_manager import ConfigManager
+
+@pytest.fixture
+def cfg_manager():
+    return ConfigManager()
 
 def test_unknown_parameter_raises_error():
     with pytest.raises(KeyError):
         ConfigManager(apple=2)
 
-class TestSystemConfig:
+class TestInfrastructureConfig:
 
-    def test_default_alphabet_is_the_test_alphpabet(self):
-        cfg = ConfigManager()
-        system_cfg = cfg.get_system_config()
-        assert system_cfg.alphabet == 'test_16bits_alph'
+    def test_default_alphabet_is_the_test_alphpabet(self, cfg_manager):
+        infra_cfg = cfg_manager.get_infrastructure_config()
+        assert infra_cfg.alphabet == 'test_16bits_alph'
+
+    def test_infrastructure_config_defaults(self, cfg_manager):
+        infra_cfg = cfg_manager.get_infrastructure_config()
+        assert infra_cfg.channel_cls is BinarySymmetricChannel
+        assert infra_cfg.channel_params['error_prob'] == 0.05
+
+    def test_infrastructure_config_override(self):
+        manager = ConfigManager(error_prob=0.2)
+        infra_cfg = manager.get_infrastructure_config()
+        assert infra_cfg.channel_params['error_prob'] == 0.2
 
 class TestPhysicalLayerConfig:
 
-    def test_physical_config_defaults(self):
-        cfg = ConfigManager()
-        phys = cfg.get_physical_layer_config()
-        assert phys.channel_cls is BinarySymmetricChannel
-        assert phys.channel_params['error_prob'] == 0.05
+    def test_physical_config_defaults(self, cfg_manager):
+        phys = cfg_manager.get_physical_layer_config()
         assert phys.code_cls is NoChannelCode
-
-    def test_physical_config_override(self):
-        manager = ConfigManager(error_prob=0.2)
-        phys = manager.get_physical_layer_config()
-        assert phys.channel_params['error_prob'] == 0.2
 
     def test_physical_config_override_does_not_affect_other_parameters(self):
         manager = ConfigManager(error_prob=0.2)
         phys = manager.get_physical_layer_config()
-        assert phys.channel_cls is BinarySymmetricChannel
         assert phys.code_cls is NoChannelCode
 
 
 class TestLinkLayerConfig:
 
-    def test_link_config_defaults(self):
-        cfg = ConfigManager()
-        link = cfg.get_link_layer_config()
+    def test_link_config_defaults(self, cfg_manager):
+        link = cfg_manager.get_link_layer_config()
         assert link.max_retries == 5
 
-    def test_frame_config_defaults(self):
-        cfg = ConfigManager()
-        frame_cfg = cfg.get_link_layer_config().frame_config
+    def test_frame_config_defaults(self, cfg_manager):
+        frame_cfg = cfg_manager.get_link_layer_config().frame_config
         assert frame_cfg.payload_size == 8
         assert frame_cfg.seq_size == 8
         assert frame_cfg.checksum_size == 4
 
-    def test_link_config_checksum_defaults(self):
-        cfg = ConfigManager()
-        link = cfg.get_link_layer_config()
+    def test_link_config_checksum_defaults(self, cfg_manager):
+        link = cfg_manager.get_link_layer_config()
         assert link.checksum_cls is ParityChecksum
         assert link.checksum_params == {}
 

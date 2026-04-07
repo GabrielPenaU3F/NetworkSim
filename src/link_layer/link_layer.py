@@ -52,32 +52,38 @@ class LinkLayer(Layer):
         body = np.concatenate((seq_bits, payload))
         return body
 
-    def transmit_frame(self, frame):
+    def transmit_frame(self, frame, interface=None):
 
-        for _ in range(self.max_retries):
+        bits = self._serialize_frame(frame)
 
-            bits = self._serialize_frame(frame)
-            received_bits = self.lower_layer.transmit(bits)
-            received_body = received_bits[:self.seq_size + self.payload_size]
-            if np.all(self._compute_checksum(received_body) == frame.get_checksum()):
-                received_frame = self._deserialize_frame(received_bits)
-                return received_frame
+        if interface is None:
+            # modo legacy completo
+            for _ in range(self.max_retries):
+                received_bits = self.lower_layer.transmit(bits)
+                received_body = received_bits[:self.seq_size + self.payload_size]
+                if np.all(self._compute_checksum(received_body) == frame.get_checksum()):
+                    return self._deserialize_frame(received_bits)
+
+        else:
+            # 🔥 modo red: SIN RETRY, SIN ESPERA
+            self.lower_layer.transmit(bits, interface)
 
         raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
     # Main transmission method
-    def transmit(self, bits):
+    def transmit(self, bits, interface=None):
 
         bits, padding = pad_bits(bits, self.payload_size)
         frames = self.build_frames(bits)
         received_frames = []
         try:
             for frame in frames:
-                rf = self.transmit_frame(frame)
+                rf = self.transmit_frame(frame, interface)
                 received_frames.append(rf)
 
             received_bits = np.concatenate([frame.get_payload() for frame in received_frames])
-            return unpad_bits(received_bits, padding)
+            unpadded = unpad_bits(received_bits, padding)
+            return unpadded
 
         except LinkError:
             print('Transmission error. Closing link.')

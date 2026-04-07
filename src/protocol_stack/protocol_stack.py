@@ -1,12 +1,12 @@
-from src.physical_layer.alphabets.alphabets import AlphabetProvider
-from src.physical_layer.codebook import Codebook
+from src.infrastructure.alphabets import AlphabetProvider
+from src.infrastructure.codebook import Codebook
 from src.protocol_stack.layer_hub import LayerHub
 
 
 class ProtocolStack:
 
     def __init__(self, cfg_manager):
-        alphabet_name = cfg_manager.get_system_config().alphabet
+        alphabet_name = cfg_manager.get_infrastructure_config().alphabet
         alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
         self.codebook = Codebook(alphabet)
         self.top_layer = self._build_stack(cfg_manager)
@@ -24,7 +24,7 @@ class ProtocolStack:
         return self.top_layer.transmit(bits)
 
     def _build_stack(self, cfg_manager):
-        top = cfg_manager.get_system_config().top_layer
+        top = cfg_manager.get_infrastructure_config().top_layer
         builders = LayerHub.builders
         if top not in builders:
             raise ValueError(f"Unknown top layer: {top}")
@@ -36,5 +36,9 @@ class ProtocolStack:
     def _transmit_current(self, bits, interface=None):
         self.top_layer.transmit(bits, interface)
 
-    def _on_receive_bits(self, bits):
-        self._last_received_bits = bits
+    def receive(self, bits):
+        message = self.codebook.decode_message(bits)
+        self._handle_message(message)
+
+    def _handle_message(self, message):
+        pass
