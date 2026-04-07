@@ -1,4 +1,4 @@
-from src.link_layer.link import Link
+from src.link_layer.link_layer import LinkLayer
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.system_configurations.config_manager import ConfigManager
 
@@ -19,7 +19,7 @@ class LayerHub:
         config = cfg_manager.get_link_layer_config()
         checksum = config.checksum_cls(**config.checksum_params)
         fc = config.frame_config
-        return Link(physical, checksum, config.max_retries,
+        return LinkLayer(physical, checksum, config.max_retries,
                     fc.payload_size, fc.seq_size, fc.checksum_size)
 
     builders = {

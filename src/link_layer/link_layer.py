@@ -1,10 +1,12 @@
 import numpy as np
 
-from src.communications_system.layer import Layer
+
 from src.errors import LinkError
 from src.link_layer.frame import Frame
 from src.physical_layer.utils import int_to_bits, bits_to_int
 from numpy import typing as npt
+
+from src.protocol_stack.layer import Layer
 
 
 def pad_bits(bits, size):
@@ -18,7 +20,7 @@ def unpad_bits(bits, padding):
     return bits[:-padding]
 
 
-class Link(Layer):
+class LinkLayer(Layer):
 
     '''
         Current frame serializing protocol:

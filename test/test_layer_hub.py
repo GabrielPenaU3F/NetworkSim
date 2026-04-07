@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 from numpy.random import Generator
 
-from src.communications_system.layer_hub import LayerHub
 from src.link_layer.checksum import CRCChecksum
-from src.link_layer.link import Link
+from src.link_layer.link_layer import LinkLayer
 from src.physical_layer.channels import BinarySymmetricChannel
 from src.physical_layer.codes.channel_codes import NoChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
+from src.protocol_stack.layer_hub import LayerHub
 from src.system_configurations.config_manager import ConfigManager
 
 
@@ -47,12 +47,12 @@ class TestLinkLayerBuilder:
 
     def test_build_link_layer_basic(self, config_manager):
         layer = LayerHub.build_link_layer(config_manager)
-        assert isinstance(layer, Link)
+        assert isinstance(layer, LinkLayer)
         assert isinstance(layer.lower_layer, PhysicalLayer)
         assert isinstance(layer.checksum, CRCChecksum)
 
     def test_build_link_layer_frame_params(self, config_manager):
         layer = LayerHub.build_link_layer(config_manager)
-        assert isinstance(layer, Link)
+        assert isinstance(layer, LinkLayer)
         assert isinstance(layer.lower_layer, PhysicalLayer)
         assert isinstance(layer.checksum, CRCChecksum)

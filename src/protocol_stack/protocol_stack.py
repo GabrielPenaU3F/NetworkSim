@@ -1,10 +1,10 @@
-from src.communications_system.layer_hub import LayerHub
+from src.protocol_stack.layer_hub import LayerHub
 
 
-class CommSystem:
+class ProtocolStack:
 
     def __init__(self, cfg_manager):
-        self.stack = self._build_stack(cfg_manager)
+        self.top_layer = self._build_stack(cfg_manager)
 
     def transmit(self, codebook, message):
 
@@ -12,7 +12,7 @@ class CommSystem:
         source_bits = codebook.encode_message(message)
 
         # Transmission
-        received_bits = self.stack.transmit(source_bits)
+        received_bits = self.top_layer.transmit(source_bits)
 
         # Source decoding
         message = codebook.decode_message(received_bits)

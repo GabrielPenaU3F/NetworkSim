@@ -3,7 +3,7 @@ import pytest
 
 from src.link_layer.checksum import ParityChecksum
 from src.link_layer.frame import Frame
-from src.link_layer.link import Link, pad_bits, unpad_bits
+from src.link_layer.link_layer import LinkLayer, pad_bits, unpad_bits
 from src.errors import LinkError
 
 class DummyPhysicalLayer:
@@ -28,7 +28,7 @@ def build_link_and_frame(parity_checksum):
 def run_retry_test(parity_checksum, corrupted_bits, correct_bits):
     physical_layer = DummyPhysicalLayer([corrupted_bits, correct_bits])
 
-    link = Link(
+    link = LinkLayer(
         physical_layer,
         parity_checksum,
         payload_size=4,
@@ -64,7 +64,7 @@ def test_unpadding():
     assert np.all(result == [1, 0, 1, 0, 1])
 
 def test_compute_checksum_parity(parity_checksum):
-    link = Link(None, parity_checksum, checksum_size=4)
+    link = LinkLayer(None, parity_checksum, checksum_size=4)
     bits = [1, 0, 1, 1]
     raw_cs = parity_checksum.compute(bits)
     expected_cs = np.concatenate((raw_cs, np.zeros(3)))
@@ -72,7 +72,7 @@ def test_compute_checksum_parity(parity_checksum):
     assert np.all(actual_cs == expected_cs)
 
 def test_build_frames(parity_checksum):
-    link = Link(None, checksum=parity_checksum, payload_size=4)
+    link = LinkLayer(None, checksum=parity_checksum, payload_size=4)
     bits = np.tile([0, 1], 4)
     frames = link.build_frames(bits)
     assert len(frames) == 2
@@ -87,20 +87,20 @@ def test_build_frames(parity_checksum):
     assert np.all(frames[1].get_checksum()[0] == parity_checksum.compute(body_2)[0])
 
 def test_build_a_single_frame(parity_checksum):
-    link = Link(None, checksum=parity_checksum, payload_size=8)
+    link = LinkLayer(None, checksum=parity_checksum, payload_size=8)
     bits = np.tile([0, 1], 4)
     frames = link.build_frames(bits)
     assert np.all(frames[0].get_payload() == bits)
 
 def test_serialize_frame(parity_checksum):
-    link = Link(None, checksum=parity_checksum, seq_size=2, payload_size=4)
+    link = LinkLayer(None, checksum=parity_checksum, seq_size=2, payload_size=4)
     expected = np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=np.uint8)
     frame = Frame([1, 1, 1, 1], 0, [0, 0])
     serialized = link._serialize_frame(frame)
     assert np.all(serialized == expected)
 
 def test_deserialize_frame(parity_checksum):
-    link = Link(None, checksum=parity_checksum, seq_size=2, payload_size=4, checksum_size=2)
+    link = LinkLayer(None, checksum=parity_checksum, seq_size=2, payload_size=4, checksum_size=2)
     serialized = np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=np.uint8)
     payload = [1, 1, 1, 1]
     checksum = [0, 0]
@@ -115,7 +115,7 @@ def test_transmit_frame_no_error(parity_checksum):
     checksum = np.array([0, 0, 0, 0], dtype=np.uint8)
     transmitted_bits = np.concatenate((seq, payload, checksum))
     physical_layer = DummyPhysicalLayer([transmitted_bits])
-    link = Link(physical_layer, parity_checksum, payload_size=4)
+    link = LinkLayer(physical_layer, parity_checksum, payload_size=4)
     frame = Frame(payload, 0, checksum)
     transmitted_frame = link.transmit_frame(frame)
     transmitted_payload = np.array([1, 0, 1, 0], dtype=np.uint8)
@@ -152,7 +152,7 @@ def test_complete_failure(parity_checksum):
     checksum = np.array([0, 0], dtype=np.uint8)
     transmitted_bits = np.concatenate((seq, payload, checksum))
     physical_layer = DummyPhysicalLayer([transmitted_bits, transmitted_bits, transmitted_bits])
-    link = Link(physical_layer, parity_checksum, payload_size=4, checksum_size=2, seq_size=2, max_retries=3)
+    link = LinkLayer(physical_layer, parity_checksum, payload_size=4, checksum_size=2, seq_size=2, max_retries=3)
     frame = Frame([0, 0, 0, 0], 0, checksum)
     with pytest.raises(LinkError):
         link.transmit_frame(frame)
@@ -164,7 +164,7 @@ def test_multiple_blocks(parity_checksum):
         [0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0]  # block 2 ok
     ]
     physical_layer = DummyPhysicalLayer(expected_frames)
-    link = Link(physical_layer, parity_checksum, payload_size=8, seq_size=2, checksum_size=2, max_retries=3)
+    link = LinkLayer(physical_layer, parity_checksum, payload_size=8, seq_size=2, checksum_size=2, max_retries=3)
     result = link.transmit(payload)
     assert np.all(result == payload)
 
@@ -175,6 +175,6 @@ def test_block_independence(parity_checksum):
         [0, 1, 1, 1, 0, 0, 0, 0]  # block 2 ok
     ]
     physical_layer = DummyPhysicalLayer(expected_frames)
-    link = Link(physical_layer, parity_checksum, payload_size=4, seq_size=2, checksum_size=2, max_retries=2)
+    link = LinkLayer(physical_layer, parity_checksum, payload_size=4, seq_size=2, checksum_size=2, max_retries=2)
     result = link.transmit(payload)
     assert np.all(result == payload)

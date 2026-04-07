@@ -1,4 +1,4 @@
-from src.communications_system.layer import Layer
+from src.protocol_stack.layer import Layer
 
 
 class PhysicalLayer(Layer):

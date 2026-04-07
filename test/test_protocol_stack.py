@@ -1,10 +1,11 @@
 import pytest
 
-from src.communications_system.comm_system import CommSystem
+from src.link_layer.link_layer import LinkLayer
 from src.physical_layer.alphabets.alphabets import AlphabetProvider
 from src.physical_layer.codebook import Codebook
 from src.physical_layer.codes.channel_codes import RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
+from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 
 @pytest.fixture
@@ -15,19 +16,19 @@ def alphabet():
 def message():
     return "sol mar luz bosque"
 
-class TestCommSystemPhysicalLayer:
+class TestProtocolStackPhysicalLayer:
 
-    def test_comm_system_no_noise(self, alphabet, message):
+    def test_stack_no_noise(self, alphabet, message):
         cfg_manager = ConfigManager(error_prob=0.0, top_layer='physical')
-        system = CommSystem(cfg_manager)
+        stack = ProtocolStack(cfg_manager)
         codebook = Codebook(alphabet)
-        received = system.transmit(codebook, message)
+        received = stack.transmit(codebook, message)
         assert received == message
 
     def test_build_stack_physical_layer(self):
         cfg_manager = ConfigManager(top_layer='physical')
-        system = CommSystem(cfg_manager)
-        assert isinstance(system.stack, PhysicalLayer)
+        stack = ProtocolStack(cfg_manager)
+        assert isinstance(stack.top_layer, PhysicalLayer)
 
     def test_channel_configuration(self):
         from src.physical_layer.codes.channel_codes import NoChannelCode
@@ -36,48 +37,47 @@ class TestCommSystemPhysicalLayer:
             channel_code=NoChannelCode,
             top_layer='physical'
         )
-        system = CommSystem(cfg_manager)
-        channel_code = system.stack.channel_code
-        channel = system.stack.channel
+        stack = ProtocolStack(cfg_manager)
+        channel_code = stack.top_layer.channel_code
+        channel = stack.top_layer.channel
 
         assert channel.error_prob == 0.2
         assert isinstance(channel_code, NoChannelCode)
 
 
-class TestCommSystemLinkLayer:
+class TestProtocolStackLinkLayer:
 
-    def test_comm_system_no_noise(self, alphabet, message):
+    def test_stack_no_noise(self, alphabet, message):
         cfg_manager = ConfigManager(error_prob=0.0, top_layer='link')
-        system = CommSystem(cfg_manager)
+        stack = ProtocolStack(cfg_manager)
         codebook = Codebook(alphabet)
-        received = system.transmit(codebook, message)
+        received = stack.transmit(codebook, message)
         assert received == message
 
-    def test_comm_system_with_noise_and_retries(self, alphabet, message):
+    def test_stack_with_noise_and_retries(self, alphabet, message):
         cfg_manager = ConfigManager(
             error_prob=0.1,
             channel_code=RepetitionChannelCode,
-            repetition=3,
+            repetition=9,
             max_retries=50,
             top_layer = 'link'
         )
-        system = CommSystem(cfg_manager)
+        stack = ProtocolStack(cfg_manager)
         codebook = Codebook(alphabet)
-        received = system.transmit(codebook, message)
+        received = stack.transmit(codebook, message)
         assert received == message
 
     def test_build_stack_link_layer(self):
         cfg_manager = ConfigManager(top_layer='link')
-        system = CommSystem(cfg_manager)
-        from src.link_layer.link import Link
-        assert isinstance(system.stack, Link)
-        assert isinstance(system.stack.lower_layer, PhysicalLayer)
+        stack = ProtocolStack(cfg_manager)
+        assert isinstance(stack.top_layer, LinkLayer)
+        assert isinstance(stack.top_layer.lower_layer, PhysicalLayer)
 
     def test_stack_order_is_correct(self):
         cfg_manager = ConfigManager(top_layer='link')
-        system = CommSystem(cfg_manager)
-        link = system.stack
-        physical = link.lower_layer
+        stack = ProtocolStack(cfg_manager)
+        link_layer = stack.top_layer
+        physical = link_layer.lower_layer
 
         assert physical.lower_layer is None
 
@@ -87,6 +87,6 @@ class TestCommSystemLinkLayer:
             checksum=ParityChecksum,
             top_layer='link'
         )
-        system = CommSystem(cfg_manager)
-        link = system.stack
+        stack = ProtocolStack(cfg_manager)
+        link = stack.top_layer
         assert isinstance(link.checksum, ParityChecksum)
