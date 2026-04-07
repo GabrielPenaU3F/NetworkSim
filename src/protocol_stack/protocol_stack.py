@@ -7,8 +7,6 @@ class ProtocolStack:
 
     def __init__(self, cfg_manager):
         alphabet_name = cfg_manager.get_system_config().alphabet
-        if alphabet_name is None:
-            alphabet_name = AlphabetProvider.provide_alphabet('test_16bits_alph')
         alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
         self.codebook = Codebook(alphabet)
         self.top_layer = self._build_stack(cfg_manager)
