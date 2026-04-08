@@ -1,30 +1,37 @@
 import pytest
 
-from src.infrastructure.p2p_link import P2PLink
+from src.infrastructure.channels import BinarySymmetricChannel
+from src.infrastructure.node import Node
 from src.system_configurations.config_manager import ConfigManager
 
+@pytest.fixture
+def clean_channel():
+    return BinarySymmetricChannel(0)
 
 @pytest.fixture
-def cfg_manager():
-    return ConfigManager()
+def nodes():
+    cfg_manager = ConfigManager(top_layer='physical')
+    def _make(channel):
+        A = Node("A", cfg_manager)
+        B = Node("B", cfg_manager)
+        A.connect_to(B, channel)
+        return A, B
+    return _make
 
 
-# def test_p2p_send():
-#     cfg_manager = ConfigManager()
-#     node_a = Node("A", cfg_manager)
-#     node_b = Node("B", cfg_manager)
-#     P2PLink(node_a, node_b)
-#     node_a.send("sol", interface=0)
-#     assert node_b.last_message == "sol"
-from src.infrastructure.nodes import Node
+def test_link_creates_interfaces(nodes):
+    A, B = nodes(None)
+    assert len(A.interfaces) == 1
+    assert len(B.interfaces) == 1
 
+def test_message_delivery(nodes, clean_channel):
+    A, B = nodes(clean_channel)
+    A.send("sol")
+    received = B.read()
+    assert received == "sol"
 
-# def test_link_creates_interfaces(cfg_manager):
-#     A = Node("A", cfg_manager)
-#     B = Node("B", cfg_manager)
-#     channel = cfg_manager.get_infrastructure_config().channel
-#
-#     link = P2PLink(A, B, channel)
-#
-#     assert len(A.interfaces) == 1
-#     assert len(B.interfaces) == 1
+def test_large_message_delivery(nodes, clean_channel):
+    A, B = nodes(clean_channel)
+    A.send("sol sol mar viento")
+    received = B.read()
+    assert received == "sol sol mar viento"

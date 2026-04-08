@@ -1,3 +1,4 @@
+from src.infrastructure.p2p_link import P2PLink
 from src.protocol_stack.protocol_stack import ProtocolStack
 
 
@@ -13,6 +14,9 @@ class Node:
     def add_interface(self, interface):
         self.interfaces.append(interface)
 
+    def connect_to(self, other_node, channel):
+        P2PLink(self, other_node, channel)
+
     def send(self, message, interface=0):
         interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface)
@@ -21,14 +25,5 @@ class Node:
         self.last_message = message
 
 
-class Interface:
-
-    def __init__(self, node, link):
-        self.node = node
-        self.link = link
-
-    def send(self, bits):
-        self.link.transmit(self, bits)
-
-    def receive(self, bits):
-        self.node.protocol_stack.receive(bits)
+    def read(self):
+        return self.last_message

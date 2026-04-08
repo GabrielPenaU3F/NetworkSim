@@ -1,37 +1,32 @@
 import numpy as np
 import pytest
 
-from src.infrastructure.channels import BinarySymmetricChannel
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 
 
 @pytest.fixture
-def bits():
-    return np.tile([0, 1], 8)
-
-@pytest.fixture
 def layer_factory():
-    def _make(channel_code, p, seed=0):
-        rng = np.random.default_rng(seed)
-        channel = BinarySymmetricChannel(p, channel_rng=rng)
-        return PhysicalLayer(channel, channel_code)
+    def _make(channel_code):
+        return PhysicalLayer(channel_code)
     return _make
 
 class TestPhysicalLayer:
 
-    def test_output_length(self, bits, layer_factory):
-        physical = layer_factory(NoChannelCode(), 0.1)
-        received = physical.transmit(bits)
-        assert len(received) == len(bits)
+    def test_output_length(self, nodes, bits):
+        channel = BinarySymmetricChannel(0)
+        A, B = nodes(channel)
+        A.send(bits)
+        received_bits = B.read()
+        assert len(received_bits) == len(bits)
 
     def test_no_noise(self, bits, layer_factory):
-        physical = layer_factory(NoChannelCode(), 0.0)
+        physical = layer_factory(NoChannelCode())
         received = physical.transmit(bits)
         np.testing.assert_array_equal(received, bits)
 
     def test_full_noise(self, bits, layer_factory):
-        physical = layer_factory(NoChannelCode(), 1.0)
+        physical = layer_factory(NoChannelCode())
         received = physical.transmit(bits)
         expected = bits ^ 1
         np.testing.assert_array_equal(received, expected)

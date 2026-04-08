@@ -18,20 +18,10 @@ class InfrastructureConfig(Config):
 
     DEFAULTS = {
                 'alphabet': 'test_16bits_alph',
-                'channel': {
-                    'class': BinarySymmetricChannel,
-                    'params': {
-                        'error_prob': 0.05,
-                        'channel_rng': None
-                    }
-                }
     }
 
-    def __init__(self, alphabet,
-                 channel_cls, channel_params):
+    def __init__(self, alphabet):
         self.alphabet = alphabet
-        self.channel_cls = channel_cls
-        self.channel_params = channel_params
 
 
 class ProtocolStackConfig(Config):

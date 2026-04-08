@@ -1,4 +1,4 @@
-from src.infrastructure.nodes import Interface
+from src.infrastructure.interface import Interface
 
 
 class P2PLink:
@@ -6,8 +6,8 @@ class P2PLink:
     def __init__(self, node_a, node_b, channel):
         self.iface_a = Interface(node_a, self)
         self.iface_b = Interface(node_b, self)
-
         self.channel = channel
+
         node_a.add_interface(self.iface_a)
         node_b.add_interface(self.iface_b)
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.infrastructure.alphabets.alphabets import AlphabetProvider
+from src.infrastructure.alphabets import AlphabetProvider
 from src.infrastructure.codebook import Codebook
 from src.physical_layer.utils import str_to_bits
 

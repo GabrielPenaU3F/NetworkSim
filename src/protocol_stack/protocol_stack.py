@@ -13,18 +13,10 @@ class ProtocolStack:
 
     def transmit(self, message, interface=None):
         source_bits = self.codebook.encode_message(message)
-        if interface is None:
-            received_bits = self._transmit_legacy(source_bits)
-            return self.codebook.decode_message(received_bits)
-        else:
-            self._transmit_current(source_bits, interface)
-
-
-    def _transmit_legacy(self, bits):
-        return self.top_layer.transmit(bits)
+        self.top_layer.transmit(source_bits, interface)
 
     def _build_stack(self, cfg_manager):
-        top = cfg_manager.get_infrastructure_config().top_layer
+        top = cfg_manager.get_protocol_stack_config().top_layer
         builders = LayerHub.builders
         if top not in builders:
             raise ValueError(f"Unknown top layer: {top}")
@@ -32,9 +24,6 @@ class ProtocolStack:
         top_builder = builders.get(top)
         top_layer = top_builder(cfg_manager)
         return top_layer
-
-    def _transmit_current(self, bits, interface=None):
-        self.top_layer.transmit(bits, interface)
 
     def receive(self, bits):
         message = self.codebook.decode_message(bits)

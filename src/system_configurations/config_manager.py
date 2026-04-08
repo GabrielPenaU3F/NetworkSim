@@ -34,8 +34,6 @@ class ConfigManager:
     def _build_infrastructure_config(self, cfg_dict):
         return InfrastructureConfig(
             alphabet=cfg_dict['alphabet'],
-            channel_cls=cfg_dict['channel']['class'],
-            channel_params=cfg_dict['channel']['params'],
         )
 
     def _build_protocol_stack_config(self, cfg_dict):

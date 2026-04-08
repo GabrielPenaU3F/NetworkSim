@@ -9,9 +9,8 @@ class LayerHub:
     def build_physical_layer(cfg_manager: ConfigManager):
         config = cfg_manager.get_physical_layer_config()
         config.validate()
-        channel = config.channel_cls(**config.channel_params)
         code = config.code_cls(**config.code_params)
-        return PhysicalLayer(channel, code)
+        return PhysicalLayer(code)
 
     @staticmethod
     def build_link_layer(cfg_manager: ConfigManager):

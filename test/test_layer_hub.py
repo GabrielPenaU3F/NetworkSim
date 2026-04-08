@@ -5,7 +5,7 @@ from numpy.random import Generator
 from src.link_layer.checksum import CRCChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.infrastructure.channels import BinarySymmetricChannel
-from src.physical_layer.channel_codes.channel_codes import NoChannelCode
+from src.physical_layer.channel_codes.channel_codes import NoChannelCode, HammingChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.layer_hub import LayerHub
 from src.system_configurations.config_manager import ConfigManager
@@ -23,24 +23,17 @@ def config_manager():
 
 class TestPhysicalLayerBuilder:
 
-    def test_build_physical_layer_basic(self, config_manager):
+    def test_build_physical_layer_default(self, config_manager):
         layer = LayerHub.build_physical_layer(config_manager)
         assert isinstance(layer, PhysicalLayer)
-        assert isinstance(layer.channel, BinarySymmetricChannel)
         assert isinstance(layer.channel_code, NoChannelCode)
 
     def test_build_physical_layer_channel_params(self):
-        p = 0.3
-        rng = np.random.default_rng(0)
         config=ConfigManager(
-            channel=BinarySymmetricChannel,
-            error_prob=p,
-            channel_code=NoChannelCode,
-            channel_rng=rng
+            channel_code=HammingChannelCode,
         )
         layer = LayerHub.build_physical_layer(config)
-        assert layer.channel.error_prob == p
-        assert isinstance(layer.channel.rng, Generator)
+        assert isinstance(layer.channel_code, HammingChannelCode)
 
 
 class TestLinkLayerBuilder:
