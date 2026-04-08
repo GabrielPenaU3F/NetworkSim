@@ -10,6 +10,7 @@ class ProtocolStack:
         alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
         self.codebook = Codebook(alphabet)
         self.top_layer = self._build_stack(cfg_manager)
+        self.bottom_layer = self._find_bottom_layer()
 
     def transmit(self, message, interface=None):
         source_bits = self.codebook.encode_message(message)
@@ -25,9 +26,13 @@ class ProtocolStack:
         top_layer = top_builder(cfg_manager)
         return top_layer
 
-    def receive(self, bits):
-        message = self.codebook.decode_message(bits)
-        self._handle_message(message)
+    def _find_bottom_layer(self):
+        layer = self.top_layer
+        while layer.lower_layer is not None:
+            layer = layer.lower_layer
+        return layer
 
-    def _handle_message(self, message):
-        pass
+    def receive(self, bits):
+        processed_bits = self.bottom_layer.on_receive(bits) # Forward up the layers
+        message = self.codebook.decode_message(processed_bits)
+        return message

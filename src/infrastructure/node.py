@@ -9,7 +9,6 @@ class Node:
         self.protocol_stack = ProtocolStack(cfg_manager)
         self.interfaces = []
         self.last_message = None
-        self.protocol_stack._handle_message = self._on_receive
 
     def add_interface(self, interface):
         self.interfaces.append(interface)
@@ -21,9 +20,9 @@ class Node:
         interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface)
 
-    def _on_receive(self, message):
+    def on_receive(self, bits):
+        message = self.protocol_stack.receive(bits)
         self.last_message = message
-
 
     def read(self):
         return self.last_message

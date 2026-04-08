@@ -14,6 +14,6 @@ class P2PLink:
     def transmit(self, sender_interface, bits):
         noisy_bits = self.channel.apply_noise(bits)
         if sender_interface == self.iface_a:
-            self.iface_b.receive(noisy_bits)
+            self.iface_b.on_receive(noisy_bits)
         else:
-            self.iface_a.receive(noisy_bits)
+            self.iface_a.on_receive(noisy_bits)

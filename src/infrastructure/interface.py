@@ -7,5 +7,5 @@ class Interface:
     def send(self, bits):
         self.link.transmit(self, bits)
 
-    def receive(self, bits):
-        self.node.protocol_stack.receive(bits)
+    def on_receive(self, bits):
+        self.node.on_receive(bits)

@@ -1,7 +1,6 @@
 import pytest
 
 from src.link_layer.checksum import ParityChecksum, CRCChecksum
-from src.infrastructure.channels import BinarySymmetricChannel
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 from src.system_configurations.config_manager import ConfigManager
 
@@ -19,16 +18,6 @@ class TestInfrastructureConfig:
         infra_cfg = cfg_manager.get_infrastructure_config()
         assert infra_cfg.alphabet == 'test_16bits_alph'
 
-    def test_infrastructure_config_defaults(self, cfg_manager):
-        infra_cfg = cfg_manager.get_infrastructure_config()
-        assert infra_cfg.channel_cls is BinarySymmetricChannel
-        assert infra_cfg.channel_params['error_prob'] == 0.05
-
-    def test_infrastructure_config_override(self):
-        manager = ConfigManager(error_prob=0.2)
-        infra_cfg = manager.get_infrastructure_config()
-        assert infra_cfg.channel_params['error_prob'] == 0.2
-
 
 class TestProtocolStackConfig:
 
@@ -43,7 +32,7 @@ class TestPhysicalLayerConfig:
         assert phys.code_cls is NoChannelCode
 
     def test_physical_config_override_does_not_affect_other_parameters(self):
-        manager = ConfigManager(error_prob=0.2)
+        manager = ConfigManager()
         phys = manager.get_physical_layer_config()
         assert phys.code_cls is NoChannelCode
 

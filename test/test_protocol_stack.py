@@ -12,31 +12,11 @@ def message():
 
 class TestProtocolStackPhysicalLayer:
 
-    def test_stack_no_noise(self, message):
-        cfg_manager = ConfigManager(error_prob=0.0, top_layer='physical')
-        stack = ProtocolStack(cfg_manager)
-        received = stack.transmit(message)
-        assert received == message
-
     def test_build_stack_physical_layer(self):
         cfg_manager = ConfigManager(top_layer='physical')
         stack = ProtocolStack(cfg_manager)
         assert isinstance(stack.top_layer, PhysicalLayer)
-
-    def test_channel_configuration(self):
-        from src.physical_layer.channel_codes.channel_codes import NoChannelCode
-        cfg_manager = ConfigManager(
-            error_prob=0.2,
-            channel_code=NoChannelCode,
-            top_layer='physical'
-        )
-        stack = ProtocolStack(cfg_manager)
-        channel_code = stack.top_layer.channel_code
-        channel = stack.top_layer.channel
-
-        assert channel.error_prob == 0.2
-        assert isinstance(channel_code, NoChannelCode)
-
+        assert isinstance(stack.bottom_layer, PhysicalLayer)
 
 class TestProtocolStackLinkLayer:
 

@@ -35,3 +35,8 @@ def test_large_message_delivery(nodes, clean_channel):
     A.send("sol sol mar viento")
     received = B.read()
     assert received == "sol sol mar viento"
+
+# def test_no_noise(self, bits, layer_factory):
+#     physical = layer_factory(NoChannelCode())
+#     received = physical.transmit(bits)
+#     np.testing.assert_array_equal(received, bits)
