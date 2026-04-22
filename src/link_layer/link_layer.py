@@ -88,6 +88,9 @@ class LinkLayer(Layer):
         except LinkError:
             print('Transmission error. Closing link.')
 
+    def on_receive(self, bits, interface=None):
+        pass
+
     def _serialize_frame(self, frame: Frame) -> npt.NDArray:
         seq_bits = int_to_bits(frame.get_seq(), self.seq_size)
         payload = frame.get_payload()

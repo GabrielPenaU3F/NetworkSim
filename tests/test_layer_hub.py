@@ -14,7 +14,6 @@ from src.system_configurations.config_manager import ConfigManager
 @pytest.fixture
 def config_manager():
     return ConfigManager(
-            error_prob=0,
             channel_code=NoChannelCode,
             max_retries=5,
             payload_size=8, seq_size=4, checksum_size=4,

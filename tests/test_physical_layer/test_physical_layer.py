@@ -51,21 +51,6 @@ class TestPhysicalLayer:
         assert np.all(interface.sent_bits == expected_bits)
 
     #
-    # def test_full_noise(self, bits, layer_factory):
-    #     physical = layer_factory(NoChannelCode())
-    #     received = physical.transmit(bits)
-    #     expected = bits ^ 1
-    #     np.testing.assert_array_equal(received, expected)
-    #
-    # def test_error_rate(self, layer_factory):
-    #     bits = np.zeros(10000, dtype=np.uint8)
-    #     p = 0.1
-    #     physical = layer_factory(NoChannelCode(), p)
-    #     received = physical.transmit(bits)
-    #     errors = sum(1 for b1, b2 in zip(bits, received) if b1 != b2)
-    #     empirical_p = errors / len(bits)
-    #     assert abs(empirical_p - p) < 0.02
-    #
     # def test_repetition_improves_error(self, layer_factory):
     #     bits = np.zeros(5000, dtype=np.uint8)
     #     p = 0.2
