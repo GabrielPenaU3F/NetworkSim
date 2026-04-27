@@ -1,3 +1,9 @@
+class ProtocolError(Exception):
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class LinkError(Exception):
 
     def __init__(self, message, retries):
