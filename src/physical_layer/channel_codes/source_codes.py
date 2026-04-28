@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.physical_layer.utils import select_binary_format
+from src.utils import select_binary_format
 
 
 class SourceCode(ABC):

@@ -27,13 +27,13 @@ class TestIntegrationPhysicalOnly:
         assert received == "sol sol mar viento"
 
 
-# class TestIntegrationUpToLink:
-#
-#     def test_message_delivery(self, nodes, clean_channel):
-#         A, B = nodes(clean_channel, top_layer='link')
-#         A.send("sol")
-#         received = B.read()
-#         assert received == "sol"
+class TestIntegrationUpToLink:
+
+    def test_message_delivery(self, nodes, clean_channel):
+        A, B = nodes(clean_channel, top_layer='link')
+        A.send("sol")
+        received = B.read()
+        assert received == "sol"
 
     # def test_large_message_delivery(self, nodes, clean_channel):
     #     A, B = nodes(clean_channel, top_layer='link')

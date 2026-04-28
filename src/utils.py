@@ -13,8 +13,19 @@ def int_to_bits(value, num_bits):
     )
 
 def bits_to_int(bits):
-    n = len(bits)
-    return np.sum([bits[k] * np.pow(2, n - k) for k in range(n)])
+    value = 0
+    for bit in bits:
+        value = (value << 1) | int(bit)
+    return value
+
+def pad_bits(bits, size):
+    padding = (size - len(bits) % size) % size
+    return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
+
+def unpad_bits(bits, padding):
+    if padding == 0:
+        return bits
+    return bits[:-padding]
 
 def select_binary_format(alphabet):
     n = len(alphabet)

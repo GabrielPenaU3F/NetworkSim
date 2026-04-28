@@ -1,5 +1,5 @@
 from src.physical_layer.channel_codes.source_codes import BasicSourceCode
-from src.physical_layer.utils import str_to_bits, bits_to_str
+from src.utils import str_to_bits, bits_to_str
 
 
 class Codebook:

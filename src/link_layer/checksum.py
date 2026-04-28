@@ -3,7 +3,7 @@ from numpy import typing as npt
 
 import numpy as np
 
-from src.physical_layer.utils import int_to_bits
+from src.utils import int_to_bits
 
 
 class Checksum(ABC):

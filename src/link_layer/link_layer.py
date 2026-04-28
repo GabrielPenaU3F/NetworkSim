@@ -1,30 +1,20 @@
 import numpy as np
 
-
-from src.errors import LinkError
 from src.link_layer.frame import Frame
-from src.physical_layer.utils import int_to_bits, bits_to_int
+from src.utils import int_to_bits, bits_to_int, pad_bits, unpad_bits
 from numpy import typing as npt
 
 from src.protocol_stack.layer import Layer
-
-
-def pad_bits(bits, size):
-    padding = (size - len(bits) % size) % size
-    return np.concatenate([bits, np.zeros(padding, dtype=np.uint8)]), padding
-
-
-def unpad_bits(bits, padding):
-    if padding == 0:
-        return bits
-    return bits[:-padding]
 
 
 class LinkLayer(Layer):
 
     '''
         Current frame serializing protocol:
-            -HEADER: seq_size bits to represent sequence numbers
+            -HEADER:
+                >seq_size bits to represent sequence numbers
+                >1 bit flag to mark if current frame is the last of a message
+                >length to represent valid number of payload bits. By default log2(1 + payload_size)
             -PAYLOAD: payload_size bits to represent payload
             -TAIL: checksum_size bits to represent checksum
     '''
@@ -33,6 +23,7 @@ class LinkLayer(Layer):
         self.checksum = checksum
         self.max_retries = max_retries
         self.payload_size = payload_size
+        self.payload_length_field_size = np.ceil(np.log2(1 + payload_size)).astype(np.uint8)
         self.seq_size = seq_size
         self.checksum_size = checksum_size
         self._rx_buffer = []
@@ -41,18 +32,24 @@ class LinkLayer(Layer):
         frames = []
         total_frames = (len(bits) + self.payload_size - 1) // self.payload_size
         for idx, i in enumerate(range(0, len(bits), self.payload_size)):
-            payload = bits[i:i + self.payload_size]
             seq = idx
             is_last = (idx == total_frames - 1)
-            body = self._build_body(payload, seq, is_last)
+            chunk = bits[i:i + self.payload_size]
+            real_length = len(chunk)
+
+            padded_payload = np.zeros(self.payload_size, dtype=np.uint8)
+            padded_payload[:real_length] = chunk
+            body = self._build_body(seq, is_last, real_length, padded_payload)
+
             cs = self._compute_checksum(body)
-            frames.append(Frame(payload, seq, cs, is_last))
+            frames.append(Frame(seq, is_last, real_length, padded_payload, cs))
         return frames
 
-    def _build_body(self, payload, seq, is_last):
+    def _build_body(self, seq, is_last, real_length, payload):
         seq_bits = int_to_bits(seq, self.seq_size)
         last_bit = np.array([is_last], dtype=np.uint8)
-        body = np.concatenate((seq_bits, last_bit, payload))
+        real_length_bits = int_to_bits(real_length, self.payload_length_field_size)
+        body = np.concatenate((seq_bits, last_bit, real_length_bits, payload))
         return body
 
     def _transmit_frame(self, frame, interface=None):
@@ -62,7 +59,7 @@ class LinkLayer(Layer):
 
     # Main transmission method
     def transmit(self, bits, interface=None):
-        bits, padding = pad_bits(bits, self.payload_size)
+        # bits, padding = pad_bits(bits, self.payload_size)
         frames = self._build_frames(bits)
         for frame in frames:
             self._transmit_frame(frame, interface)
@@ -83,21 +80,30 @@ class LinkLayer(Layer):
     def _serialize_frame(self, frame: Frame) -> npt.NDArray:
         seq_bits = int_to_bits(frame.get_seq(), self.seq_size)
         last_bit = np.array([frame.get_is_last()], dtype=np.uint8)
+        real_length = int_to_bits(frame.get_real_length(), self.payload_length_field_size)
+
         payload = frame.get_payload()
+
         checksum = frame.get_checksum()
-        return np.concatenate([seq_bits, last_bit, payload, checksum])
+        return np.concatenate([seq_bits, last_bit, real_length, payload, checksum])
 
     def _deserialize_frame(self, received_bits: npt.NDArray) -> Frame:
         seq = bits_to_int(received_bits[:self.seq_size])
         is_last = received_bits[self.seq_size]
 
-        start = self.seq_size + 1
+        real_length_field_start = self.seq_size + 1
+        real_length_field_end = real_length_field_start + self.payload_length_field_size
+        real_length = bits_to_int(received_bits[real_length_field_start : real_length_field_end])
+
+        start = real_length_field_end
         end = start + self.payload_size
-        payload = received_bits[start:end]
+        padded_payload = received_bits[start:end]
+        padding = len(padded_payload) - real_length
+        payload = unpad_bits(padded_payload, padding)
 
         checksum = received_bits[-self.checksum_size:]
 
-        frame = Frame(payload, seq, checksum, is_last)
+        frame = Frame(seq, is_last, real_length, payload, checksum)
         return frame
 
     def _compute_checksum(self, payload):
@@ -106,4 +112,3 @@ class LinkLayer(Layer):
             raise ValueError("Checksum is too large to be represented with these protocol settings")
 
         return pad_bits(raw_cs, self.checksum_size)[0]
-

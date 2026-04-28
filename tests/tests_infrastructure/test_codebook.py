@@ -3,7 +3,7 @@ import pytest
 
 from src.infrastructure.alphabets import AlphabetProvider
 from src.infrastructure.codebook import Codebook
-from src.physical_layer.utils import str_to_bits
+from src.utils import str_to_bits
 
 
 @pytest.fixture
