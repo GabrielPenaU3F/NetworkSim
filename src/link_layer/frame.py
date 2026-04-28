@@ -21,3 +21,6 @@ class Frame:
 
     def get_real_length(self):
         return self.real_length
+
+    def get_true_payload(self):
+        return self.payload[:self.real_length]

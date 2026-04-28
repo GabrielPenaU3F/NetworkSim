@@ -15,7 +15,6 @@ def bits():
 def no_code():
     return NoChannelCode()
 
-
 @pytest.fixture
 def repetition_code():
     return RepetitionChannelCode(repetition=3)

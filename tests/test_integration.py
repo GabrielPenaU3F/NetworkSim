@@ -35,8 +35,14 @@ class TestIntegrationUpToLink:
         received = B.read()
         assert received == "sol"
 
-    # def test_large_message_delivery(self, nodes, clean_channel):
-    #     A, B = nodes(clean_channel, top_layer='link')
-    #     A.send("sol sol mar viento")
-    #     received = B.read()
-    #     assert received == "sol sol mar viento"
+    def test_medium_message_delivery(self, nodes, clean_channel):
+        A, B = nodes(clean_channel, top_layer='link')
+        A.send("sol luna")
+        received = B.read()
+        assert received == "sol luna"
+
+    def test_large_message_delivery(self, nodes, clean_channel):
+        A, B = nodes(clean_channel, top_layer='link')
+        A.send("sol sol mar viento")
+        received = B.read()
+        assert received == "sol sol mar viento"

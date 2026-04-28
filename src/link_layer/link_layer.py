@@ -59,16 +59,13 @@ class LinkLayer(Layer):
 
     # Main transmission method
     def transmit(self, bits, interface=None):
-        # bits, padding = pad_bits(bits, self.payload_size)
         frames = self._build_frames(bits)
         for frame in frames:
             self._transmit_frame(frame, interface)
-            # received_bits = np.concatenate([frame.get_payload() for frame in received_frames])
-            # unpadded = unpad_bits(received_bits, padding)
 
     def on_receive(self, bits):
         frame = self._deserialize_frame(bits)
-        self._rx_buffer.append(frame.get_payload())
+        self._rx_buffer.append(frame.get_true_payload())
         if frame.get_is_last():
             return self._rebuild_message()
 
@@ -112,3 +109,6 @@ class LinkLayer(Layer):
             raise ValueError("Checksum is too large to be represented with these protocol settings")
 
         return pad_bits(raw_cs, self.checksum_size)[0]
+
+    def _get_frame_size(self):
+        return self.seq_size + 1 + self.payload_length_field_size + self.payload_size + self.checksum_size

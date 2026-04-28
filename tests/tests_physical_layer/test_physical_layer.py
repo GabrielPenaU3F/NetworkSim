@@ -26,7 +26,6 @@ def layer_factory():
         return PhysicalLayer(channel_code)
     return _make
 
-
 @pytest.fixture
 def bits():
     return np.tile([0, 1], 4).astype(np.uint8)

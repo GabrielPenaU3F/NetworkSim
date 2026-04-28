@@ -4,7 +4,7 @@ import pytest
 from src.link_layer.checksum import ParityChecksum, SumChecksum, CRCChecksum
 
 @pytest.fixture
-def bits():
+def example_four_bits():
     return [1, 0, 1, 1]
 
 @pytest.fixture
@@ -21,8 +21,8 @@ def crc_checksum():
 
 class TestParityChecksum:
 
-    def test_parity_checksum_returns_binary_ndarray(self, parity_checksum, bits):
-        cs = parity_checksum.compute(bits)
+    def test_parity_checksum_returns_binary_ndarray(self, parity_checksum, example_four_bits):
+        cs = parity_checksum.compute(example_four_bits)
         assert isinstance(cs, np.ndarray)
         assert cs.dtype == np.uint8
         assert cs.size == parity_checksum.size
@@ -38,8 +38,8 @@ class TestParityChecksum:
 
 class TestSumChecksum:
 
-    def test_sum_checksum_returns_binary_ndarray(self, sum_checksum, bits):
-        cs = sum_checksum.compute(bits)
+    def test_sum_checksum_returns_binary_ndarray(self, sum_checksum, example_four_bits):
+        cs = sum_checksum.compute(example_four_bits)
         assert isinstance(cs, np.ndarray)
         assert cs.dtype == np.uint8
         assert cs.size == sum_checksum.size
@@ -60,8 +60,8 @@ class TestSumChecksum:
 
 class TestCRCChecksum:
 
-    def test_sum_checksum_returns_binary_ndarray(self, crc_checksum, bits):
-        cs = crc_checksum.compute(bits)
+    def test_sum_checksum_returns_binary_ndarray(self, crc_checksum, example_four_bits):
+        cs = crc_checksum.compute(example_four_bits)
         assert isinstance(cs, np.ndarray)
         assert cs.dtype == np.uint8
         assert cs.size == crc_checksum.size
