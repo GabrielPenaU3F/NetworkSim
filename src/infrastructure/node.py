@@ -8,7 +8,7 @@ class Node:
         self.name = name
         self.protocol_stack = ProtocolStack(cfg_manager)
         self.interfaces = []
-        self.last_message = None
+        self._rx_messages = []
 
     def add_interface(self, interface):
         self.interfaces.append(interface)
@@ -16,13 +16,15 @@ class Node:
     def connect_to(self, other_node, channel):
         P2PLink(self, other_node, channel)
 
-    def send(self, message, interface=0):
+    def send(self, message, interface=0) -> None:
         interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface)
 
-    def on_receive(self, bits):
-        message = self.protocol_stack.receive(bits)
-        self.last_message = message
+    def on_receive(self, bits) -> None:
+        message = self.protocol_stack.on_receive(bits)
+        if message is not None:
+            self._rx_messages.append(message)
 
     def read(self):
-        return self.last_message
+        if self._rx_messages:
+            return self._rx_messages.pop(0)

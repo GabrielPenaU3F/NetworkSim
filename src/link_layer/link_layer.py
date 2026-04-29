@@ -26,7 +26,8 @@ class LinkLayer(Layer):
         self.payload_length_field_size = np.ceil(np.log2(1 + payload_size)).astype(np.uint8)
         self.seq_size = seq_size
         self.checksum_size = checksum_size
-        self._rx_buffer = []
+        self._rx_stream_buffer = []
+        self._rx_message_buffer = []
 
     def _build_frames(self, bits):
         frames = []
@@ -60,19 +61,32 @@ class LinkLayer(Layer):
     # Main transmission method
     def transmit(self, bits, interface=None):
         frames = self._build_frames(bits)
-        for frame in frames:
+        for idx, frame in enumerate(frames):
             self._transmit_frame(frame, interface)
 
-    def on_receive(self, bits):
-        frame = self._deserialize_frame(bits)
-        self._rx_buffer.append(frame.get_true_payload())
-        if frame.get_is_last():
-            return self._rebuild_message()
+    def on_receive(self, bits) -> npt.NDArray:
+        self._rx_stream_buffer.extend(bits)
+
+        while len(self._rx_stream_buffer) >= self._get_frame_size():
+
+            frame_bits = np.array(self._rx_stream_buffer[:self._get_frame_size()], dtype=np.uint8)
+            frame = self._deserialize_frame(frame_bits)
+            self._rx_stream_buffer = self._rx_stream_buffer[self._get_frame_size():]
+            self._rx_message_buffer.append(frame.get_true_payload())
+
+            if frame.get_is_last():
+                return self._rebuild_message()
+
+            return None
 
     def _rebuild_message(self):
-        message_bits = np.concatenate(self._rx_buffer)
-        self._rx_buffer.clear()
+        message_bits = np.concatenate(self._rx_message_buffer)
+        self._clear_buffers()
         return self._forward_up(message_bits)
+
+    def _clear_buffers(self):
+        self._rx_stream_buffer.clear()
+        self._rx_message_buffer.clear()
 
     def _serialize_frame(self, frame: Frame) -> npt.NDArray:
         seq_bits = int_to_bits(frame.get_seq(), self.seq_size)

@@ -32,7 +32,11 @@ class ProtocolStack:
             layer = layer.lower_layer
         return layer
 
-    def receive(self, bits):
+    def on_receive(self, bits):
         processed_bits = self.bottom_layer.on_receive(bits) # Forward up the layers
+
+        if processed_bits is None:
+            return None
+
         message = self.codebook.decode_message(processed_bits)
         return message
