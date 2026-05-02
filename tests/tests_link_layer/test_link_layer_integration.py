@@ -25,9 +25,9 @@ def test_total_serialized_length(example_link_layer, tile_bits):
     full_stream = np.concatenate(serialized_frames)
 
     assert len(frames) == 2
-    assert len(serialized_frames[0]) == 17
-    assert len(serialized_frames[1]) == 17
-    assert len(full_stream) == 34
+    assert len(serialized_frames[0]) == 18
+    assert len(serialized_frames[1]) == 18
+    assert len(full_stream) == 36
 
 def test_frame_roundtrip_with_real_config(example_link_layer, tile_bits):
     bits = tile_bits(7)

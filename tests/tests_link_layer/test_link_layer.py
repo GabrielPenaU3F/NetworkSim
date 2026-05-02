@@ -23,29 +23,46 @@ class TestSerialization:
         actual_is_last = serialized[seq_end]
         assert actual_is_last == 0
 
+    def test_serialize_frame_is_ack(self, example_link_layer, frame_to_serialize):
+        serialized = example_link_layer._serialize_frame(frame_to_serialize(is_ack=1))
+        seq_end = example_link_layer.seq_size
+        actual_is_ack = serialized[1 + seq_end]
+        assert actual_is_ack == 1
+
+    def test_serialize_frame_is_not_ack(self, example_link_layer, frame_to_serialize):
+        serialized = example_link_layer._serialize_frame(frame_to_serialize(is_ack=0))
+        seq_end = example_link_layer.seq_size
+        actual_is_ack = serialized[1 + seq_end]
+        assert actual_is_ack == 0
+
     def test_serialize_frame_real_length(self, example_link_layer, frame_to_serialize):
         # Size is ceil(log2(1 + payload_size)), thus, 4 binary digits. So 4 in binary (with four digits) is 0100
         expected_real_length = np.array([0, 1, 0, 0], dtype=np.uint8)
         serialized = example_link_layer._serialize_frame(frame_to_serialize(is_last=1))
-        real_length_start = 1 + example_link_layer.seq_size
-        real_length_end = real_length_start + example_link_layer.payload_length_field_size
+
+        real_length_size = example_link_layer.payload_length_field_size
+        real_length_end = example_link_layer._get_header_size()
+        real_length_start = example_link_layer._get_header_size() - real_length_size
+
         actual_real_length = serialized[real_length_start: real_length_end]
         assert np.all(actual_real_length == expected_real_length)
 
     def test_serialize_frame_payload(self, example_link_layer, frame_to_serialize):
         frame = frame_to_serialize(is_last=1)
-        serialized = example_link_layer._serialize_frame(frame)
-        payload_start = example_link_layer.seq_size + 1 + example_link_layer.payload_length_field_size
-        payload_end = payload_start + example_link_layer.payload_size
         expected_payload = frame.get_payload()
+        serialized = example_link_layer._serialize_frame(frame)
+
+        payload_end = example_link_layer._get_body_size()
+        payload_start = payload_end - example_link_layer.payload_size
+
         actual_payload = serialized[payload_start: payload_end]
         assert np.all(actual_payload == expected_payload)
 
     def test_serialize_frame_checksum(self, example_link_layer, frame_to_serialize):
         expected_checksum = np.array([0, 0], dtype=np.uint8)
         serialized = example_link_layer._serialize_frame(frame_to_serialize(is_last=1))
-        payload_start = example_link_layer.seq_size + 1 + example_link_layer.payload_length_field_size
-        payload_end = payload_start + example_link_layer.payload_size
+        payload_end = example_link_layer._get_body_size()
+
         actual_checksum = serialized[payload_end:]
         assert np.all(actual_checksum == expected_checksum)
 
@@ -53,23 +70,31 @@ class TestSerialization:
 class TestDeserialization:
 
     def test_deserialize_frame_seq(self, example_link_layer, serialized_bits):
-        deserialized = example_link_layer._deserialize_frame(serialized_bits(1))
+        deserialized = example_link_layer._deserialize_frame(serialized_bits())
         assert deserialized.get_seq() == 0
 
     def test_deserialize_frame_is_last(self, example_link_layer, serialized_bits):
-        deserialized = example_link_layer._deserialize_frame(serialized_bits(1))
+        deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=1))
         assert deserialized.get_is_last() == 1
 
     def test_deserialize_frame_is_not_last(self, example_link_layer, serialized_bits):
-        deserialized = example_link_layer._deserialize_frame(serialized_bits(0))
+        deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=0))
         assert deserialized.get_is_last() == 0
 
+    def test_deserialize_frame_is_ack(self, example_link_layer, serialized_bits):
+        deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=1))
+        assert deserialized.get_is_ack() == 1
+
+    def test_deserialize_frame_is_not_ack(self, example_link_layer, serialized_bits):
+        deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=0))
+        assert deserialized.get_is_ack() == 0
+
     def test_deserialize_frame_real_length(self, example_link_layer, serialized_bits):
-        deserialized = example_link_layer._deserialize_frame(serialized_bits(1))
+        deserialized = example_link_layer._deserialize_frame(serialized_bits())
         assert deserialized.get_real_length() == 4
 
     def test_deserialize_frame_payload(self, example_link_layer, serialized_bits):
-        deserialized = example_link_layer._deserialize_frame(serialized_bits(1))
+        deserialized = example_link_layer._deserialize_frame(serialized_bits())
         expected_payload = np.array([0, 1, 0, 1], dtype=np.uint8)
         assert np.all(deserialized.get_payload() == expected_payload)
 
@@ -79,14 +104,16 @@ class TestChecksumCalculation:
     def test_build_body_structure(self, example_link_layer):
         seq = 0
         is_last = 1
+        is_ack = 0
         real_length = 4
         payload = np.array([0, 1, 0, 1, 0, 0, 0, 0], dtype=np.uint8)
 
-        body = example_link_layer._build_body(seq, is_last, real_length, payload)
+        body = example_link_layer._build_body(seq, is_last, is_ack, real_length, payload)
 
         expected = np.array([
             0, 0,  # seq (2 bits)
             1,  # is_last
+            0, # is_ack
             0, 1, 0, 0,  # real_length = 4
             0, 1, 0, 1, 0, 0, 0, 0  # payload
         ], dtype=np.uint8)
@@ -109,9 +136,17 @@ class TestChecksumCalculation:
 
         assert not np.all(cs1 == cs2)
 
+    def test_checksum_changes_with_is_ack(self, example_link_layer, base_body):
+        body_with_isack_1 = base_body.copy()
+        body_with_isack_1[3] ^= 1  # flip is_ack
+        cs1 = example_link_layer._compute_checksum(base_body)
+        cs2 = example_link_layer._compute_checksum(body_with_isack_1)
+
+        assert not np.all(cs1 == cs2)
+
     def test_checksum_changes_with_real_length(self, example_link_layer, base_body):
         body_with_different_real_length = base_body.copy()
-        body_with_different_real_length[3] ^= 1  # flip a bit from real_length
+        body_with_different_real_length[4] ^= 1  # flip a bit from real_length
         cs1 = example_link_layer._compute_checksum(base_body)
         cs2 = example_link_layer._compute_checksum(body_with_different_real_length)
 
@@ -189,6 +224,21 @@ class TestLinkLayer:
         expected = np.array([0, 1, 0, 1], dtype=np.uint8)
 
         assert np.all(message == expected)
+
+    def test_parity_checksum_detects_error(self, example_link_layer, serialized_bits):
+        corrupted = serialized_bits(0).copy()
+        corrupted[5] ^= 1
+
+        result = example_link_layer.on_receive(corrupted)
+        assert result is None
+
+    def test_parity_checksum_does_not_detect_error_when_two_bits_flip(self, example_link_layer, serialized_bits):
+        corrupted = serialized_bits(0).copy()
+        corrupted[5] ^= 1
+        corrupted[2] ^= 1
+
+        result = example_link_layer.on_receive(corrupted)
+        assert result is not None
 
 # def test_transmit_frame_no_error(parity_checksum):
 #     seq = np.zeros(8, dtype=np.uint8)
