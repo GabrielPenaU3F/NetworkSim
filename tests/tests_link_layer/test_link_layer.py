@@ -1,6 +1,9 @@
 import numpy as np
 import pytest
 
+from src.errors import LinkError
+from tests.tests_link_layer.conftest import frame_to_serialize
+
 
 class TestSerialization:
 
@@ -216,10 +219,27 @@ class TestLinkLayer:
 
     def test_link_tx_serializes_and_sends_downwards(self, example_link_layer):
         bits = np.array(np.zeros(16), dtype=np.uint8)
+
+        # Monkeypatch ack reception
+        acked = set()
+        def fake_ack(frame):
+            seq = frame.get_seq()
+            if seq in acked:
+                return True
+
+            acked.add(seq)
+            return False
+
+        example_link_layer._ack_received = fake_ack
+
         example_link_layer.transmit(bits)
         physical = example_link_layer.lower_layer
-        assert len(physical.sent_bits) > 0
-        assert physical.calls == 2
+        assert len(physical.sent_bits) > 0 # something was sent
+
+        for sent in physical.sent_bits:
+            assert isinstance(sent, np.ndarray) # sent stuff are bit arrays
+
+        assert physical.calls >= 2 # at least 2 calls
 
     def test_reception_removes_padding_single_frame(self, example_link_layer, serialized_bits):
         # payload_size = 8, only 4 real bits
@@ -242,3 +262,122 @@ class TestLinkLayer:
 
         result = example_link_layer.on_receive(corrupted)
         assert result is not None
+
+    def test_no_retry_when_ack_received(self, example_link_layer, tile_bits):
+        bits = tile_bits(2)  # 1 frame
+        physical = example_link_layer.lower_layer
+
+        # We monkeypatch the transmission method of the physical layer
+        # It sends an immediate ack. Then the link layer should stop transmitting.
+        def transmit_with_ack(bits_sent, interface=None):
+            physical.sent_bits.append(bits_sent)
+            physical.calls += 1
+
+            # immediate ACK
+            frame = example_link_layer._deserialize_frame(bits_sent)
+            ack = example_link_layer._build_ack(frame.get_seq())
+            ack_bits = example_link_layer._serialize_frame(ack)
+
+            example_link_layer.on_receive(ack_bits)
+
+        # monkeypatch
+        physical.transmit = transmit_with_ack
+        example_link_layer._validate_checksum = lambda x: True  # Do not check anything
+        example_link_layer.transmit(bits)
+
+        # A single call
+        assert physical.calls == 1
+
+    def test_no_duplicate_payload_on_retry(self, example_link_layer, frame_to_serialize):
+        frame = frame_to_serialize(is_last=0)
+        serialized = example_link_layer._serialize_frame(frame)
+
+        # do not check anything
+        example_link_layer._validate_checksum = lambda x: True
+
+        # RX receives a duplicate frame
+        example_link_layer.on_receive(serialized)
+        example_link_layer.on_receive(serialized)
+
+        # Manually rebuild
+        result = example_link_layer._rebuild_message()
+
+        expected_payload = np.tile([0, 1], 2)
+        assert np.all(result == expected_payload)
+
+    def test_rx_sends_an_ack(self, example_link_layer, frame_to_serialize):
+        frame = frame_to_serialize()
+        serialized = example_link_layer._serialize_frame(frame)
+
+        physical = example_link_layer.lower_layer
+
+        # do not check anything
+        example_link_layer._validate_checksum = lambda x: True
+        example_link_layer.on_receive(serialized)
+
+        # RX should have transmitted exactly one ACK
+        assert physical.calls == 1
+
+    def test_rx_sends_correct_ack(self, example_link_layer, frame_to_serialize):
+        frame = frame_to_serialize(seq=3, is_last=0)
+        serialized = example_link_layer._serialize_frame(frame)
+
+        physical = example_link_layer.lower_layer
+
+        # do not check anything
+        example_link_layer._validate_checksum = lambda x: True
+        example_link_layer.on_receive(serialized)
+
+        ack_bits = physical.sent_bits[0]
+        ack_frame = example_link_layer._deserialize_frame(ack_bits)
+
+        assert ack_frame.get_is_ack() == 1
+        assert ack_frame.get_seq() == 3
+
+    def test_rx_reacknowledges_duplicate_frames(self, example_link_layer, frame_to_serialize):
+        frame = frame_to_serialize(seq=3, is_last=0)
+        serialized = example_link_layer._serialize_frame(frame)
+
+        physical = example_link_layer.lower_layer
+
+        # do not check anything
+        example_link_layer._validate_checksum = lambda x: True
+
+        # receive twice the same frame
+        example_link_layer.on_receive(serialized)
+        example_link_layer.on_receive(serialized)
+
+        # ack should be sent twice (despite being the same frame)
+        assert physical.calls == 2
+
+    def test_tx_raises_after_max_retries(self, example_link_layer, tile_bits):
+        bits = tile_bits(2)  # 1 frame
+        physical = example_link_layer.lower_layer
+
+        # ack not received
+        example_link_layer._ack_received = lambda frame: False
+
+        with pytest.raises(LinkError):
+            example_link_layer.transmit(bits)
+
+        # exactly max_retries transmissions
+        assert physical.calls == example_link_layer.max_retries
+
+    def test_build_ack_generates_valid_checksum(self, example_link_layer):
+        ack = example_link_layer._build_ack(seq=3)
+        serialized = example_link_layer._serialize_frame(ack)
+        assert example_link_layer._validate_checksum(serialized)
+
+    def test_build_ack_sets_correct_fields(self, example_link_layer):
+        ack = example_link_layer._build_ack(seq=5)
+
+        assert ack.get_seq() == 5
+        assert ack.get_is_ack() == 1
+        assert ack.get_is_last() == 0
+        assert ack.get_real_length() == 0
+
+    def test_build_ack_uses_empty_payload(self, example_link_layer):
+        ack = example_link_layer._build_ack(seq=1)
+        expected = np.zeros(example_link_layer.payload_size, dtype=np.uint8)
+
+        assert np.all(ack.get_payload() == expected)

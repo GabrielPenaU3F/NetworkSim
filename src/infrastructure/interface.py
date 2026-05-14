@@ -8,4 +8,4 @@ class Interface:
         self.link.transmit(self, bits)
 
     def on_receive(self, bits):
-        self.node.on_receive(bits)
+        self.node.on_receive(bits, self) # inject RX interface

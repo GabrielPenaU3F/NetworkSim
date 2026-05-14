@@ -20,8 +20,8 @@ class Node:
         interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface)
 
-    def on_receive(self, bits) -> None:
-        message = self.protocol_stack.on_receive(bits)
+    def on_receive(self, bits, interface=None) -> None:
+        message = self.protocol_stack.on_receive(bits, interface)
         if message is not None:
             self._rx_messages.append(message)
 

@@ -1,5 +1,6 @@
 import numpy as np
 
+from src.errors import LinkError
 from src.link_layer.frame import Frame
 from src.utils import int_to_bits, bits_to_int, pad_bits, unpad_bits
 from numpy import typing as npt
@@ -29,6 +30,8 @@ class LinkLayer(Layer):
         self.checksum_size = checksum_size
         self._rx_stream_buffer = []
         self._rx_message_buffer = []
+        self._expected_seq = 0
+        self._last_ack_seq = None
 
     def _build_frames(self, bits, is_ack=0):
         frames = []
@@ -55,35 +58,64 @@ class LinkLayer(Layer):
         body = np.concatenate((seq_bits, is_last_bit, is_ack_bit, real_length_bits, payload))
         return body
 
+    def _build_ack(self, seq):
+        payload = np.zeros(self.payload_size, dtype=np.uint8)
+        body = self._build_body(seq, is_last=0, is_ack=1, real_length=0, payload=payload)
+        cs = self._compute_checksum(body)
+        ack = Frame(seq=seq, is_last=0, is_ack=1, real_length=0, payload=payload, checksum=cs)
+        return ack
+
     def _transmit_frame(self, frame, interface=None):
         bits = self._serialize_frame(frame)
         self.lower_layer.transmit(bits, interface)
-        # raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
     # Main transmission method
     def transmit(self, bits, interface=None):
         frames = self._build_frames(bits)
         for idx, frame in enumerate(frames):
-            self._transmit_frame(frame, interface)
+            self._last_ack_seq = None
+            retries = 0
+            while not self._ack_received(frame) and retries < self.max_retries:
+                self._transmit_frame(frame, interface)
+                retries += 1
 
-    def on_receive(self, bits) -> npt.NDArray:
+            if retries == self.max_retries:
+                raise LinkError('Maximum number of retries exceeded.', self.max_retries)
+
+    def on_receive(self, bits, interface=None):
         self._rx_stream_buffer.extend(bits)
 
         while len(self._rx_stream_buffer) >= self._get_frame_size():
 
             frame_bits = np.array(self._rx_stream_buffer[:self._get_frame_size()], dtype=np.uint8)
+            self._rx_stream_buffer = self._rx_stream_buffer[self._get_frame_size():]
+
             if not self._validate_checksum(frame_bits):
                 print("Checksum error → dropping frame")
-                return None
+                continue
 
             frame = self._deserialize_frame(frame_bits)
-            self._rx_stream_buffer = self._rx_stream_buffer[self._get_frame_size():]
-            self._rx_message_buffer.append(frame.get_true_payload())
+            print(
+                "RX:",
+                "seq=", frame.get_seq(),
+                "ack=", frame.get_is_ack(),
+                "last=", frame.get_is_last()
+            )
+            if frame.get_is_ack():
+                self._last_ack_seq = frame.get_seq()
+                continue
 
-            if frame.get_is_last():
-                return self._rebuild_message()
+            # If it is a valid data frame, then send ack
+            ack = self._build_ack(frame.get_seq())
+            self._transmit_frame(ack, interface)
 
-            return None
+            if frame.get_seq() == self._expected_seq:
+                self._rx_message_buffer.append(frame.get_true_payload())
+                self._expected_seq = (self._expected_seq + 1) % (2**self.seq_size)
+                if frame.get_is_last():
+                    return self._rebuild_message()
+
+        return None
 
     def _rebuild_message(self):
         message_bits = np.concatenate(self._rx_message_buffer)
@@ -137,6 +169,9 @@ class LinkLayer(Layer):
             raise ValueError("Checksum is too large to be represented with these protocol settings")
 
         return pad_bits(raw_cs, self.checksum_size)[0]
+
+    def _ack_received(self, frame):
+        return self._last_ack_seq == frame.get_seq()
 
     def _get_frame_size(self):
         return self.seq_size + 2 + self.payload_length_field_size + self.payload_size + self.checksum_size
