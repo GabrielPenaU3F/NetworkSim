@@ -8,10 +8,10 @@ class Source(ABC):
     probs = None
 
     def __init__(self, alphabet, source_rng=None):
-        self.alphabet = np.array(alphabet)
-        self.source_rng = source_rng if source_rng is not None else np.random.default_rng(seed=42)
+        self.alphabet = alphabet
+        self.source_rng = source_rng if source_rng is not None else np.random.default_rng(seed=0)
 
-        self.source_rng.shuffle(alphabet)
+        self.source_rng.shuffle(self.alphabet)
 
     @abstractmethod
     def generate(self, n):
@@ -20,8 +20,8 @@ class Source(ABC):
 
 class UniformIIDSource(Source):
 
-    def __init__(self, alphabet):
-        super().__init__(alphabet)
+    def __init__(self, alphabet, source_rng=None):
+        super().__init__(alphabet, source_rng)
         L = len(alphabet)
         self.probs = np.ones(L) / L
 
@@ -34,8 +34,8 @@ class UniformIIDSource(Source):
 
 class ZipfIIDSource(Source): # Pareto-like distribution (heavy tailed)
 
-    def __init__(self, alphabet, alpha=1.5):
-        super().__init__(alphabet)
+    def __init__(self, alphabet, alpha=1.5, source_rng=None):
+        super().__init__(alphabet, source_rng)
         ranks = np.arange(1, len(alphabet) + 1)
         probs = 1 / (ranks ** alpha)
         self.probs = probs / probs.sum()
@@ -48,8 +48,8 @@ class ZipfIIDSource(Source): # Pareto-like distribution (heavy tailed)
 
 class MarkovSource(Source):
 
-    def __init__(self, alphabet, transition_matrix):
-        super().__init__(alphabet)
+    def __init__(self, alphabet, transition_matrix, source_rng=None):
+        super().__init__(alphabet, source_rng)
         self.P = transition_matrix
         self.index = {word: i for i, word in enumerate(alphabet)}
 
@@ -68,8 +68,8 @@ class MarkovSource(Source):
 
 class BurstySource(Source):
 
-    def __init__(self, alphabet, n_bursty=1, p_enter=0.05, p_exit=0.2):
-        super().__init__(alphabet)
+    def __init__(self, alphabet, n_bursty=1, p_enter=0.05, p_exit=0.2, source_rng=None):
+        super().__init__(alphabet, source_rng)
         self.p_enter = p_enter
         self.p_exit = p_exit
 

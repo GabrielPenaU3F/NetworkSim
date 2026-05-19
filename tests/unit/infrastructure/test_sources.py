@@ -9,19 +9,20 @@ from src.infrastructure.sources import UniformIIDSource, ZipfIIDSource, MarkovSo
 def alphabet():
     return AlphabetProvider.provide_alphabet('test_16bits_alph')
 
-@pytest.fixture(autouse=True)
-def fixed_seed():
-    np.random.seed(0)
+@pytest.fixture
+def fixed_rng():
+    return np.random.default_rng(seed=0)
+
 
 class TestUniformIIDSource:
 
-    def test_length(self, alphabet):
-        src = UniformIIDSource(alphabet)
+    def test_length(self, alphabet, fixed_rng):
+        src = UniformIIDSource(alphabet, source_rng=fixed_rng)
         seq = src.generate(1000)
         assert len(seq) == 1000
 
-    def test_uniform_distribution(self, alphabet):
-        src = UniformIIDSource(alphabet)
+    def test_uniform_distribution(self, alphabet, fixed_rng):
+        src = UniformIIDSource(alphabet, source_rng=fixed_rng)
         n = 10000
         seq = src.generate(n)
 
@@ -35,13 +36,13 @@ class TestUniformIIDSource:
 
 class TestZipfIIDSource:
 
-    def test_length(self, alphabet):
-        src = ZipfIIDSource(alphabet)
+    def test_length(self, alphabet, fixed_rng):
+        src = ZipfIIDSource(alphabet, source_rng=fixed_rng)
         seq = src.generate(1000)
         assert len(seq) == 1000
 
-    def test_zipf_not_uniform(self, alphabet):
-        src = ZipfIIDSource(alphabet, alpha=1.5)
+    def test_zipf_not_uniform(self, alphabet, fixed_rng):
+        src = ZipfIIDSource(alphabet, alpha=1.5, source_rng=fixed_rng)
         n = 20000
         seq = src.generate(n)
         counts = {word: 0 for word in alphabet}
@@ -54,19 +55,19 @@ class TestZipfIIDSource:
 
 class TestMarkovSource:
 
-    def test_length(self, alphabet):
+    def test_length(self, alphabet, fixed_rng):
         L = len(alphabet)
         P = np.ones((L, L)) / L  # transición uniforme
-        src = MarkovSource(alphabet, P)
+        src = MarkovSource(alphabet, P, source_rng=fixed_rng)
         seq = src.generate(1000)
 
         assert len(seq) == 1000
 
-    def test_has_memory(self, alphabet):
+    def test_has_memory(self, alphabet, fixed_rng):
         L = len(alphabet)
         # matrix with a high correlation level
         P = np.eye(L) * 0.9 + (1 - 0.9) / L
-        src = MarkovSource(alphabet, P)
+        src = MarkovSource(alphabet, P, source_rng=fixed_rng)
         seq = src.generate(5000)
         same = 0
         for i in range(len(seq) - 1):
@@ -75,19 +76,19 @@ class TestMarkovSource:
 
         ratio = same / len(seq)
 
-        assert ratio > 0.5  # Should repeat a lot - may fail, but with low probability
+        assert ratio > 0.5
 
 
 class TestBurstySource:
 
-    def test_length(self, alphabet):
-        src = BurstySource(alphabet, n_bursty=2)
+    def test_length(self, alphabet, fixed_rng):
+        src = BurstySource(alphabet, n_bursty=2, source_rng=fixed_rng)
         seq = src.generate(1000)
 
         assert len(seq) == 1000
 
-    def test_has_bursts(self, alphabet):
-        src = BurstySource(alphabet, n_bursty=1, p_enter=0.2, p_exit=0.1)
+    def test_has_bursts(self, alphabet, fixed_rng):
+        src = BurstySource(alphabet, n_bursty=1, p_enter=0.2, p_exit=0.1, source_rng=fixed_rng)
         seq = src.generate(5000)
         max_run = 1
         current_run = 1
