@@ -3,7 +3,6 @@ import pytest
 
 from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
-from src.protocol_stack.layer_hub import LayerHub
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 
@@ -37,5 +36,5 @@ def example_link_layer():
     dummy_physical = DummyPhysicalLayer()
     checksum = ParityChecksum()
     link_layer = LinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
-    LayerHub._connect_layers(link_layer, dummy_physical)
+    link_layer.attach_lower(dummy_physical)
     return link_layer

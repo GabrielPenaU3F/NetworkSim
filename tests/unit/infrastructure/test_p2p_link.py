@@ -56,7 +56,7 @@ def test_full_noise_flips_all_bits(make_dummy_nodes, noisy_channel):
 
 def test_error_rate(make_dummy_nodes):
     p = 0.1
-    channel = BinarySymmetricChannel(p)
+    channel = BinarySymmetricChannel(p, rng=np.random.default_rng(seed=42))
     A, B = make_dummy_nodes(channel)
     zeros = np.zeros(10000, dtype=np.uint8)
     A.interfaces[0].send(zeros)

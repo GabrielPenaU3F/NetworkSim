@@ -95,12 +95,6 @@ class LinkLayer(Layer):
                 continue
 
             frame = self._deserialize_frame(frame_bits)
-            print(
-                "RX:",
-                "seq=", frame.get_seq(),
-                "ack=", frame.get_is_ack(),
-                "last=", frame.get_is_last()
-            )
             if frame.get_is_ack():
                 self._last_ack_seq = frame.get_seq()
                 continue

@@ -1,4 +1,4 @@
-from src.physical_layer.channel_codes.source_codes import BasicSourceCode
+from src.infrastructure.source_codes import BasicSourceCode
 from src.utils import str_to_bits, bits_to_str
 
 
@@ -8,9 +8,6 @@ class Codebook:
     available_codes = {
         'basic': BasicSourceCode,
     }
-    alphabet = []
-    codebook = []
-    reverse_codebook = []
 
     def __init__(self, alphabet, code='basic'):
         self.alphabet = alphabet

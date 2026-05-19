@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from src.infrastructure.alphabets import AlphabetProvider
-from src.physical_layer.channel_codes.source_codes import BasicSourceCode
+from src.infrastructure.source_codes import BasicSourceCode
 
 
 @pytest.fixture

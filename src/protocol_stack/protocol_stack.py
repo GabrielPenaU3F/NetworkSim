@@ -1,9 +1,14 @@
 from src.infrastructure.alphabets import AlphabetProvider
 from src.infrastructure.codebook import Codebook
-from src.protocol_stack.layer_hub import LayerHub
+from src.protocol_stack.layer_factory import LayerFactory
 
 
 class ProtocolStack:
+
+    LAYER_BUILDERS = {
+        'physical': LayerFactory.build_physical_layer,
+        'link': LayerFactory.build_link_layer,
+    }
 
     def __init__(self, cfg_manager):
         alphabet_name = cfg_manager.get_infrastructure_config().alphabet
@@ -18,7 +23,7 @@ class ProtocolStack:
 
     def _build_stack(self, cfg_manager):
         top = cfg_manager.get_protocol_stack_config().top_layer
-        builders = LayerHub.builders
+        builders = type(self).LAYER_BUILDERS
         if top not in builders:
             raise ValueError(f"Unknown top layer: {top}")
 

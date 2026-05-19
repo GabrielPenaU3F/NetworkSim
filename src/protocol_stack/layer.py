@@ -1,5 +1,7 @@
 from abc import abstractmethod, ABC
 
+from src.errors import ProtocolError
+
 
 class Layer(ABC):
 
@@ -13,10 +15,12 @@ class Layer(ABC):
         return bits
 
     def attach_lower(self, lower):
+        if self.lower_layer is not None:
+            raise ProtocolError("Upper layer already connected")
+        if lower.upper_layer is not None:
+            raise ProtocolError("Lower layer already connected")
         self.lower_layer = lower
-
-    def attach_upper(self, upper):
-        self.upper_layer = upper
+        lower.upper_layer = self
 
     @abstractmethod
     def transmit(self, bits, interface=None):

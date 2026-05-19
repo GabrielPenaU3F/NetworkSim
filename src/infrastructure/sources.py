@@ -7,9 +7,11 @@ class Source(ABC):
 
     probs = None
 
-    def __init__(self, alphabet):
-        np.random.shuffle(alphabet)
+    def __init__(self, alphabet, source_rng=None):
         self.alphabet = np.array(alphabet)
+        self.source_rng = source_rng if source_rng is not None else np.random.default_rng(seed=42)
+
+        self.source_rng.shuffle(alphabet)
 
     @abstractmethod
     def generate(self, n):
@@ -24,7 +26,7 @@ class UniformIIDSource(Source):
         self.probs = np.ones(L) / L
 
     def generate(self, n):
-        return np.random.choice(self.alphabet, n)
+        return self.source_rng.choice(self.alphabet, n)
 
     def get_probs(self):
         return dict(zip(self.alphabet, self.probs))
@@ -39,7 +41,7 @@ class ZipfIIDSource(Source): # Pareto-like distribution (heavy tailed)
         self.probs = probs / probs.sum()
 
     def generate(self, n):
-        return list(np.random.choice(self.alphabet, size=n, p=self.probs))
+        return list(self.source_rng.choice(self.alphabet, size=n, p=self.probs))
 
     def get_probs(self):
         return dict(zip(self.alphabet, self.probs))
@@ -52,13 +54,13 @@ class MarkovSource(Source):
         self.index = {word: i for i, word in enumerate(alphabet)}
 
     def generate(self, n):
-        state = np.random.choice(self.alphabet)
+        state = self.source_rng.choice(self.alphabet)
         seq = [state]
 
         for _ in range(n - 1):
             i = self.index[state]
             probs = self.P[i]
-            state = np.random.choice(self.alphabet, p=probs)
+            state = self.source_rng.choice(self.alphabet, p=probs)
             seq.append(state)
 
         return seq
@@ -72,7 +74,7 @@ class BurstySource(Source):
         self.p_exit = p_exit
 
         # Choose bursty subset
-        self.bursty_symbols = np.random.choice(alphabet, n_bursty)
+        self.bursty_symbols = self.source_rng.choice(alphabet, n_bursty)
 
     def generate(self, n):
         seq = []
@@ -83,14 +85,14 @@ class BurstySource(Source):
             if in_burst:
                 seq.append(current_symbol)
 
-                if np.random.random() < self.p_exit:
+                if self.source_rng.random() < self.p_exit:
                     in_burst = False
             else:
                 # Choose base symbol
-                symbol = np.random.choice(self.alphabet)
+                symbol = self.source_rng.choice(self.alphabet)
 
                 # If the symbol is bursty, goto burst mode
-                if symbol in self.bursty_symbols and np.random.random() < self.p_enter:
+                if symbol in self.bursty_symbols and self.source_rng.random() < self.p_enter:
                     in_burst = True
                     current_symbol = symbol
                     seq.append(symbol)
