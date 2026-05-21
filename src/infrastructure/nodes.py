@@ -1,17 +1,33 @@
+from abc import abstractmethod, ABC
+
 from src.infrastructure.p2p_link import P2PLink
 from src.protocol_stack.protocol_stack import ProtocolStack
 
 
-class Node:
+class Node(ABC):
 
-    def __init__(self, name, cfg_manager):
+    def __init__(self, name):
         self.name = name
-        self.protocol_stack = ProtocolStack(cfg_manager)
         self.interfaces = []
-        self._rx_messages = []
 
     def add_interface(self, interface):
         self.interfaces.append(interface)
+
+    @abstractmethod
+    def send(self, message, interface=0) -> None:
+        pass
+
+    @abstractmethod
+    def on_receive(self, bits, interface=0) -> None:
+        pass
+
+
+class Host(Node):
+
+    def __init__(self, name, cfg_manager):
+        super().__init__(name)
+        self.protocol_stack = ProtocolStack(cfg_manager)
+        self._rx_messages = []
 
     def connect_to(self, other_node, channel):
         P2PLink(self, other_node, channel)
