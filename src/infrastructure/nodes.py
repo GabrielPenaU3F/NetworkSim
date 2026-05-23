@@ -21,6 +21,16 @@ class Node(ABC):
     def on_receive(self, bits, interface=0) -> None:
         pass
 
+    def __eq__(self, other):
+        if not isinstance(other, Node): # Validate they're both nodes
+            return False
+        if self.address is None or other.address is None: # If any does not have an address
+            return super().__eq__(other)
+        return self.address == other.address # Then compare addresses
+
+    def __hash__(self):
+        return hash(self.address)
+
 
 class Host(Node):
 
