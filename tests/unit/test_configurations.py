@@ -21,9 +21,9 @@ class TestInfrastructureConfig:
 
 class TestProtocolStackConfig:
 
-    def test_default_top_layer_is_link(self, cfg_manager):
+    def test_default_top_layer_is_network(self, cfg_manager):
         stack_cfg = cfg_manager.get_protocol_stack_config()
-        assert stack_cfg.top_layer == 'link'
+        assert stack_cfg.top_layer == 'network'
 
 class TestPhysicalLayerConfig:
 

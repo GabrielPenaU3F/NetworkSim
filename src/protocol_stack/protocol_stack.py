@@ -8,6 +8,7 @@ class ProtocolStack:
     LAYER_BUILDERS = {
         'physical': LayerFactory.build_physical_layer,
         'link': LayerFactory.build_link_layer,
+        'network': LayerFactory.build_dummy_layer,
     }
 
     def __init__(self, cfg_manager):

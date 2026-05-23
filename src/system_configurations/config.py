@@ -1,7 +1,6 @@
 from abc import ABC
 
 from src.link_layer.checksum import ParityChecksum
-from src.infrastructure.channels import BinarySymmetricChannel
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 
 
@@ -27,7 +26,7 @@ class InfrastructureConfig(Config):
 class ProtocolStackConfig(Config):
 
     DEFAULTS = {
-        'top_layer': 'link'
+        'top_layer': 'network'
     }
 
     def __init__(self, top_layer):
@@ -74,6 +73,7 @@ class LinkConfig(Config):
 
 
 class FrameConfig:
+
     def __init__(self, payload_size, seq_size, checksum_size):
         self.payload_size = payload_size
         self.seq_size = seq_size

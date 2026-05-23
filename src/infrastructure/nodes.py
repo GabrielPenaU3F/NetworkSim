@@ -6,8 +6,8 @@ from src.protocol_stack.protocol_stack import ProtocolStack
 
 class Node(ABC):
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, address=None):
+        self.address = address
         self.interfaces = []
 
     def add_interface(self, interface):
@@ -24,8 +24,8 @@ class Node(ABC):
 
 class Host(Node):
 
-    def __init__(self, name, cfg_manager):
-        super().__init__(name)
+    def __init__(self, cfg_manager, address=None):
+        super().__init__(address)
         self.protocol_stack = ProtocolStack(cfg_manager)
         self._rx_messages = []
 
@@ -44,3 +44,6 @@ class Host(Node):
     def read(self):
         if self._rx_messages:
             return self._rx_messages.pop(0)
+
+    def get_address(self):
+        return self.address
