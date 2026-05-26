@@ -1,15 +1,9 @@
-from src.infrastructure.interface import Interface
-
-
 class P2PLink:
 
-    def __init__(self, node_a, node_b, channel):
-        self.iface_a = Interface(node_a, self)
-        self.iface_b = Interface(node_b, self)
+    def __init__(self, iface_a, iface_b, channel):
+        self.iface_a = iface_a
+        self.iface_b = iface_b
         self.channel = channel
-
-        node_a.add_interface(self.iface_a)
-        node_b.add_interface(self.iface_b)
 
     def transmit(self, sender_interface, bits):
         noisy_bits = self.channel.apply_noise(bits)

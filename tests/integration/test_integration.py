@@ -1,12 +1,7 @@
 import pytest
 
-from src.infrastructure.channels import BinarySymmetricChannel
 from tests.utilities.utils import make_nodes, make_triangle_nodes
 
-
-@pytest.fixture
-def clean_channel():
-    return BinarySymmetricChannel(0)
 
 @pytest.fixture
 def nodes():

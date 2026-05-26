@@ -12,11 +12,11 @@ class NetworkGraph:
             self.nodes.append(node)
             self._adjacency[node] = []
 
-    def add_edge(self, node_a, node_b):
+    def add_edge(self, node_a, node_b, link=None):
         if self.get_edge_to(node_a, node_b) is not None:
             raise ValueError('An edge between these nodes already exists')
 
-        edge = Edge(node_a, node_b)
+        edge = Edge(node_a, node_b, link)
         self._adjacency[node_a].append(edge)
         self._adjacency[node_b].append(edge)
         return edge
@@ -33,9 +33,10 @@ class NetworkGraph:
 
 class Edge:
 
-    def __init__(self, node_a, node_b):
+    def __init__(self, node_a, node_b, link):
         self.node_a = node_a
         self.node_b = node_b
+        self.link = link
 
     def get_other_node(self, node):
         if self.node_a == node:
@@ -46,4 +47,4 @@ class Edge:
         return node.get_interface_for_edge(self)
 
     def get_link(self):
-        return self.get_interface_for(self.node_a).link
+        return self.link

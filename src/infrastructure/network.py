@@ -1,7 +1,7 @@
 from src.errors import NetworkError
+from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
 from src.infrastructure.nodes import Host
-from src.infrastructure.p2p_link import P2PLink
 
 
 class Network:
@@ -36,8 +36,4 @@ class Network:
     def connect(self, node_a, node_b, channel):
         if not all(node.get_address() in self._address_registry for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
-        p2p_link = P2PLink(node_a, node_b, channel)
-        iface_a, iface_b = p2p_link.get_interfaces()
-        edge = self.graph.add_edge(node_a, node_b)
-        iface_a.connect_edge(edge)
-        iface_b.connect_edge(edge)
+        LinkFactory.create_network_link(self.graph, node_a, node_b, channel)

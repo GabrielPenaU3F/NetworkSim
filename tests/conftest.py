@@ -5,20 +5,12 @@ from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
+from tests.utilities.dummies import DummyPhysicalLayer, CleanChannel
 
 
-class DummyPhysicalLayer:
-    def __init__(self):
-        self.upper_layer = None
-        self.sent_bits = []
-        self.calls = 0
-
-    def attach_upper(self, upper):
-        self.upper_layer = upper
-
-    def transmit(self, bits, interface=None):
-        self.sent_bits.append(bits)
-        self.calls += 1
+@pytest.fixture
+def clean_channel():
+    return CleanChannel()
 
 @pytest.fixture
 def tile_bits():

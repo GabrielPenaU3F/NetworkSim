@@ -47,9 +47,6 @@ class Host(Node):
         self.protocol_stack = ProtocolStack(cfg_manager)
         self._rx_messages = []
 
-    def connect_to(self, other_node, channel):
-        P2PLink(self, other_node, channel)
-
     def send(self, message, interface=0) -> None:
         interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface)
