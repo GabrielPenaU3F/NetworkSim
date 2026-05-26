@@ -10,7 +10,9 @@ class Node(ABC):
         self.address = address
         self.interfaces = []
 
-    def add_interface(self, interface):
+    def add_interface(self, interface, edge=None):
+        if edge is not None:
+            interface.connect_edge(edge)
         self.interfaces.append(interface)
 
     @abstractmethod
@@ -20,6 +22,12 @@ class Node(ABC):
     @abstractmethod
     def on_receive(self, bits, interface=0) -> None:
         pass
+
+    def get_interface_for_edge(self, edge):
+        for interface in self.interfaces:
+            if interface.edge == edge:
+                return interface
+        return None
 
     def __eq__(self, other):
         if not isinstance(other, Node): # Validate they're both nodes

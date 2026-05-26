@@ -37,12 +37,11 @@ class TestAddresses:
         host = Host(ConfigManager(), address='192.168.0.1')
         assert host.get_address() == '192.168.0.1'
 
-    def test_network_host_default_address(self, basic_network):
-        host = basic_network.create_host()
+    def test_network_host_default_address(self, simple_network):
+        host = simple_network.create_host()
         assert host.get_address() == '192.168.0.1'
 
-    def test_cannot_create_two_hosts_with_equal_addresses(self, basic_network):
-        with pytest.raises(NetworkError) as e:
-            host_1 = basic_network.create_host(address='192.168.0.1')
-            host_2 = basic_network.create_host(address='192.168.0.1')
-            assert e.message == 'Address 192.168.0.1 already in use'
+    def test_cannot_create_two_hosts_with_equal_addresses(self, simple_network):
+        with pytest.raises(NetworkError, match='Address 192.168.0.1 already in use'):
+            host_1 = simple_network.create_host(address='192.168.0.1')
+            host_2 = simple_network.create_host(address='192.168.0.1')

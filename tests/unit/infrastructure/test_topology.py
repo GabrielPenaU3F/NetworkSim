@@ -1,6 +1,5 @@
 import pytest
 
-from src.errors import NetworkError
 from src.infrastructure.network_graph import NetworkGraph
 from src.infrastructure.nodes import Host
 from src.system_configurations.config_manager import ConfigManager
@@ -33,6 +32,23 @@ def test_add_duplicate_node_does_not_increase_count(graph, hosts):
     graph.add_node(a)
     assert graph.node_count() == 1
 
+def test_get_edge_to_returns_correct_edge(graph, hosts):
+    a, b, _ = hosts
+    graph.add_node(a)
+    graph.add_node(b)
+    graph.add_edge(a, b)
+    edge = graph.get_edge_to(a, b)
+    assert edge is not None
+    assert edge.get_other_node(a) == b
+
+def test_get_edge_to_returns_none_if_not_connected(graph, hosts):
+    a, b, c = hosts
+    graph.add_node(a)
+    graph.add_node(b)
+    graph.add_node(c)
+    graph.add_edge(a, b)
+    assert graph.get_edge_to(a, c) is None
+
 def test_add_edge_registers_both_directions(graph, hosts):
     a, b, _ = hosts
     graph.add_node(a)
@@ -57,8 +73,18 @@ def test_get_neighbors_of_connected_node(graph, hosts):
     assert b in neighbors
     assert c in neighbors
 
-def test_cannot_create_edges_between_nonexistent_nodes(graph, hosts):
+def test_cannot_create_parallel_edges(graph, hosts):
     a, b, _ = hosts
     graph.add_node(a)
-    with pytest.raises(ValueError, match='Cannot create an edge between nonexistent nodes'):
+    graph.add_node(b)
+    with pytest.raises(ValueError, match='An edge between these nodes already exists'):
         graph.add_edge(a, b)
+        graph.add_edge(a, b)
+
+def test_cannot_create_antiparallel_edges(graph, hosts):
+    a, b, _ = hosts
+    graph.add_node(a)
+    graph.add_node(b)
+    with pytest.raises(ValueError, match='An edge between these nodes already exists'):
+        graph.add_edge(a, b)
+        graph.add_edge(b, a)

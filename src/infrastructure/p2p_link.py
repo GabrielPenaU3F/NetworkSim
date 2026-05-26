@@ -17,3 +17,6 @@ class P2PLink:
             self.iface_b.on_receive(noisy_bits)
         else:
             self.iface_a.on_receive(noisy_bits)
+
+    def get_interfaces(self):
+        return self.iface_a, self.iface_b
