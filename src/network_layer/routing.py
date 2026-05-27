@@ -8,6 +8,7 @@ class ShortestPathRouting:
 
     def __init__(self, graph: NetworkGraph):
         self.graph = graph
+        self.graph.subscribe(self)
         self._cache = {}
 
     def get_first_hops(self, origin):
@@ -64,3 +65,6 @@ class ShortestPathRouting:
             if current is None:
                 return None  # destino no alcanzable
         return current
+
+    def on_graph_changed(self):
+        self._cache.clear()

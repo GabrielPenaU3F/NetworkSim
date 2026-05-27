@@ -16,6 +16,14 @@ def make_routing():
 
 # example_graph is a -- b -- c
 
+def test_first_hops_of_isolated_node_is_empty(make_routing, hosts):
+    graph = NetworkGraph()
+    routing = make_routing(graph)
+    a, _, _ = hosts
+    graph.add_node(a)
+    first_hops = routing.get_first_hops(a)
+    assert first_hops == {}
+
 def test_first_hop_to_direct_neighbor(make_routing, example_graph, hosts):
     a, b, c = hosts
     routing = make_routing(example_graph)
@@ -65,21 +73,41 @@ def test_unreachable_node_raises_exception(network_cfg_manager, make_routing, ho
     with pytest.raises(NetworkError, match=err_msg):
         routing.get_first_hops(a)
 
-# def test_cache_is_invalidated_when_node_is_added(make_routing, hosts, clean_channel):
-#     graph = NetworkGraph()
-#     routing = make_routing(graph)
-#     a, b, c = hosts
-#     graph.add_node(a)
-#     graph.add_node(b)
-#     graph.add_edge(a, b, make_link(a, b, clean_channel))
-#
-#     # Compute to cache distances
-#     first_hops = routing.get_first_hops(a)
-#     assert c not in first_hops
-#
-#     # Add new node
-#     graph.add_node(c)
-#     graph.add_edge(b, c, make_link(b, c, clean_channel))
-#
-#     first_hops = routing.get_first_hops(a)
-#     assert c in first_hops
+def test_cache_is_invalidated_when_node_is_added(make_routing, hosts, clean_channel):
+    graph = NetworkGraph()
+    routing = make_routing(graph)
+    a, b, c = hosts
+    graph.add_node(a)
+    graph.add_node(b)
+    graph.add_edge(a, b, make_link(a, b, clean_channel))
+
+    # Compute to cache distances
+    first_hops = routing.get_first_hops(a)
+    assert c not in first_hops
+
+    # Add new node
+    graph.add_node(c)
+    graph.add_edge(b, c, make_link(b, c, clean_channel))
+
+    first_hops = routing.get_first_hops(a)
+    assert c in first_hops
+
+def test_cache_is_invalidated_when_edge_is_added(make_routing, hosts, clean_channel):
+    graph = NetworkGraph()
+    routing = make_routing(graph)
+    a, b, c = hosts
+    graph.add_node(a)
+    graph.add_node(b)
+    graph.add_node(c)
+    graph.add_edge(a, b, make_link(a, b, clean_channel))
+
+    # Compute to cache distances - C should be unreachable
+    with pytest.raises(NetworkError):
+        routing.get_first_hops(a)
+
+    # Thus we connect C
+    graph.add_edge(b, c, make_link(b, c, clean_channel))
+
+    # C should now be reachable
+    first_hops = routing.get_first_hops(a)
+    assert first_hops[c] == b

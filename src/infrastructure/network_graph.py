@@ -3,6 +3,7 @@ class NetworkGraph:
     def __init__(self):
         self.nodes = []
         self._adjacency = {}
+        self._observers = []
 
     def node_count(self):
         return len(self.nodes)
@@ -11,6 +12,7 @@ class NetworkGraph:
         if node not in self.nodes:
             self.nodes.append(node)
             self._adjacency[node] = []
+        self._notify_change()
 
     def add_edge(self, node_a, node_b, link=None):
         if self.get_edge_to(node_a, node_b) is not None:
@@ -19,6 +21,7 @@ class NetworkGraph:
         edge = Edge(node_a, node_b, link)
         self._adjacency[node_a].append(edge)
         self._adjacency[node_b].append(edge)
+        self._notify_change()
         return edge
 
     def get_neighbors(self, node):
@@ -29,6 +32,13 @@ class NetworkGraph:
             if edge.get_other_node(node) == neighbor:
                 return edge
         return None
+
+    def subscribe(self, observer):
+        self._observers.append(observer)
+
+    def _notify_change(self):
+        for observer in self._observers:
+            observer.on_graph_changed()
 
 
 class Edge:
