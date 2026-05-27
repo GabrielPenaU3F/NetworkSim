@@ -1,90 +1,68 @@
 import pytest
 
-from src.infrastructure.network_graph import NetworkGraph
-from src.infrastructure.nodes import Host
-from src.system_configurations.config_manager import ConfigManager
 
+def test_graph_starts_empty(empty_graph):
+    assert empty_graph.node_count() == 0
 
-@pytest.fixture
-def graph():
-    return NetworkGraph()
-
-@pytest.fixture
-def hosts():
-    cfg = ConfigManager(top_layer='network')
-    a = Host(cfg, address='192.168.0.1')
-    b = Host(cfg, address='192.168.0.2')
-    c = Host(cfg, address='192.168.0.3')
-    return a, b, c
-
-
-def test_graph_starts_empty(graph):
-    assert graph.node_count() == 0
-
-def test_add_node(graph, hosts):
+def test_add_node(empty_graph, hosts):
     a, _, _ = hosts
-    graph.add_node(a)
-    assert graph.node_count() == 1
+    empty_graph.add_node(a)
+    assert empty_graph.node_count() == 1
 
-def test_add_duplicate_node_does_not_increase_count(graph, hosts):
+def test_add_duplicate_node_does_not_increase_count(empty_graph, hosts):
     a, _, _ = hosts
-    graph.add_node(a)
-    graph.add_node(a)
-    assert graph.node_count() == 1
+    empty_graph.add_node(a)
+    empty_graph.add_node(a)
+    assert empty_graph.node_count() == 1
 
-def test_get_edge_to_returns_correct_edge(graph, hosts):
+def test_get_edge_to_returns_correct_edge(empty_graph, hosts):
     a, b, _ = hosts
-    graph.add_node(a)
-    graph.add_node(b)
-    graph.add_edge(a, b)
-    edge = graph.get_edge_to(a, b)
+    empty_graph.add_node(a)
+    empty_graph.add_node(b)
+    empty_graph.add_edge(a, b)
+    edge = empty_graph.get_edge_to(a, b)
     assert edge is not None
     assert edge.get_other_node(a) == b
 
-def test_get_edge_to_returns_none_if_not_connected(graph, hosts):
+def test_get_edge_to_returns_none_if_not_connected(empty_graph, hosts):
     a, b, c = hosts
-    graph.add_node(a)
-    graph.add_node(b)
-    graph.add_node(c)
-    graph.add_edge(a, b)
-    assert graph.get_edge_to(a, c) is None
+    empty_graph.add_node(a)
+    empty_graph.add_node(b)
+    empty_graph.add_node(c)
+    empty_graph.add_edge(a, b)
+    assert empty_graph.get_edge_to(a, c) is None
 
-def test_add_edge_registers_both_directions(graph, hosts):
+def test_add_edge_registers_both_directions(empty_graph, hosts):
     a, b, _ = hosts
-    graph.add_node(a)
-    graph.add_node(b)
-    graph.add_edge(a, b)
-    assert b in graph.get_neighbors(a)
-    assert a in graph.get_neighbors(b)
+    empty_graph.add_node(a)
+    empty_graph.add_node(b)
+    empty_graph.add_edge(a, b)
+    assert b in empty_graph.get_neighbors(a)
+    assert a in empty_graph.get_neighbors(b)
 
-def test_get_neighbors_of_isolated_node(graph, hosts):
+def test_get_neighbors_of_isolated_node(empty_graph, hosts):
     a, _, _ = hosts
-    graph.add_node(a)
-    assert graph.get_neighbors(a) == []
+    empty_graph.add_node(a)
+    assert empty_graph.get_neighbors(a) == []
 
-def test_get_neighbors_of_connected_node(graph, hosts):
+def test_get_neighbors_of_connected_node(example_graph, hosts):
     a, b, c = hosts
-    graph.add_node(a)
-    graph.add_node(b)
-    graph.add_node(c)
-    graph.add_edge(a, b)
-    graph.add_edge(a, c)
-    neighbors = graph.get_neighbors(a)
-    assert b in neighbors
+    neighbors = example_graph.get_neighbors(b)
+    assert a in neighbors
     assert c in neighbors
 
-def test_cannot_create_parallel_edges(graph, hosts):
+def test_cannot_create_parallel_edges(empty_graph, hosts):
     a, b, _ = hosts
-    graph.add_node(a)
-    graph.add_node(b)
+    empty_graph.add_node(a)
+    empty_graph.add_node(b)
     with pytest.raises(ValueError, match='An edge between these nodes already exists'):
-        graph.add_edge(a, b)
-        graph.add_edge(a, b)
+        empty_graph.add_edge(a, b)
+        empty_graph.add_edge(a, b)
 
-def test_cannot_create_antiparallel_edges(graph, hosts):
+def test_cannot_create_antiparallel_edges(empty_graph, hosts):
     a, b, _ = hosts
-    graph.add_node(a)
-    graph.add_node(b)
+    empty_graph.add_node(a)
+    empty_graph.add_node(b)
     with pytest.raises(ValueError, match='An edge between these nodes already exists'):
-        graph.add_edge(a, b)
-        graph.add_edge(b, a)
+        empty_graph.add_edge(a, b)
+        empty_graph.add_edge(b, a)

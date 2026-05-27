@@ -1,16 +1,25 @@
 import numpy as np
 import pytest
 
+from src.infrastructure.network_graph import NetworkGraph
 from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 from tests.utilities.dummies import DummyPhysicalLayer, CleanChannel
-
+from tests.utilities.utils import make_network_level_hosts
 
 @pytest.fixture
 def clean_channel():
     return CleanChannel()
+
+@pytest.fixture
+def empty_graph():
+    return NetworkGraph()
+
+@pytest.fixture
+def hosts():
+    return make_network_level_hosts()
 
 @pytest.fixture
 def tile_bits():

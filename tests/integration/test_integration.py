@@ -1,11 +1,11 @@
 import pytest
 
-from tests.utilities.utils import make_nodes, make_triangle_nodes
+from tests.utilities.utils import make_physical_level_hosts, make_triangle_nodes
 
 
 @pytest.fixture
 def nodes():
-    return make_nodes
+    return make_physical_level_hosts
 
 @pytest.fixture
 def nodes_triangle():
