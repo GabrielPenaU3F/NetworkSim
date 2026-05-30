@@ -1,13 +1,8 @@
 from src.physical_layer.channel_codes.channel_codes import RepetitionChannelCode
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
+from tests.utilities.dummies import DummyInterface
 
-class DummyInterface:
-    def __init__(self):
-        self.sent_bits = None
-
-    def send(self, bits):
-        self.sent_bits = bits
 
 def test_link_has_checksum():
     from src.link_layer.checksum import ParityChecksum

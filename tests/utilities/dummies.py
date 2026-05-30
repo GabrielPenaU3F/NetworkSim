@@ -1,3 +1,7 @@
+from src.infrastructure.interface import Interface
+from src.infrastructure.nodes import Node
+
+
 class CleanChannel:
 
     def apply_noise(self, bits):
@@ -18,12 +22,15 @@ class DummyPhysicalLayer:
         self.calls += 1
 
 
-class DummyNode:
-    def __init__(self):
+class DummyNode(Node):
+
+    def __init__(self, address='0'):
+        super().__init__()
+        self.address = address
         self.interfaces = []
         self._rx_bits = []
 
-    def add_interface(self, interface):
+    def add_interface(self, interface, **kwargs):
         self.interfaces.append(interface)
 
     def on_receive(self, bits, interface=None):
@@ -32,3 +39,16 @@ class DummyNode:
     def read(self):
         if self._rx_bits:
             return self._rx_bits.pop(0)
+
+    def send(self, message, interface=0) -> None:
+        pass
+
+
+class DummyInterface(Interface):
+
+    def __init__(self, node=None):
+        super().__init__(node)
+        self.sent_bits = None
+
+    def send(self, bits):
+        self.sent_bits = bits
