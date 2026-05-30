@@ -36,7 +36,7 @@ def test_frame_roundtrip_with_real_config(example_link_layer, tile_bits):
     for f in frames:
         serialized = example_link_layer._serialize_frame(f)
         deserialized = example_link_layer._deserialize_frame(serialized)
-        assert deserialized.get_is_last() == f.get_is_last()
+        assert deserialized.is_last == f.is_last
 
 def test_rx_fails_with_fragmented_frames(example_link_layer, tile_bits):
     bits = tile_bits(7)  # 14 bits → 2 frames

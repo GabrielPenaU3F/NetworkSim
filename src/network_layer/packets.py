@@ -9,12 +9,3 @@ class IPPacket:
         self.origin_address = origin_address
         self.destination_address = destination_address
         self.payload = payload
-
-    def get_origin_address(self):
-        return self.origin_address
-
-    def get_destination_address(self):
-        return self.destination_address
-
-    def get_payload(self):
-        return self.payload

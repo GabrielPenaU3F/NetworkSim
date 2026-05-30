@@ -60,6 +60,3 @@ class Host(Node):
     def read(self):
         if self._rx_messages:
             return self._rx_messages.pop(0)
-
-    def get_address(self):
-        return self.address

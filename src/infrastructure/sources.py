@@ -10,7 +10,6 @@ class Source(ABC):
     def __init__(self, alphabet, source_rng=None):
         self.alphabet = alphabet
         self.source_rng = source_rng if source_rng is not None else np.random.default_rng(seed=0)
-
         self.source_rng.shuffle(self.alphabet)
 
     @abstractmethod

@@ -13,13 +13,13 @@ def example_packet():
 
 
 def test_packet_knows_origin_address(example_packet):
-    assert example_packet.get_origin_address() == '192.168.0.1'
+    assert example_packet.origin_address == '192.168.0.1'
 
 def test_packet_knows_destination_address(example_packet):
-    assert example_packet.get_destination_address() == '192.168.0.2'
+    assert example_packet.destination_address == '192.168.0.2'
 
 def test_packet_payload(example_packet):
-    assert example_packet.get_payload() == [1, 0, 1, 0]
+    assert example_packet.payload == [1, 0, 1, 0]
 
 def test_cannot_create_packet_without_origin_address():
     with pytest.raises(NetworkError, match='Origin and Destination addresses must be specified'):

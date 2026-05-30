@@ -52,7 +52,7 @@ class TestSerialization:
 
     def test_serialize_frame_payload(self, example_link_layer, frame_to_serialize):
         frame = frame_to_serialize(is_last=1)
-        expected_payload = frame.get_payload()
+        expected_payload = frame.payload
         serialized = example_link_layer._serialize_frame(frame)
 
         payload_end = example_link_layer._get_body_size()
@@ -74,32 +74,32 @@ class TestDeserialization:
 
     def test_deserialize_frame_seq(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits())
-        assert deserialized.get_seq() == 0
+        assert deserialized.seq == 0
 
     def test_deserialize_frame_is_last(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=1))
-        assert deserialized.get_is_last() == 1
+        assert deserialized.is_last == 1
 
     def test_deserialize_frame_is_not_last(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=0))
-        assert deserialized.get_is_last() == 0
+        assert deserialized.is_last == 0
 
     def test_deserialize_frame_is_ack(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=1))
-        assert deserialized.get_is_ack() == 1
+        assert deserialized.is_ack == 1
 
     def test_deserialize_frame_is_not_ack(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=0))
-        assert deserialized.get_is_ack() == 0
+        assert deserialized.is_ack == 0
 
     def test_deserialize_frame_real_length(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits())
-        assert deserialized.get_real_length() == 4
+        assert deserialized.real_length == 4
 
     def test_deserialize_frame_payload(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits())
         expected_payload = np.array([0, 1, 0, 1], dtype=np.uint8)
-        assert np.all(deserialized.get_payload() == expected_payload)
+        assert np.all(deserialized.payload == expected_payload)
 
 
 class TestChecksumCalculation:
@@ -174,22 +174,22 @@ class TestLinkLayer:
         frames = example_link_layer._build_frames(bits)
         frame = frames[0]
 
-        assert frame.get_seq() == 0
-        assert frame.get_is_last() == 1
-        assert frame.get_real_length() == 4
+        assert frame.seq == 0
+        assert frame.is_last == 1
+        assert frame.real_length == 4
 
     def test_build_a_single_frame_payload_without_padding(self, example_link_layer, tile_bits):
         bits = tile_bits(4) # Exactly 8 bits on a link layer with payload_size=8
         frames = example_link_layer._build_frames(bits)
         frame = frames[0]
-        assert np.all(frame.get_payload() == bits)
+        assert np.all(frame.payload == bits)
 
     def test_build_a_single_frame_payload_with_padding(self, example_link_layer, tile_bits):
         bits = tile_bits(2) # 4 bits on a link layer with payload_size=8, needs padding
         frames = example_link_layer._build_frames(bits)
         frame = frames[0]
         expected_payload = np.concatenate(([0, 1, 0, 1], [0, 0, 0, 0]))
-        assert np.all(frame.get_payload() == expected_payload)
+        assert np.all(frame.payload == expected_payload)
 
     def test_build_frames(self, example_link_layer, tile_bits):
         bits = tile_bits(7)
@@ -201,10 +201,10 @@ class TestLinkLayer:
         # ------------------
         expected_payload_0 = bits[:8]
 
-        assert f0.get_seq() == 0
-        assert f0.get_is_last() == 0
-        assert f0.get_real_length() == 8
-        assert np.all(f0.get_payload() == expected_payload_0)
+        assert f0.seq == 0
+        assert f0.is_last == 0
+        assert f0.real_length == 8
+        assert np.all(f0.payload == expected_payload_0)
 
         # ------------------
         # Frame 1 (with two-bit padding)
@@ -212,10 +212,10 @@ class TestLinkLayer:
         real_payload_1 = bits[8:]  # 6 bits
         expected_payload_1 = np.concatenate((real_payload_1, [0, 0]))
 
-        assert f1.get_seq() == 1
-        assert f1.get_is_last() == 1
-        assert f1.get_real_length() == 6
-        assert np.all(f1.get_payload() == expected_payload_1)
+        assert f1.seq == 1
+        assert f1.is_last == 1
+        assert f1.real_length == 6
+        assert np.all(f1.payload == expected_payload_1)
 
     def test_link_tx_serializes_and_sends_downwards(self, example_link_layer):
         bits = np.array(np.zeros(16), dtype=np.uint8)
@@ -223,7 +223,7 @@ class TestLinkLayer:
         # Monkeypatch ack reception
         acked = set()
         def fake_ack(frame):
-            seq = frame.get_seq()
+            seq = frame.seq
             if seq in acked:
                 return True
 
@@ -275,7 +275,7 @@ class TestLinkLayer:
 
             # immediate ACK
             frame = example_link_layer._deserialize_frame(bits_sent)
-            ack = example_link_layer._build_ack(frame.get_seq())
+            ack = example_link_layer._build_ack(frame.seq)
             ack_bits = example_link_layer._serialize_frame(ack)
 
             example_link_layer.on_receive(ack_bits)
@@ -331,8 +331,8 @@ class TestLinkLayer:
         ack_bits = physical.sent_bits[0]
         ack_frame = example_link_layer._deserialize_frame(ack_bits)
 
-        assert ack_frame.get_is_ack() == 1
-        assert ack_frame.get_seq() == 3
+        assert ack_frame.is_ack == 1
+        assert ack_frame.seq == 3
 
     def test_rx_reacknowledges_duplicate_frames(self, example_link_layer, frame_to_serialize):
         frame = frame_to_serialize(seq=3, is_last=0)
@@ -371,13 +371,13 @@ class TestLinkLayer:
     def test_build_ack_sets_correct_fields(self, example_link_layer):
         ack = example_link_layer._build_ack(seq=5)
 
-        assert ack.get_seq() == 5
-        assert ack.get_is_ack() == 1
-        assert ack.get_is_last() == 0
-        assert ack.get_real_length() == 0
+        assert ack.seq == 5
+        assert ack.is_ack == 1
+        assert ack.is_last == 0
+        assert ack.real_length == 0
 
     def test_build_ack_uses_empty_payload(self, example_link_layer):
         ack = example_link_layer._build_ack(seq=1)
         expected = np.zeros(example_link_layer.payload_size, dtype=np.uint8)
 
-        assert np.all(ack.get_payload() == expected)
+        assert np.all(ack.payload == expected)

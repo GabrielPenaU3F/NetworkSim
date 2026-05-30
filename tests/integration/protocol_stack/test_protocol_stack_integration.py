@@ -33,7 +33,7 @@ def test_stack_transmits_through_layers(link_stack):
     def transmit_with_ack(bits, iface=None):
         interface.sent_bits = bits
         frame = link_layer._deserialize_frame(bits)
-        ack = link_layer._build_ack(frame.get_seq())
+        ack = link_layer._build_ack(frame.seq)
         ack_bits = link_layer._serialize_frame(ack)
         link_layer.on_receive(ack_bits)
 

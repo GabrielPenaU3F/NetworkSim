@@ -31,15 +31,15 @@ class TestAddresses:
 
     def test_host_default_address_is_none(self):
         host = Host(ConfigManager())
-        assert host.get_address() is None
+        assert host.address is None
 
     def test_host_accepts_an_address(self):
         host = Host(ConfigManager(), address='192.168.0.1')
-        assert host.get_address() == '192.168.0.1'
+        assert host.address == '192.168.0.1'
 
     def test_network_host_default_address(self, simple_network):
         host = simple_network.create_host()
-        assert host.get_address() == '192.168.0.1'
+        assert host.address == '192.168.0.1'
 
     def test_cannot_create_two_hosts_with_equal_addresses(self, simple_network):
         with pytest.raises(NetworkError, match='Address 192.168.0.1 already in use'):

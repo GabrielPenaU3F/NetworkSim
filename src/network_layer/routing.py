@@ -31,7 +31,7 @@ class ShortestPathRouting:
 
             # If every node has infinity distance, then they are unreachable
             if current != origin and distances[current] == np.inf:
-                raise NetworkError(f'Node {current.get_address()} is unreachable from {origin.get_address()}')
+                raise NetworkError(f'Node {current.address} is unreachable from {origin.address}')
 
             # If it is reachable, we visit it
             unvisited.remove(current)

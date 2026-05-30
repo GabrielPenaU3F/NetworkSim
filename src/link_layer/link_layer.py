@@ -95,18 +95,18 @@ class LinkLayer(Layer):
                 continue
 
             frame = self._deserialize_frame(frame_bits)
-            if frame.get_is_ack():
-                self._last_ack_seq = frame.get_seq()
+            if frame.is_ack:
+                self._last_ack_seq = frame.seq
                 continue
 
             # If it is a valid data frame, then send ack
-            ack = self._build_ack(frame.get_seq())
+            ack = self._build_ack(frame.seq)
             self._transmit_frame(ack, interface)
 
-            if frame.get_seq() == self._expected_seq:
+            if frame.seq == self._expected_seq:
                 self._rx_message_buffer.append(frame.get_true_payload())
                 self._expected_seq = (self._expected_seq + 1) % (2**self.seq_size)
-                if frame.get_is_last():
+                if frame.is_last:
                     return self._rebuild_message()
 
         return None
@@ -121,14 +121,14 @@ class LinkLayer(Layer):
         self._rx_message_buffer.clear()
 
     def _serialize_frame(self, frame: Frame) -> npt.NDArray:
-        seq_bits = int_to_bits(frame.get_seq(), self.seq_size)
-        is_last_bit = np.array([frame.get_is_last()], dtype=np.uint8)
-        is_ack_bit = np.array([frame.get_is_ack()], dtype=np.uint8)
-        real_length = int_to_bits(frame.get_real_length(), self.payload_length_field_size)
+        seq_bits = int_to_bits(frame.seq, self.seq_size)
+        is_last_bit = np.array([frame.is_last], dtype=np.uint8)
+        is_ack_bit = np.array([frame.is_ack], dtype=np.uint8)
+        real_length = int_to_bits(frame.real_length, self.payload_length_field_size)
 
-        payload = frame.get_payload()
+        payload = frame.payload
 
-        checksum = frame.get_checksum()
+        checksum = frame.checksum
         return np.concatenate([seq_bits, is_last_bit, is_ack_bit, real_length, payload, checksum])
 
     def _deserialize_frame(self, received_bits: npt.NDArray) -> Frame:
@@ -165,7 +165,7 @@ class LinkLayer(Layer):
         return pad_bits(raw_cs, self.checksum_size)[0]
 
     def _ack_received(self, frame):
-        return self._last_ack_seq == frame.get_seq()
+        return self._last_ack_seq == frame.seq
 
     def _get_frame_size(self):
         return self.seq_size + 2 + self.payload_length_field_size + self.payload_size + self.checksum_size

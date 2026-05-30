@@ -36,7 +36,7 @@ class Network:
         return self.graph
 
     def connect(self, node_a, node_b, channel):
-        if not all(node.get_address() in self._address_registry for node in (node_a, node_b)):
+        if not all(node.address in self._address_registry for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
         LinkFactory.create_network_link(self.graph, node_a, node_b, channel)
 
