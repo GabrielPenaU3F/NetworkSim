@@ -6,17 +6,24 @@ class LinkFactory:
 
     @classmethod
     def create_physical_link(cls, node_a, node_b, channel):
-        iface_a = Interface(node_a)
-        iface_b = Interface(node_b)
-        link = P2PLink(iface_a, iface_b, channel)
-        iface_a.attach_link(link)
-        iface_b.attach_link(link)
+        link, iface_a, iface_b = cls._build_link(node_a, node_b, channel)
         node_a.add_interface(iface_a)
         node_b.add_interface(iface_b)
         return link
 
     @classmethod
+    def _build_link(cls, node_a, node_b, channel):
+        iface_a = Interface(node_a)
+        iface_b = Interface(node_b)
+        link = P2PLink(iface_a, iface_b, channel)
+        iface_a.attach_link(link)
+        iface_b.attach_link(link)
+        return link, iface_a, iface_b
+
+    @classmethod
     def create_network_link(cls, graph, node_a, node_b, channel):
-        link = LinkFactory.create_physical_link(node_a, node_b, channel)
-        graph.add_edge(node_a, node_b, link)
+        link, iface_a, iface_b = cls._build_link(node_a, node_b, channel)
+        edge = graph.add_edge(node_a, node_b, link)
+        node_a.add_interface(iface_a, edge)
+        node_b.add_interface(iface_b, edge)
         return link

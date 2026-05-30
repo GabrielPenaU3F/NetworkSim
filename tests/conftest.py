@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
 from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
@@ -39,3 +40,15 @@ def example_link_layer():
     link_layer = LinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
     link_layer.attach_lower(dummy_physical)
     return link_layer
+
+@pytest.fixture
+def linear_network():
+    network = Network(ConfigManager(top_layer='network'))
+    host_a = network.create_host(address='192.168.0.1')
+    host_b = network.create_host(address='192.168.0.2')
+    host_c = network.create_host(address='192.168.0.3')
+    channel = CleanChannel()
+    network.connect(host_a, host_b, channel)
+    network.connect(host_b, host_c, channel)
+    network.build_routing_tables()
+    return network

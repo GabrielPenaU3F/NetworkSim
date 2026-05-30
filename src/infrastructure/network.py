@@ -2,6 +2,7 @@ from src.errors import NetworkError
 from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
 from src.infrastructure.nodes import Host
+from src.network_layer.routing_table import RoutingTable
 
 
 class Network:
@@ -14,6 +15,7 @@ class Network:
         self.cfg_manager = cfg_manager
         self._address_registry = set()
         self.graph = NetworkGraph()
+        self.routing = self.routing_algorithm()
 
     def create_host(self, address='192.168.0.1'):
 
@@ -26,7 +28,7 @@ class Network:
         return host
 
     def _validate_config(self, cfg_manager):
-        top_layer = cfg_manager.get_protocol_stack_config().top_layer
+        top_layer = cfg_manager.protocol_stack_config.top_layer
         if top_layer in ['physical', 'link']:
             raise NetworkError('Top layer should be at least Network Layer')
 
@@ -37,3 +39,26 @@ class Network:
         if not all(node.get_address() in self._address_registry for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
         LinkFactory.create_network_link(self.graph, node_a, node_b, channel)
+
+    def build_routing_tables(self):
+        all_nodes = self.graph.nodes
+        for node in all_nodes:
+            table = RoutingTable(node)
+            first_hops = self.routing.get_first_hops(node)
+
+            for destination, first_hop in first_hops.items():
+                edge = self.graph.get_edge_to(node, first_hop)
+                iface = edge.get_interface_for(node)
+                table.add_entry(destination, iface)
+
+            node.routing_table = table
+
+    def routing_algorithm(self):
+        routing_class = self.cfg_manager.network_layer_config.routing
+        return routing_class(self.graph)
+
+    def get_node(self, address):
+        for node in self.graph.nodes:
+            if node.address == address:
+                return node
+        return None

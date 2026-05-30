@@ -1,6 +1,7 @@
 from abc import ABC
 
 from src.link_layer.checksum import ParityChecksum
+from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 
 
@@ -70,6 +71,16 @@ class LinkConfig(Config):
         self.frame_config = frame_config
         self.checksum_cls = checksum_cls
         self.checksum_params = checksum_params
+
+
+class NetworkConfig(Config):
+
+    DEFAULTS = {
+        'routing': ShortestPathRouting
+    }
+
+    def __init__(self, routing):
+        self.routing = routing
 
 
 class FrameConfig:

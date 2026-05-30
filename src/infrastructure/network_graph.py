@@ -55,6 +55,3 @@ class Edge:
 
     def get_interface_for(self, node):
         return node.get_interface_for_edge(self)
-
-    def get_link(self):
-        return self.link

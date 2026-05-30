@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABC
 
-from src.infrastructure.p2p_link import P2PLink
 from src.protocol_stack.protocol_stack import ProtocolStack
 
 
@@ -9,6 +8,8 @@ class Node(ABC):
     def __init__(self, address=None):
         self.address = address
         self.interfaces = []
+        self.routing_table = None
+
 
     def add_interface(self, interface, edge=None):
         if edge is not None:

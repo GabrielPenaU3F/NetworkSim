@@ -23,7 +23,7 @@ class LayerFactory:
 
     @staticmethod
     def build_physical_layer(cfg_manager: ConfigManager):
-        config = cfg_manager.get_physical_layer_config()
+        config = cfg_manager.physical_layer_config
         config.validate()
         code = config.code_cls(**config.code_params)
         return PhysicalLayer(code)
@@ -31,7 +31,7 @@ class LayerFactory:
     @staticmethod
     def build_link_layer(cfg_manager: ConfigManager):
         physical_layer = LayerFactory.build_physical_layer(cfg_manager)
-        config = cfg_manager.get_link_layer_config()
+        config = cfg_manager.link_layer_config
         checksum = config.checksum_cls(**config.checksum_params)
         fc = config.frame_config
 
