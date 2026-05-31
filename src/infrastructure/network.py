@@ -46,10 +46,10 @@ class Network:
             table = RoutingTable(node)
             first_hops = self.routing.get_first_hops(node)
 
-            for destination_address, first_hop in first_hops.items():
+            for destination, first_hop in first_hops.items():
                 edge = self.graph.get_edge_to(node, first_hop)
                 iface = edge.get_interface_for(node)
-                table.add_entry(destination_address, iface)
+                table.add_entry(destination.address, iface)
 
             node.routing_table = table
 

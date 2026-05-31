@@ -15,7 +15,7 @@ def test_routing_table_is_initialized_empty(routing_table):
 def test_destination_added_to_table(routing_table):
     iface = DummyInterface()
     routing_table.add_entry('192.168.0.1', iface)
-    assert routing_table.get_interface('192.168.0.1') == iface
+    assert routing_table.get_interface_to_address('192.168.0.1') == iface
 
 def test_unreachable_node_is_rejected():
     node_a = DummyNode(address='192.168.0.1')
@@ -24,6 +24,6 @@ def test_unreachable_node_is_rejected():
     routing_table.add_entry('192.168.0.2', iface)
 
     err_msg = 'Node 192.168.0.3 is unreachable from 192.168.0.1'
-    assert routing_table.get_interface('192.168.0.2') == iface
+    assert routing_table.get_interface_to_address('192.168.0.2') == iface
     with pytest.raises(NetworkError, match=err_msg):
-        routing_table.get_interface('192.168.0.3')
+        routing_table.get_interface_to_address('192.168.0.3')

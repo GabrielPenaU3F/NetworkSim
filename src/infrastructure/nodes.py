@@ -50,7 +50,7 @@ class Host(Node):
 
     def send(self, message, interface=0, destination_address=None) -> None:
         if destination_address is not None: # if we are in network layer or above
-            interface = self.routing_table.get_interface(destination_address)
+            interface = self.routing_table.get_interface_to_address(destination_address)
         else: # if we are in physical or link layer
             interface = self.interfaces[interface]
         self.protocol_stack.transmit(message, interface, destination_address)

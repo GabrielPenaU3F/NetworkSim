@@ -1,5 +1,6 @@
 from src.errors import ProtocolError
 from src.link_layer.link_layer import LinkLayer
+from src.network_layer.network_layer import NetworkLayer
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.layer import Layer
 from src.system_configurations.config_manager import ConfigManager
@@ -7,13 +8,14 @@ from src.system_configurations.config_manager import ConfigManager
 
 class LayerFactory:
 
+    # THIS IS TO BE USED IN DEVELOPMENT ONLY
     @staticmethod
     def build_dummy_layer(cfg_manager: ConfigManager):
         class DummyLayer(Layer):
             def __init__(self):
                 self.lower_layer = LayerFactory.build_physical_layer(cfg_manager)
 
-            def transmit(self, bits, interface=None):
+            def transmit(self, bits, interface=None, **kwargs):
                 pass
 
             def on_receive(self, bits):
@@ -39,3 +41,10 @@ class LayerFactory:
                      fc.payload_size, fc.seq_size, fc.checksum_size)
         link_layer.attach_lower(physical_layer)
         return link_layer
+
+    @staticmethod
+    def build_network_layer(cfg_manager: ConfigManager):
+        network_layer = NetworkLayer()
+        link_layer = LayerFactory.build_link_layer(cfg_manager)
+        network_layer.attach_lower(link_layer)
+        return network_layer
