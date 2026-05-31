@@ -6,7 +6,7 @@ class PhysicalLayer(Layer):
     def __init__(self, channel_code):
         self.channel_code = channel_code
 
-    def transmit(self, bits, interface=None):
+    def transmit(self, bits, interface, **kwargs):
         encoded_bits = self.channel_code.encode_bits(bits)
         interface.send(encoded_bits)
 

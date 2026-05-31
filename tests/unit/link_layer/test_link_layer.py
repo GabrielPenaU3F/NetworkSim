@@ -232,7 +232,7 @@ class TestLinkLayer:
 
         example_link_layer._ack_received = fake_ack
 
-        example_link_layer.transmit(bits)
+        example_link_layer.transmit(bits, interface=None)
         physical = example_link_layer.lower_layer
         assert len(physical.sent_bits) > 0 # something was sent
 
@@ -283,7 +283,7 @@ class TestLinkLayer:
         # monkeypatch
         physical.transmit = transmit_with_ack
         example_link_layer._validate_checksum = lambda x: True  # Do not check anything
-        example_link_layer.transmit(bits)
+        example_link_layer.transmit(bits, interface=None)
 
         # A single call
         assert physical.calls == 1
@@ -358,7 +358,7 @@ class TestLinkLayer:
         example_link_layer._ack_received = lambda frame: False
 
         with pytest.raises(LinkError):
-            example_link_layer.transmit(bits)
+            example_link_layer.transmit(bits, interface=None)
 
         # exactly max_retries transmissions
         assert physical.calls == example_link_layer.max_retries

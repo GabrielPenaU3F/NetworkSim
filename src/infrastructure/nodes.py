@@ -48,12 +48,12 @@ class Host(Node):
         self.protocol_stack = ProtocolStack(cfg_manager)
         self._rx_messages = []
 
-    def send(self, message, interface=0, destination=None) -> None:
-        if destination is not None: # if we are in network layer or above
-            interface = self.routing_table.get_interface(destination)
+    def send(self, message, interface=0, destination_address=None) -> None:
+        if destination_address is not None: # if we are in network layer or above
+            interface = self.routing_table.get_interface(destination_address)
         else: # if we are in physical or link layer
             interface = self.interfaces[interface]
-        self.protocol_stack.transmit(message, interface)
+        self.protocol_stack.transmit(message, interface, destination_address)
 
     def on_receive(self, bits, interface=None) -> None:
         message = self.protocol_stack.on_receive(bits, interface)

@@ -18,9 +18,9 @@ class ProtocolStack:
         self.top_layer = self._build_stack(cfg_manager)
         self.bottom_layer = self._find_bottom_layer()
 
-    def transmit(self, message, interface=None):
+    def transmit(self, message, interface, destination_address=None):
         source_bits = self.codebook.encode_message(message)
-        self.top_layer.transmit(source_bits, interface)
+        self.top_layer.transmit(source_bits, interface, destination_address=destination_address)
 
     def _build_stack(self, cfg_manager):
         top = cfg_manager.protocol_stack_config.top_layer

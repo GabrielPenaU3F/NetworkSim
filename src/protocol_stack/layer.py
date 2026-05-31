@@ -23,7 +23,7 @@ class Layer(ABC):
         lower.upper_layer = self
 
     @abstractmethod
-    def transmit(self, bits, interface=None):
+    def transmit(self, bits, interface, **kwargs):
         pass
 
     @abstractmethod

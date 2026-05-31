@@ -65,12 +65,12 @@ class LinkLayer(Layer):
         ack = Frame(seq=seq, is_last=0, is_ack=1, real_length=0, payload=payload, checksum=cs)
         return ack
 
-    def _transmit_frame(self, frame, interface=None):
+    def _transmit_frame(self, frame, interface):
         bits = self._serialize_frame(frame)
         self.lower_layer.transmit(bits, interface)
 
     # Main transmission method
-    def transmit(self, bits, interface=None):
+    def transmit(self, bits, interface, **kwargs):
         frames = self._build_frames(bits)
         for idx, frame in enumerate(frames):
             self._last_ack_seq = None
