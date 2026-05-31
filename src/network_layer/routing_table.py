@@ -9,10 +9,10 @@ class RoutingTable:
         self.node = node
         self._table = {}
 
-    def add_entry(self, destination: Node, interface: Interface):
+    def add_entry(self, destination: str, interface: Interface):
         self._table[destination] = interface
 
-    def get_interface(self, destination):
-        if destination not in self._table:
-            raise NetworkError(f'Node {destination.address} is unreachable from {self.node.address}')
-        return self._table[destination]
+    def get_interface(self, destination_address):
+        if destination_address not in self._table:
+            raise NetworkError(f'Node {destination_address} is unreachable from {self.node.address}')
+        return self._table[destination_address]
