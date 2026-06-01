@@ -31,3 +31,36 @@ def select_binary_format(alphabet):
     n = len(alphabet)
     n_bits = int(np.ceil(np.log2(n)))
     return f'0{n_bits}b'
+
+
+def serialize_ip_address(address: str, num_bits: int = 32) -> np.ndarray:
+    parts = address.split('.')
+    num_parts = len(parts)
+
+    if num_bits < num_parts * 8:
+        raise ValueError(f'{num_bits} bits are not enough to represent {num_parts} parts of 8 bits each')
+
+    values = [int(p) for p in parts]
+
+    if not all(0 <= v <= 255 for v in values):
+        raise ValueError('Each part must be between 0 and 255')
+
+    int_value = 0
+    for v in values:
+        int_value = (int_value << 8) | v
+
+    return int_to_bits(int_value, num_bits)
+
+
+def deserialize_ip_address(bits: np.ndarray, num_parts: int = 4) -> str:
+    if len(bits) < num_parts * 8:
+        raise ValueError(f'{len(bits)} bits are not enough to deserialize {num_parts} parts of 8 bits each')
+
+    int_value = bits_to_int(bits)
+
+    parts = []
+    for _ in range(num_parts):
+        parts.append(int_value & 0xFF)
+        int_value >>= 8
+
+    return '.'.join(str(p) for p in reversed(parts))

@@ -8,12 +8,14 @@ class ProtocolStack:
     LAYER_BUILDERS = {
         'physical': LayerFactory.build_physical_layer,
         'link': LayerFactory.build_link_layer,
-        'network': LayerFactory.build_dummy_layer,
+        'network': LayerFactory.build_network_layer,
     }
 
-    def __init__(self, cfg_manager):
+    def __init__(self, cfg_manager, address=None):
         alphabet_name = cfg_manager.infrastructure_config.alphabet
         alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
+
+        self.address = address
         self.codebook = Codebook(alphabet)
         self.top_layer = self._build_stack(cfg_manager)
         self.bottom_layer = self._find_bottom_layer()
@@ -29,7 +31,7 @@ class ProtocolStack:
             raise ValueError(f"Unknown top layer: {top}")
 
         top_builder = builders.get(top)
-        top_layer = top_builder(cfg_manager)
+        top_layer = top_builder(cfg_manager, address=self.address)
         return top_layer
 
     def _find_bottom_layer(self):

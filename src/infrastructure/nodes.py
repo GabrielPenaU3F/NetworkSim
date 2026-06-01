@@ -10,7 +10,6 @@ class Node(ABC):
         self.interfaces = []
         self.routing_table = None
 
-
     def add_interface(self, interface, edge=None):
         if edge is not None:
             interface.connect_edge(edge)
@@ -45,7 +44,7 @@ class Host(Node):
 
     def __init__(self, cfg_manager, address=None):
         super().__init__(address)
-        self.protocol_stack = ProtocolStack(cfg_manager)
+        self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
         self._rx_messages = []
 
     def send(self, message, interface=0, destination_address=None) -> None:

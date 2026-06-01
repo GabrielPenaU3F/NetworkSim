@@ -10,7 +10,7 @@ class LayerFactory:
 
     # THIS IS TO BE USED IN DEVELOPMENT ONLY
     @staticmethod
-    def build_dummy_layer(cfg_manager: ConfigManager):
+    def build_dummy_layer(cfg_manager: ConfigManager, **kwargs):
         class DummyLayer(Layer):
             def __init__(self):
                 self.lower_layer = LayerFactory.build_physical_layer(cfg_manager)
@@ -24,14 +24,14 @@ class LayerFactory:
         return DummyLayer()
 
     @staticmethod
-    def build_physical_layer(cfg_manager: ConfigManager):
+    def build_physical_layer(cfg_manager: ConfigManager, **kwargs):
         config = cfg_manager.physical_layer_config
         config.validate()
         code = config.code_cls(**config.code_params)
         return PhysicalLayer(code)
 
     @staticmethod
-    def build_link_layer(cfg_manager: ConfigManager):
+    def build_link_layer(cfg_manager: ConfigManager, **kwargs):
         physical_layer = LayerFactory.build_physical_layer(cfg_manager)
         config = cfg_manager.link_layer_config
         checksum = config.checksum_cls(**config.checksum_params)
@@ -43,8 +43,8 @@ class LayerFactory:
         return link_layer
 
     @staticmethod
-    def build_network_layer(cfg_manager: ConfigManager):
-        network_layer = NetworkLayer()
+    def build_network_layer(cfg_manager: ConfigManager, address='127.0.0.1', **kwargs):
+        network_layer = NetworkLayer(address)
         link_layer = LayerFactory.build_link_layer(cfg_manager)
         network_layer.attach_lower(link_layer)
         return network_layer
