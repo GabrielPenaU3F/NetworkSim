@@ -8,6 +8,9 @@ from src.utils import int_to_bits
 
 class Checksum(ABC):
 
+    def __init__(self, **kwargs):
+        pass
+
     @abstractmethod
     def compute(self, bits) -> npt.NDArray[np.uint8]:
         pass
@@ -47,9 +50,10 @@ class SumChecksum(Checksum):
 
 class CRCChecksum(Checksum):
 
-    def __init__(self, crc_generator=np.array([1, 1, 0, 1])):
-        self.generator = np.array(crc_generator, dtype=np.uint8)
-        self.degree = len(crc_generator) - 1
+    def __init__(self, generator=np.array([1, 1, 0, 1])):
+        super().__init__()
+        self.generator = np.array(generator, dtype=np.uint8)
+        self.degree = len(generator) - 1
 
     def compute(self, bits):
         padded = np.concatenate([bits, np.zeros(self.degree, dtype=np.uint8)])
@@ -72,10 +76,10 @@ class CRCChecksum(Checksum):
 
     @classmethod
     def validate(cls, params):
-        if 'crc_generator' not in params:
+        if 'generator' not in params:
             raise ValueError("CRCChecksum requires 'generator'")
 
-        g = np.array(params['crc_generator'])
+        g = np.array(params['generator'])
 
         if g.ndim != 1 or len(g) < 2:
             raise ValueError("Generator must be 1D with length >= 2")

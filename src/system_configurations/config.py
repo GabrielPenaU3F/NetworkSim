@@ -1,91 +1,66 @@
-from abc import ABC
+from dataclasses import dataclass, field
+from typing import Type
 
-from src.link_layer.checksum import ParityChecksum
+from src.link_layer.checksum import ParityChecksum, Checksum
 from src.network_layer.routing import ShortestPathRouting
-from src.physical_layer.channel_codes.channel_codes import NoChannelCode
+from src.physical_layer.channel_codes.channel_codes import NoChannelCode, ChannelCode
 
 
-class Config(ABC):
+@dataclass
+class CRCConfig:
+    generator: list = field(default_factory=lambda: [1, 1, 0, 1])
 
-    DEFAULTS = {}
+
+@dataclass
+class ChecksumConfig:
+    cls: Type[Checksum] = ParityChecksum
+    params: dict = field(default_factory=dict)
 
     @classmethod
-    def get_defaults(cls):
-        return cls.DEFAULTS
+    def from_crc(cls, crc: CRCConfig):
+        from src.link_layer.checksum import CRCChecksum
+        return cls(cls=CRCChecksum, params={'crc_generator': crc.generator})
 
 
-class InfrastructureConfig(Config):
-
-    DEFAULTS = {
-                'alphabet': 'test_16bits_alph',
-    }
-
-    def __init__(self, alphabet):
-        self.alphabet = alphabet
-
-
-class ProtocolStackConfig(Config):
-
-    DEFAULTS = {
-        'top_layer': 'network'
-    }
-
-    def __init__(self, top_layer):
-        self.top_layer = top_layer
-
-
-class PhysicalConfig(Config):
-
-    DEFAULTS = {
-        'channel_code': {
-            'class': NoChannelCode,
-            'params': {}
-        }
-    }
-
-    def __init__(self, code_cls, code_params):
-        self.code_cls = code_cls
-        self.code_params = code_params
-
-    def validate(self):
-        self.code_cls.validate(self.code_params)
-
-
-class LinkConfig(Config):
-
-    DEFAULTS = {
-        'max_retries': 5,
-        'frame_params': {
-            'payload_size': 8,
-            'seq_size': 8,
-            'checksum_size': 4,
-        },
-        'checksum': {
-            'class': ParityChecksum,
-            'params': {}
-        },
-    }
-
-    def __init__(self, max_retries, frame_config, checksum_cls, checksum_params):
-        self.max_retries = max_retries
-        self.frame_config = frame_config
-        self.checksum_cls = checksum_cls
-        self.checksum_params = checksum_params
-
-
-class NetworkConfig(Config):
-
-    DEFAULTS = {
-        'routing': ShortestPathRouting
-    }
-
-    def __init__(self, routing):
-        self.routing = routing
-
-
+@dataclass
 class FrameConfig:
+    payload_size: int = 8
+    seq_size: int = 8
+    checksum_size: int = 4
 
-    def __init__(self, payload_size, seq_size, checksum_size):
-        self.payload_size = payload_size
-        self.seq_size = seq_size
-        self.checksum_size = checksum_size
+# ------------- Network infrastructure ------------
+
+@dataclass
+class InfrastructureConfig:
+    alphabet: str = 'test_16bits_alph'
+
+# -------------- Layer configurations -------------
+
+@dataclass
+class PhysicalConfig:
+    channel_code: Type[ChannelCode] = NoChannelCode
+    code_params: dict = field(default_factory=dict)
+
+    def build_channel_code(self):
+        self.channel_code.validate(self.code_params)
+        return self.channel_code(**self.code_params)
+
+
+@dataclass
+class LinkConfig:
+    max_retries: int = 5
+    checksum_cfg: ChecksumConfig = field(default_factory=ChecksumConfig)
+    frame_cfg: FrameConfig = field(default_factory=FrameConfig)
+
+    def build_checksum(self):
+        params = self.checksum_cfg.params
+        return self.checksum_cfg.cls(**params)
+
+
+@dataclass
+class NetworkConfig:
+
+    routing: ShortestPathRouting = ShortestPathRouting
+    address_size: int = 32
+    payload_size: int = 64
+

@@ -5,6 +5,9 @@ import numpy as np
 
 class ChannelCode(ABC):
 
+    def __init__(self, **kwargs):
+        pass
+
     @abstractmethod
     def encode_bits(self, bits):
         pass
@@ -34,6 +37,7 @@ class NoChannelCode(ChannelCode):
 class RepetitionChannelCode(ChannelCode):
 
     def __init__(self, repetition=3):
+        super().__init__()
         self.r = repetition
 
     def encode_bits(self, bits):
@@ -62,6 +66,7 @@ class HammingChannelCode(ChannelCode):
 
     # This may be improved in a (not near) future
     def __init__(self):
+        super().__init__()
         self.data_bits = 4
         self.total_bits = 7
 

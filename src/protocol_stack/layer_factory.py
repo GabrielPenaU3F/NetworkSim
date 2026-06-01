@@ -25,19 +25,18 @@ class LayerFactory:
 
     @staticmethod
     def build_physical_layer(cfg_manager: ConfigManager, **kwargs):
-        config = cfg_manager.physical_layer_config
-        config.validate()
-        code = config.code_cls(**config.code_params)
+        config = cfg_manager.physical_layer_cfg
+        code = config.build_channel_code()
         return PhysicalLayer(code)
 
     @staticmethod
     def build_link_layer(cfg_manager: ConfigManager, **kwargs):
         physical_layer = LayerFactory.build_physical_layer(cfg_manager)
-        config = cfg_manager.link_layer_config
-        checksum = config.checksum_cls(**config.checksum_params)
-        fc = config.frame_config
+        link_cfg = cfg_manager.link_layer_cfg
+        checksum = link_cfg.build_checksum()
+        fc = link_cfg.frame_cfg
 
-        link_layer = LinkLayer(checksum, config.max_retries,
+        link_layer = LinkLayer(checksum, link_cfg.max_retries,
                      fc.payload_size, fc.seq_size, fc.checksum_size)
         link_layer.attach_lower(physical_layer)
         return link_layer

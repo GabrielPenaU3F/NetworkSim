@@ -12,7 +12,7 @@ class ProtocolStack:
     }
 
     def __init__(self, cfg_manager, address=None):
-        alphabet_name = cfg_manager.infrastructure_config.alphabet
+        alphabet_name = cfg_manager.infrastructure_cfg.alphabet
         alphabet = AlphabetProvider.provide_alphabet(alphabet_name)
 
         self.address = address
@@ -25,7 +25,7 @@ class ProtocolStack:
         self.top_layer.transmit(source_bits, interface, destination_address=destination_address)
 
     def _build_stack(self, cfg_manager):
-        top = cfg_manager.protocol_stack_config.top_layer
+        top = cfg_manager.top_layer
         builders = type(self).LAYER_BUILDERS
         if top not in builders:
             raise ValueError(f"Unknown top layer: {top}")

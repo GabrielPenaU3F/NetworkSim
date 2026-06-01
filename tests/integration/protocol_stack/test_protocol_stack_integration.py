@@ -1,24 +1,27 @@
 from src.physical_layer.channel_codes.channel_codes import RepetitionChannelCode
 from src.protocol_stack.protocol_stack import ProtocolStack
+from src.system_configurations.config import LinkConfig, ChecksumConfig, PhysicalConfig
 from src.system_configurations.config_manager import ConfigManager
 from tests.utilities.dummies import DummyInterface
 
 
 def test_link_has_checksum():
     from src.link_layer.checksum import ParityChecksum
-    cfg_manager = ConfigManager(
-        checksum=ParityChecksum,
-        top_layer='link'
+    cfg_manager = ConfigManager(top_layer='link',
+        link=LinkConfig(
+            checksum_cfg=ChecksumConfig(cls=ParityChecksum),
+        )
     )
     stack = ProtocolStack(cfg_manager)
     link = stack.top_layer
     assert type(link.checksum) is ParityChecksum
 
 def test_physical_has_channel_code_config():
-    cfg_manager = ConfigManager(
-        top_layer='physical',
-        channel_code=RepetitionChannelCode,
-        repetition=3
+    cfg_manager = ConfigManager(top_layer='physical',
+        physical=PhysicalConfig(
+            channel_code=RepetitionChannelCode,
+            code_params={'repetition': 3}
+        )
     )
     stack = ProtocolStack(cfg_manager)
     physical_layer = stack.bottom_layer

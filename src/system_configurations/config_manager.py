@@ -1,68 +1,20 @@
 from copy import deepcopy
 
-from src.system_configurations.config import PhysicalConfig, LinkConfig, FrameConfig, InfrastructureConfig, \
-    ProtocolStackConfig, NetworkConfig
-from src.system_configurations.parameter_routing import route_param
+from src.system_configurations.config import PhysicalConfig, LinkConfig, InfrastructureConfig, \
+    NetworkConfig
 
 
 class ConfigManager:
 
-    def __init__(self, **kwargs):
+    def __init__(self, top_layer='network',
+            infrastructure: InfrastructureConfig = None,
+            physical: PhysicalConfig = None,
+            link: LinkConfig = None,
+            network: NetworkConfig = None,
+    ):
 
-        # Copy defaults
-        infrastructure_cfg_dict = deepcopy(InfrastructureConfig.get_defaults())
-        stack_cfg_dict = deepcopy(ProtocolStackConfig.get_defaults())
-        physical_cfg_dict = deepcopy(PhysicalConfig.get_defaults())
-        link_cfg_dict = deepcopy(LinkConfig.get_defaults())
-        network_cfg_dict = deepcopy(NetworkConfig.get_defaults())
-
-        # Update those which are provided by parameter
-        config_dicts = {
-            'infrastructure': infrastructure_cfg_dict,
-            'protocol_stack': stack_cfg_dict,
-            'physical': physical_cfg_dict,
-            'link': link_cfg_dict,
-            'network': network_cfg_dict
-        }
-        for key, value in kwargs.items():
-            route_param(config_dicts, key, value)
-
-        # Build configuration objects
-        self.infrastructure_config = self._build_infrastructure_config(infrastructure_cfg_dict)
-        self.protocol_stack_config = self._build_protocol_stack_config(stack_cfg_dict)
-        self.physical_layer_config = self._build_physical_config(physical_cfg_dict)
-        self.link_layer_config = self._build_link_config(link_cfg_dict)
-        self.network_layer_config = self._build_network_config(network_cfg_dict)
-
-    def _build_infrastructure_config(self, cfg_dict):
-        return InfrastructureConfig(
-            alphabet=cfg_dict['alphabet'],
-        )
-
-    def _build_protocol_stack_config(self, cfg_dict):
-        return ProtocolStackConfig(
-            top_layer=cfg_dict['top_layer']
-        )
-
-    def _build_physical_config(self, cfg_dict):
-        return PhysicalConfig(
-            code_cls=cfg_dict['channel_code']['class'],
-            code_params=cfg_dict['channel_code']['params']
-        )
-
-    def _build_link_config(self, cfg_dict):
-        frame_config = self._build_frame_config(cfg_dict['frame_params'])
-        return LinkConfig(
-            max_retries=cfg_dict['max_retries'],
-            frame_config=frame_config,
-            checksum_cls=cfg_dict['checksum']['class'],
-            checksum_params=cfg_dict['checksum']['params']
-        )
-
-    def _build_network_config(self, cfg_dict):
-        return NetworkConfig(
-            routing=cfg_dict['routing'],
-        )
-
-    def _build_frame_config(self, params):
-        return FrameConfig(params['payload_size'], params['seq_size'], params['checksum_size'])
+        self.top_layer = top_layer
+        self.infrastructure_cfg = deepcopy(infrastructure) or InfrastructureConfig()
+        self.physical_layer_cfg = deepcopy(physical) if physical else PhysicalConfig()
+        self.link_layer_cfg = deepcopy(link) if link else LinkConfig()
+        self.network_layer_cfg = deepcopy(network) if network else NetworkConfig()

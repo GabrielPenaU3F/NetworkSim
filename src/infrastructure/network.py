@@ -28,7 +28,7 @@ class Network:
         return host
 
     def _validate_config(self, cfg_manager):
-        top_layer = cfg_manager.protocol_stack_config.top_layer
+        top_layer = cfg_manager.top_layer
         if top_layer in ['physical', 'link']:
             raise NetworkError('Top layer should be at least Network Layer')
 
@@ -54,7 +54,7 @@ class Network:
             node.routing_table = table
 
     def routing_algorithm(self):
-        routing_class = self.cfg_manager.network_layer_config.routing
+        routing_class = self.cfg_manager.network_layer_cfg.routing
         return routing_class(self.graph)
 
     def get_node(self, address):

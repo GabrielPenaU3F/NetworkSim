@@ -12,3 +12,4 @@ class TestPacketBuilding:
     def test_packet_built(self, network_layer, tile_bits):
         bits = tile_bits(4)
         payload_size = 8
+        packets = network_layer._build_packets(bits, '192.168.0.1')
