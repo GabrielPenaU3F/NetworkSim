@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytest
 
@@ -381,3 +383,10 @@ class TestLinkLayer:
         expected = np.zeros(example_link_layer.payload_size, dtype=np.uint8)
 
         assert np.all(ack.payload == expected)
+
+    def test_checksum_error_is_logged(self, example_link_layer, serialized_bits, caplog):
+        with caplog.at_level(logging.DEBUG):
+            corrupted = serialized_bits(0).copy()
+            corrupted[5] ^= 1
+            example_link_layer.on_receive(corrupted)
+        assert "Checksum error" in caplog.text

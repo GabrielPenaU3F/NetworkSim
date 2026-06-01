@@ -1,4 +1,6 @@
 import numpy as np
+import logging
+logger = logging.getLogger(__name__)
 
 from src.errors import LinkError
 from src.link_layer.frame import Frame
@@ -91,7 +93,7 @@ class LinkLayer(Layer):
             self._rx_stream_buffer = self._rx_stream_buffer[self._get_frame_size():]
 
             if not self._validate_checksum(frame_bits):
-                print("Checksum error → dropping frame")
+                logger.debug("Checksum error → dropping frame")
                 continue
 
             frame = self._deserialize_frame(frame_bits)

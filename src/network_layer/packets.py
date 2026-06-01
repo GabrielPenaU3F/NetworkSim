@@ -1,11 +1,16 @@
+from dataclasses import dataclass
+
+import numpy as np
+
 from src.errors import NetworkError
 
 
+@dataclass
 class IPPacket:
+    origin_address: str
+    destination_address: str
+    payload: np.ndarray
 
-    def __init__(self, origin_address, destination_address, payload):
-        if origin_address is None or destination_address is None:
+    def __post_init__(self):
+        if self.origin_address is None or self.destination_address is None:
             raise NetworkError('Origin and Destination addresses must be specified')
-        self.origin_address = origin_address
-        self.destination_address = destination_address
-        self.payload = payload

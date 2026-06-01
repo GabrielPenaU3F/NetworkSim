@@ -1,12 +1,20 @@
+from dataclasses import dataclass, field
+from typing import Type
+
+import numpy as np
+
+from src.link_layer.checksum import Checksum, ParityChecksum
+
+
+@dataclass
 class Frame:
 
-    def __init__(self, seq, is_last, is_ack, real_length, payload, checksum):
-        self.seq = seq
-        self.is_last = is_last
-        self.is_ack = is_ack
-        self.real_length = real_length
-        self.payload = payload
-        self.checksum = checksum
+    seq: int = 0
+    is_last: int = 0
+    is_ack: int = 0
+    real_length: int = 0
+    payload: np.ndarray = field(default_factory=lambda: [])
+    checksum: Type[Checksum] = ParityChecksum
 
     def get_true_payload(self):
         return self.payload[:self.real_length]

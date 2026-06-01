@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 class NetworkGraph:
 
     def __init__(self):
@@ -41,12 +44,13 @@ class NetworkGraph:
             observer.on_graph_changed()
 
 
+# noinspection PyUnresolvedReferences
+@dataclass
 class Edge:
 
-    def __init__(self, node_a, node_b, link):
-        self.node_a = node_a
-        self.node_b = node_b
-        self.link = link
+    node_a: 'Node' = None
+    node_b: 'Node' = None
+    link: 'P2PLink' = None
 
     def get_other_node(self, node):
         if self.node_a == node:
