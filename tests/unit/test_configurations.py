@@ -64,7 +64,7 @@ class TestLinkLayerConfig:
         link_cfg = manager.link_layer_cfg
         assert link_cfg.max_retries == 10
         assert link_cfg.checksum_cfg.cls is CRCChecksum
-        assert np.all(link_cfg.checksum_cfg.params.get('crc_generator') == [1, 0, 0, 1])
+        assert np.all(link_cfg.checksum_cfg.params.get('generator') == [1, 0, 0, 1])
 
     def test_physical_config_override_does_not_affect_other_parameters(self):
         manager = ConfigManager(link=LinkConfig(
@@ -81,3 +81,11 @@ class TestLinkLayerConfig:
         assert frame_cfg.payload_size == 16
         assert frame_cfg.seq_size == 16
         assert frame_cfg.checksum_size == 8
+
+    def test_link_config_rejects_invalid_crc_generator(self):
+        manager = ConfigManager(link=LinkConfig(
+                checksum_cfg=ChecksumConfig.from_crc(CRCConfig(generator=[1, 1, 0]))
+            )
+        )
+        with pytest.raises(ValueError, match='Generator must end with 1'):
+            manager.link_layer_cfg.build_checksum()

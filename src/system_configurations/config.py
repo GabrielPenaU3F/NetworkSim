@@ -19,7 +19,7 @@ class ChecksumConfig:
     @classmethod
     def from_crc(cls, crc: CRCConfig):
         from src.link_layer.checksum import CRCChecksum
-        return cls(cls=CRCChecksum, params={'crc_generator': crc.generator})
+        return cls(cls=CRCChecksum, params={'generator': crc.generator})
 
 
 @dataclass
@@ -54,6 +54,7 @@ class LinkConfig:
 
     def build_checksum(self):
         params = self.checksum_cfg.params
+        self.checksum_cfg.cls.validate(params)
         return self.checksum_cfg.cls(**params)
 
 

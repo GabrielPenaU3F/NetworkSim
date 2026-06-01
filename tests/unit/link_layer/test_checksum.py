@@ -96,22 +96,22 @@ class TestCRCChecksum:
         CRCChecksum.validate({'generator': [1, 0, 1, 1]})
 
     def test_crc_validate_missing_generator(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="CRCChecksum requires 'generator'"):
             CRCChecksum.validate({})
 
     def test_crc_validate_non_binary(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Generator must contain only 0s and 1s"):
             CRCChecksum.validate({'generator': [1, 2, 1]})
 
     def test_crc_validate_too_short(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Generator must be 1D with length >= 2"):
             CRCChecksum.validate({'generator': [1]})
 
     def test_crc_validate_leading_zero(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Generator must start with 1"):
             CRCChecksum.validate({'generator': [0, 1, 1]})
 
     def test_crc_validate_trailing_zero(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Generator must end with 1"):
             CRCChecksum.validate({'generator': [1, 1, 0]})
 
