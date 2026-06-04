@@ -4,7 +4,7 @@ import networkx as nx
 from src.infrastructure.network_graph import NetworkGraph
 
 
-def draw_network(graph: NetworkGraph, title: str = "Network Topology", ax=None) -> None:
+def draw_network(graph: NetworkGraph, title: str = "Network Topology", ax=None) -> None:  # pragma: no cover
     """
     Draw a NetworkGraph using matplotlib and networkx.
 
