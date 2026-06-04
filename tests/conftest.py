@@ -8,7 +8,8 @@ from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 from tests.utilities.dummies import DummyPhysicalLayer, CleanChannel
-from tests.utilities.utils import make_network_level_hosts
+from tests.utilities.utils import make_network_level_hosts, build_linear_network
+
 
 @pytest.fixture
 def clean_channel():
@@ -43,12 +44,6 @@ def example_link_layer():
 
 @pytest.fixture
 def linear_network():
-    network = Network(ConfigManager(top_layer='network'))
-    host_a = network.create_host(address='192.168.0.1')
-    host_b = network.create_host(address='192.168.0.2')
-    host_c = network.create_host(address='192.168.0.3')
-    channel = CleanChannel()
-    network.connect(host_a, host_b, channel)
-    network.connect(host_b, host_c, channel)
+    network = build_linear_network()
     network.build_routing_tables()
     return network
