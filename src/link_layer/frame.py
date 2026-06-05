@@ -14,7 +14,7 @@ class Frame:
     is_ack: int = 0
     real_length: int = 0
     payload: np.ndarray = field(default_factory=lambda: [])
-    checksum: Type[Checksum] = ParityChecksum
+    checksum: np.ndarray = field(default_factory=lambda: [])
 
     def get_true_payload(self):
         return self.payload[:self.real_length]

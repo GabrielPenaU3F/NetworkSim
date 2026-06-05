@@ -135,8 +135,8 @@ class LinkLayer(Layer):
 
     def _deserialize_frame(self, received_bits: npt.NDArray) -> Frame:
         seq = bits_to_int(received_bits[:self.seq_size])
-        is_last = received_bits[self.seq_size]
-        is_ack = received_bits[self.seq_size + 1]
+        is_last = int(received_bits[self.seq_size])
+        is_ack = int(received_bits[self.seq_size + 1])
 
         real_length_field_end = self._get_header_size()
         real_length_field_start = real_length_field_end - self.payload_length_field_size
