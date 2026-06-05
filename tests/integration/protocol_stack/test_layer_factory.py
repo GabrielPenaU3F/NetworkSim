@@ -98,7 +98,3 @@ class TestNetworkLayerBuilder:
                                network=NetworkConfig(packet_cfg=packet_config))
         layer = LayerFactory.build_network_layer(config)
         assert layer.packet_payload_size == 8
-
-    # def test_address_size_must_be_divisible_by_16(self):
-    #     with pytest.raises(ValueError, match='header_size must be divisible by 16'):
-    #         NetworkConfig(header_size=24)

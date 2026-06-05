@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from src.errors import NetworkError
@@ -8,8 +9,8 @@ from src.network_layer.packets import IPPacket
 def example_packet():
     origin = '192.168.0.1'
     destiny = '192.168.0.2'
-    payload = [1, 0, 1, 0]
-    return IPPacket(origin, destiny, payload)
+    payload = np.array([1, 0, 1, 0], dtype=np.uint8)
+    return IPPacket(origin, destiny, offset=0, payload=payload)
 
 
 def test_packet_knows_origin_address(example_packet):
@@ -19,7 +20,7 @@ def test_packet_knows_destination_address(example_packet):
     assert example_packet.destination_address == '192.168.0.2'
 
 def test_packet_payload(example_packet):
-    assert example_packet.payload == [1, 0, 1, 0]
+    assert np.all(example_packet.payload == [1, 0, 1, 0])
 
 def test_cannot_create_packet_without_origin_address():
     with pytest.raises(NetworkError, match='Origin and Destination addresses must be specified'):

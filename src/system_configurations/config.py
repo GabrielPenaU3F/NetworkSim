@@ -32,7 +32,14 @@ class FrameConfig:
 class PacketConfig:
 
     payload_size: int = 64
+    offset_size: int = 16
 
+    def __post_init__(self):
+        if 2 ** self.offset_size < self.payload_size:
+            raise ValueError(
+                f'An offset size of {self.offset_size} bits cannot represent '
+                f'offsets up to a payload size of {self.payload_size} bits'
+            )
 
 # ------------- Network infrastructure ------------
 

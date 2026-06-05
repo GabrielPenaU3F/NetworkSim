@@ -103,6 +103,7 @@ class TestNetworkLayerConfig:
     def test_packet_config_defaults(self, cfg_manager):
         packet_cfg = cfg_manager.network_layer_cfg.packet_cfg
         assert packet_cfg.payload_size == 64
+        assert packet_cfg.offset_size == 16
 
     def test_link_config_override(self):
         manager = ConfigManager(network=NetworkConfig(
@@ -112,7 +113,7 @@ class TestNetworkLayerConfig:
         network_cfg = manager.network_layer_cfg
         assert network_cfg.packet_cfg.payload_size == 8
 
-    def test_physical_config_override_does_not_affect_other_parameters(self):
+    def test_network_config_override_does_not_affect_other_parameters(self):
         manager = ConfigManager(network=NetworkConfig(
                 packet_cfg=PacketConfig(payload_size=8),
             )
@@ -120,7 +121,13 @@ class TestNetworkLayerConfig:
         network_cfg = manager.network_layer_cfg
         assert network_cfg.routing is ShortestPathRouting
         assert network_cfg.address_size == 32
+        assert network_cfg.packet_cfg.offset_size == 16
 
     def test_network_config_rejects_invalid_address_size(self):
         with pytest.raises(ValueError, match='Address size must be divisible by 8'):
             manager = ConfigManager(network=NetworkConfig(address_size=12))
+
+    def test_network_config_rejects_invalid_offset_size(self):
+        with pytest.raises(ValueError, match=f'An offset size of 4 bits cannot represent '
+            f'offsets up to a payload size of 64 bits'):
+            manager = ConfigManager(network=NetworkConfig(packet_cfg=PacketConfig(offset_size=4)))

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -7,9 +7,12 @@ from src.errors import NetworkError
 
 @dataclass
 class IPPacket:
+
     origin_address: str
     destination_address: str
-    payload: np.ndarray
+    offset: int
+    is_last: int = 0
+    payload: np.ndarray = field(default_factory=lambda: [])
 
     def __post_init__(self):
         if self.origin_address is None or self.destination_address is None:
