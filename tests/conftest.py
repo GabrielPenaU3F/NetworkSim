@@ -31,7 +31,7 @@ def hosts():
 @pytest.fixture
 def tile_bits():
     def _make_tile(n):
-        return np.tile([0, 1], n)
+        return np.tile([0, 1], n).astype(np.uint8)
     return _make_tile
 
 @pytest.fixture

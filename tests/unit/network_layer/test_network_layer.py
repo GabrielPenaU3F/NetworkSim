@@ -117,34 +117,29 @@ class TestPacketSerialization:
         assert np.all(actual_payload == expected_payload)
 
 
+class TestPacketDeserialization:
 
-# class TestPacketDeserialization:
-#
-#     def test_deserialize_frame_seq(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits())
-#         assert deserialized.seq == 0
-#
-#     def test_deserialize_frame_is_last(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=1))
-#         assert deserialized.is_last == 1
-#
-#     def test_deserialize_frame_is_not_last(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_last=0))
-#         assert deserialized.is_last == 0
-#
-#     def test_deserialize_frame_is_ack(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=1))
-#         assert deserialized.is_ack == 1
-#
-#     def test_deserialize_frame_is_not_ack(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits(is_ack=0))
-#         assert deserialized.is_ack == 0
-#
-#     def test_deserialize_frame_real_length(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits())
-#         assert deserialized.real_length == 4
-#
-#     def test_deserialize_frame_payload(self, example_link_layer, serialized_bits):
-#         deserialized = example_link_layer._deserialize_frame(serialized_bits())
-#         expected_payload = np.array([0, 1, 0, 1], dtype=np.uint8)
-#         assert np.all(deserialized.payload == expected_payload)
+    def test_deserialize_packet_origin_address(self, network_layer, serialized_last_bits):
+        deserialized = network_layer._deserialize_packet(serialized_last_bits)
+        assert deserialized.origin_address == '192.168.0.1'
+
+    def test_deserialize_packet_destination_address(self, network_layer, serialized_last_bits):
+        deserialized = network_layer._deserialize_packet(serialized_last_bits)
+        assert deserialized.destination_address == '192.168.0.2'
+
+    def test_deserialize_packet_is_last(self, network_layer, serialized_last_bits):
+        deserialized = network_layer._deserialize_packet(serialized_last_bits)
+        assert deserialized.is_last == 1
+
+    def test_deserialize_packet_is_not_last(self, network_layer, serialized_bits):
+        deserialized = network_layer._deserialize_packet(serialized_bits(is_last=0))
+        assert deserialized.is_last == 0
+
+    def test_deserialize_packet_offset(self, network_layer, serialized_last_bits):
+        deserialized = network_layer._deserialize_packet(serialized_last_bits)
+        assert deserialized.offset == 0
+
+    def test_deserialize_packet_payload(self, network_layer, serialized_last_bits):
+        deserialized = network_layer._deserialize_packet(serialized_last_bits)
+        expected_payload = np.array([0, 1, 0, 1, 0, 1, 0, 1], dtype=np.uint8)
+        assert np.all(deserialized.payload == expected_payload)

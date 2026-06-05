@@ -10,8 +10,8 @@ class IPPacket:
 
     origin_address: str
     destination_address: str
+    is_last: int
     offset: int
-    is_last: int = 0
     payload: np.ndarray = field(default_factory=lambda: [])
 
     def __post_init__(self):

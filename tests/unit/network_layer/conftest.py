@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from src.network_layer.packets import IPPacket
+from src.utils import serialize_ip_address
 
 
 @pytest.fixture
@@ -21,16 +22,20 @@ def last_packet(packet_to_serialize):
     return packet_to_serialize(is_last=1)
 
 @pytest.fixture
-def serialized_bits():
-    def _make(is_last=0, is_ack=0):
-        checksum_bit = 1 if is_last ^ is_ack == 0 else 0
-        serialized = np.array([
-            0, 0,  # seq
-            is_last,  # is_last
-            is_ack, # is_ack
-            0, 1, 0, 0,  # real_length = 4
-            0, 1, 0, 1, 0, 0, 0, 0,  # payload (0101 + padding)
-            checksum_bit, 0  # checksum
+def serialized_bits(tile_bits):
+    def _make(is_last=0):
+        serialized_origin = serialize_ip_address('192.168.0.1', 32)
+        serialized_destination = serialize_ip_address('192.168.0.2', 32)
+        serialized = np.concatenate([
+            serialized_origin,
+            serialized_destination,
+            np.array([is_last], dtype=np.uint8),
+            np.zeros(8).astype(np.uint8),
+            tile_bits(4)
         ], dtype=np.uint8)
         return serialized
     return _make
+
+@pytest.fixture
+def serialized_last_bits(serialized_bits):
+    return serialized_bits(is_last=1)
