@@ -7,7 +7,7 @@ from src.errors import LinkError
 from tests.unit.link_layer.conftest import frame_to_serialize
 
 
-class TestSerialization:
+class TestFrameSerialization:
 
     def test_serialize_frame_seq(self, example_link_layer, frame_to_serialize):
         expected_seq = np.array([0, 0], dtype=np.uint8)
@@ -72,7 +72,7 @@ class TestSerialization:
         assert np.all(actual_checksum == expected_checksum)
 
 
-class TestDeserialization:
+class TestFrameDeserialization:
 
     def test_deserialize_frame_seq(self, example_link_layer, serialized_bits):
         deserialized = example_link_layer._deserialize_frame(serialized_bits())

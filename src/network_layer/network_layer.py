@@ -2,6 +2,9 @@ import numpy as np
 
 from src.network_layer.packets import IPPacket
 from src.protocol_stack.layer import Layer
+from numpy import typing as npt
+
+from src.utils import serialize_ip_address, int_to_bits
 
 
 class NetworkLayer(Layer):
@@ -21,10 +24,14 @@ class NetworkLayer(Layer):
             -PAYLOAD: packet_payload_size bits to represent payload
     """
 
-    def __init__(self, address, address_size, packet_payload_size):
+    def __init__(self, address, address_size, offset_size, packet_payload_size):
         self.address = address
         self.address_size = address_size
+        if self.address is not None:
+            self.serialized_address = self._serialize_address()
+        self.offset_size = offset_size
         self.packet_payload_size = packet_payload_size
+        self.get_interface_for_address = None
 
     def transmit(self, bits, interface, destination_address='127.0.0.1', **kwargs):
         packets = self._build_packets(bits, destination_address)
@@ -52,3 +59,22 @@ class NetworkLayer(Layer):
             )
             packets.append(packet)
         return packets
+
+    def set_routing_callback(self, callback):
+        self.get_interface_for_address = callback
+
+    def _serialize_packet(self, packet: IPPacket) -> npt.NDArray:
+        origin_address_bits = self.serialized_address
+        destination_address_bits = serialize_ip_address(packet.destination_address, self.address_size)
+        is_last_bit = np.array([packet.is_last], dtype=np.uint8)
+        offset = int_to_bits(packet.offset, self.offset_size)
+        payload = packet.payload
+
+        return np.concatenate([origin_address_bits, destination_address_bits, is_last_bit, offset, payload])
+
+    def _deserialize_packet(self, bits: np.ndarray) -> IPPacket:
+        pass
+
+    def _serialize_address(self):
+        return serialize_ip_address(self.address, self.address_size)
+

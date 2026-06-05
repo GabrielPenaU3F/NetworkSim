@@ -48,3 +48,12 @@ class ProtocolStack:
 
         message = self.codebook.decode_message(processed_bits)
         return message
+
+    def get_layer(self, layer_name):
+        layer = self.top_layer
+        while layer is not None:
+            if layer.__class__.__name__.lower().startswith(layer_name):
+                return layer
+            layer = layer.lower_layer
+
+        raise KeyError(f"Unknown layer: {layer_name}")

@@ -10,6 +10,22 @@ def physical_stack():
     cfg = ConfigManager(top_layer='physical')
     return ProtocolStack(cfg)
 
+class TestProtocolStack:
+
+    def test_can_get_link_layer(self, link_stack):
+        link_layer = link_stack.get_layer('link')
+        assert type(link_layer) is LinkLayer
+        assert link_layer == link_stack.top_layer
+
+    def test_can_get_physical_layer(self, link_stack):
+        physical_layer = link_stack.get_layer('physical')
+        assert type(physical_layer) is PhysicalLayer
+        assert physical_layer == link_stack.bottom_layer
+
+    def test_cannot_get_nonexistent_layers(self, link_stack):
+        with pytest.raises(KeyError, match='Unknown layer: transport'):
+            link_stack.get_layer('transport')
+
 class TestProtocolStackPhysicalLayer:
 
     def test_top_layer_is_physical(self, physical_stack):

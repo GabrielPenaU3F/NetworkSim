@@ -88,9 +88,16 @@ class TestNetworkLayerBuilder:
 
     def test_network_layer_has_correct_packet_address_size(self):
         config = ConfigManager(top_layer='network',
-                               network=NetworkConfig(address_size=16))
+                               network=NetworkConfig(address_size=64))
         layer = LayerFactory.build_network_layer(config)
-        assert layer.address_size == 16
+        assert layer.address_size == 64
+
+    def test_network_layer_has_correct_offset_size(self):
+        packet_config = PacketConfig(offset_size=8)
+        config = ConfigManager(top_layer='network',
+                               network=NetworkConfig(packet_cfg=packet_config))
+        layer = LayerFactory.build_network_layer(config)
+        assert layer.offset_size == 8
 
     def test_network_layer_has_correct_packet_payload_size(self):
         packet_config = PacketConfig(payload_size=8)

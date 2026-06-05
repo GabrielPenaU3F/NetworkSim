@@ -38,13 +38,3 @@ def make_link(node_a, node_b, channel):
     iface_a.attach_link(link)
     iface_b.attach_link(link)
     return link
-
-def build_linear_network():
-    network = Network(ConfigManager(top_layer='network'))
-    host_a = network.create_host(address='192.168.0.1')
-    host_b = network.create_host(address='192.168.0.2')
-    host_c = network.create_host(address='192.168.0.3')
-    channel = CleanChannel()
-    network.connect(host_a, host_b, channel)
-    network.connect(host_b, host_c, channel)
-    return network
