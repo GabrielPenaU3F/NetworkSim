@@ -12,6 +12,11 @@ from tests.utilities.utils import make_network_level_hosts, build_linear_network
 
 
 @pytest.fixture
+def network_cfg_manager():
+    cfg = ConfigManager(top_layer='network')
+    return cfg
+
+@pytest.fixture
 def clean_channel():
     return CleanChannel()
 
@@ -41,6 +46,10 @@ def example_link_layer():
     link_layer = LinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
     link_layer.attach_lower(dummy_physical)
     return link_layer
+
+@pytest.fixture
+def simple_network():
+    return Network(ConfigManager(top_layer='network'))
 
 @pytest.fixture
 def linear_network():

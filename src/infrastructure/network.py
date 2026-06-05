@@ -5,6 +5,12 @@ from src.infrastructure.nodes import Host
 from src.network_layer.routing_table import RoutingTable
 
 
+"""
+    IP Addresses are formed by parts separated by dots, e.g. 128.192 has 2 parts
+    Each part has a fixed size of 8 bits. Thus the cfg parameter address_size 
+    determines the number of parts the addresses must have.
+"""
+
 class Network:
 
     _address_registry = None
@@ -18,14 +24,20 @@ class Network:
         self.routing = self.routing_algorithm()
 
     def create_host(self, address='192.168.0.1'):
-
-        if address in self._address_registry:
-            raise NetworkError(f'Address {address} already in use')
+        self._validate_address(address)
 
         host = Host(self.cfg_manager, address=address)
         self._address_registry.add(address)
         self.graph.add_node(host)
         return host
+
+    def _validate_address(self, address):
+        expected_parts = self.cfg_manager.network_layer_cfg.address_size // 8
+        actual_parts = len(address.split('.'))
+        if actual_parts != expected_parts:
+            raise NetworkError(f'Addresses must have {expected_parts} parts, got {actual_parts}')
+        if address in self._address_registry:
+            raise NetworkError(f'Address {address} already in use')
 
     def _validate_config(self, cfg_manager):
         top_layer = cfg_manager.top_layer

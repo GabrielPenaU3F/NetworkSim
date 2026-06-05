@@ -8,19 +8,10 @@ from tests.utilities.dummies import DummyNode
 from tests.utilities.utils import make_link, make_network_level_hosts
 
 @pytest.fixture
-def network_cfg_manager():
-    cfg = ConfigManager(top_layer='network')
-    return cfg
-
-@pytest.fixture
 def dummy_nodes():
     A = DummyNode()
     B = DummyNode()
     return A, B
-
-@pytest.fixture
-def simple_network():
-    return Network(ConfigManager(top_layer='network'))
 
 @pytest.fixture
 def example_graph():

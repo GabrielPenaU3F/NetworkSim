@@ -3,6 +3,7 @@ import pytest
 from src.errors import NetworkError
 from src.infrastructure.network import Network
 from src.infrastructure.nodes import Host
+from src.system_configurations.config import NetworkConfig
 from src.system_configurations.config_manager import ConfigManager
 
 
@@ -59,3 +60,25 @@ def test_cannot_connect_host_from_another_network(simple_network, clean_channel)
     external_host = Host(ConfigManager(top_layer='network'), address='192.168.0.2')
     with pytest.raises(NetworkError, match='Cannot connect nodes that do not belong to this network'):
         simple_network.connect(host_a, external_host, clean_channel)
+
+
+class TestAddresses:
+
+    def test_network_host_default_address(self, simple_network):
+        host = simple_network.create_host()
+        assert host.address == '192.168.0.1'
+
+    def test_cannot_create_two_hosts_with_equal_addresses(self, simple_network):
+        with pytest.raises(NetworkError, match='Address 192.168.0.1 already in use'):
+            host_1 = simple_network.create_host(address='192.168.0.1')
+            host_2 = simple_network.create_host(address='192.168.0.1')
+
+    def test_cannot_create_host_with_wrong_address_format(self, simple_network):
+        with pytest.raises(NetworkError, match='Addresses must have 4 parts'):
+            simple_network.create_host('192.168.0')
+
+    def test_can_create_host_with_correct_address_format(self):
+        cfg = ConfigManager(top_layer='network', network=NetworkConfig(address_size=24))
+        network = Network(cfg)
+        host = network.create_host('192.168.0')
+        assert host.address == '192.168.0'

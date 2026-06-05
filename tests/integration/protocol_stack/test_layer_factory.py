@@ -2,10 +2,12 @@ import numpy as np
 
 from src.link_layer.checksum import CRCChecksum
 from src.link_layer.link_layer import LinkLayer
+from src.network_layer.network_layer import NetworkLayer
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, HammingChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.layer_factory import LayerFactory
-from src.system_configurations.config import PhysicalConfig, LinkConfig, ChecksumConfig, FrameConfig
+from src.system_configurations.config import PhysicalConfig, LinkConfig, ChecksumConfig, FrameConfig, NetworkConfig, \
+    PacketConfig
 from src.system_configurations.config_manager import ConfigManager
 
 class TestPhysicalLayerBuilder:
@@ -68,3 +70,35 @@ class TestLinkLayerBuilder:
                                )
         layer = LayerFactory.build_link_layer(config)
         assert layer.seq_size == 4
+
+
+class TestNetworkLayerBuilder:
+
+    def test_builds_network_layer_instance(self, network_cfg_manager):
+        layer = LayerFactory.build_network_layer(network_cfg_manager)
+        assert type(layer) is NetworkLayer
+
+    def test_network_layer_has_link_layer_below(self, network_cfg_manager):
+        layer = LayerFactory.build_network_layer(network_cfg_manager)
+        assert type(layer.lower_layer) is LinkLayer
+
+    def test_network_layer_has_correct_address(self, network_cfg_manager):
+        layer = LayerFactory.build_network_layer(network_cfg_manager, address='192.168.0.1')
+        assert layer.address == '192.168.0.1'
+
+    def test_network_layer_has_correct_packet_address_size(self):
+        config = ConfigManager(top_layer='network',
+                               network=NetworkConfig(address_size=16))
+        layer = LayerFactory.build_network_layer(config)
+        assert layer.address_size == 16
+
+    def test_network_layer_has_correct_packet_payload_size(self):
+        packet_config = PacketConfig(payload_size=8)
+        config = ConfigManager(top_layer='network',
+                               network=NetworkConfig(packet_cfg=packet_config))
+        layer = LayerFactory.build_network_layer(config)
+        assert layer.packet_payload_size == 8
+
+    # def test_address_size_must_be_divisible_by_16(self):
+    #     with pytest.raises(ValueError, match='header_size must be divisible by 16'):
+    #         NetworkConfig(header_size=24)

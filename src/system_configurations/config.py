@@ -28,6 +28,12 @@ class FrameConfig:
     seq_size: int = 8
     checksum_size: int = 4
 
+@dataclass
+class PacketConfig:
+
+    payload_size: int = 64
+
+
 # ------------- Network infrastructure ------------
 
 @dataclass
@@ -63,5 +69,8 @@ class NetworkConfig:
 
     routing: ShortestPathRouting = ShortestPathRouting
     address_size: int = 32
-    payload_size: int = 64
+    packet_cfg: PacketConfig = field(default_factory=PacketConfig)
 
+    def __post_init__(self):
+        if self.address_size % 8 != 0:
+            raise ValueError('Address size must be divisible by 8')

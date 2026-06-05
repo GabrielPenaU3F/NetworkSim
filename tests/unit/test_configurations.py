@@ -2,8 +2,10 @@ import numpy as np
 import pytest
 
 from src.link_layer.checksum import ParityChecksum, CRCChecksum
+from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
-from src.system_configurations.config import ChecksumConfig, LinkConfig, CRCConfig, FrameConfig
+from src.system_configurations.config import ChecksumConfig, LinkConfig, CRCConfig, FrameConfig, NetworkConfig, \
+    PacketConfig
 from src.system_configurations.config_manager import ConfigManager
 
 @pytest.fixture
@@ -89,3 +91,36 @@ class TestLinkLayerConfig:
         )
         with pytest.raises(ValueError, match='Generator must end with 1'):
             manager.link_layer_cfg.build_checksum()
+
+
+class TestNetworkLayerConfig:
+
+    def test_network_config_defaults(self, cfg_manager):
+        network = cfg_manager.network_layer_cfg
+        assert network.routing is ShortestPathRouting
+        assert network.address_size == 32
+
+    def test_packet_config_defaults(self, cfg_manager):
+        packet_cfg = cfg_manager.network_layer_cfg.packet_cfg
+        assert packet_cfg.payload_size == 64
+
+    def test_link_config_override(self):
+        manager = ConfigManager(network=NetworkConfig(
+                packet_cfg=PacketConfig(payload_size=8),
+            )
+        )
+        network_cfg = manager.network_layer_cfg
+        assert network_cfg.packet_cfg.payload_size == 8
+
+    def test_physical_config_override_does_not_affect_other_parameters(self):
+        manager = ConfigManager(network=NetworkConfig(
+                packet_cfg=PacketConfig(payload_size=8),
+            )
+        )
+        network_cfg = manager.network_layer_cfg
+        assert network_cfg.routing is ShortestPathRouting
+        assert network_cfg.address_size == 32
+
+    def test_network_config_rejects_invalid_address_size(self):
+        with pytest.raises(ValueError, match='Address size must be divisible by 8'):
+            manager = ConfigManager(network=NetworkConfig(address_size=12))

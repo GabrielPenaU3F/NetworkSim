@@ -1,7 +1,9 @@
 import pytest
 
 from src.errors import NetworkError
+from src.infrastructure.network import Network
 from src.infrastructure.nodes import Host
+from src.system_configurations.config import NetworkConfig
 from src.system_configurations.config_manager import ConfigManager
 
 class TestNode:
@@ -36,12 +38,3 @@ class TestAddresses:
     def test_host_accepts_an_address(self):
         host = Host(ConfigManager(), address='192.168.0.1')
         assert host.address == '192.168.0.1'
-
-    def test_network_host_default_address(self, simple_network):
-        host = simple_network.create_host()
-        assert host.address == '192.168.0.1'
-
-    def test_cannot_create_two_hosts_with_equal_addresses(self, simple_network):
-        with pytest.raises(NetworkError, match='Address 192.168.0.1 already in use'):
-            host_1 = simple_network.create_host(address='192.168.0.1')
-            host_2 = simple_network.create_host(address='192.168.0.1')
