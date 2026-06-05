@@ -36,6 +36,9 @@ class NetworkLayer(Layer):
 
     def transmit(self, bits, interface, destination_address='127.0.0.1', **kwargs):
         packets = self._build_packets(bits, destination_address)
+        for idx, packet in enumerate(packets):
+            bits = self._serialize_packet(packet)
+            self.lower_layer.transmit(bits, interface)
 
     def on_receive(self, bits):
         pass

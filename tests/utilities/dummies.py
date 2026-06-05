@@ -8,7 +8,7 @@ class CleanChannel:
         return bits
 
 
-class DummyPhysicalLayer:
+class DummyLowerLayer:
     def __init__(self):
         self.upper_layer = None
         self.sent_bits = []

@@ -3,11 +3,18 @@ import pytest
 
 from src.network_layer.network_layer import NetworkLayer
 from src.utils import serialize_ip_address
+from tests.utilities.dummies import DummyLowerLayer
 
 
 @pytest.fixture
 def network_layer():
     return NetworkLayer('192.168.0.1', address_size=32, offset_size=8, packet_payload_size=8)
+
+@pytest.fixture
+def network_layer_with_dummy_lower(network_layer):
+    dummy_lower = DummyLowerLayer()
+    network_layer.lower_layer = dummy_lower
+    return network_layer, dummy_lower
 
 class TestPacketBuilding:
 
@@ -143,3 +150,25 @@ class TestPacketDeserialization:
         deserialized = network_layer._deserialize_packet(serialized_last_bits)
         expected_payload = np.array([0, 1, 0, 1, 0, 1, 0, 1], dtype=np.uint8)
         assert np.all(deserialized.payload == expected_payload)
+
+
+class TestNetworkLayer:
+
+    def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = tile_bits(4)  # 1 packet
+        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        assert dummy.calls == 1
+
+    def test_transmit_sends_one_call_per_packet(self, network_layer_with_dummy_lower, tile_bits):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = tile_bits(8)  # 2 packets
+        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        assert dummy.calls == 2
+
+    def test_transmit_sends_correct_bit_length(self, network_layer_with_dummy_lower, tile_bits):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = tile_bits(4)  # 1 packet
+        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        expected_size = layer.address_size * 2 + layer.offset_size + 1 + layer.packet_payload_size
+        assert len(dummy.sent_bits[0]) == expected_size

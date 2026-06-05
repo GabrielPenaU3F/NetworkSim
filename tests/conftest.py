@@ -7,7 +7,7 @@ from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyPhysicalLayer, CleanChannel
+from tests.utilities.dummies import DummyLowerLayer, CleanChannel
 from tests.utilities.utils import make_network_level_hosts
 
 
@@ -41,7 +41,7 @@ def link_stack():
 
 @pytest.fixture
 def example_link_layer():
-    dummy_physical = DummyPhysicalLayer()
+    dummy_physical = DummyLowerLayer()
     checksum = ParityChecksum()
     link_layer = LinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
     link_layer.attach_lower(dummy_physical)
