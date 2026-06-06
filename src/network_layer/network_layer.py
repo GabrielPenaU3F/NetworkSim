@@ -33,15 +33,34 @@ class NetworkLayer(Layer):
         self.offset_size = offset_size
         self.packet_payload_size = packet_payload_size
         self.get_interface_for_address = None
+        self._rx_buffer = {}  # { offset: payload }
+        self._last_received = False
 
     def transmit(self, bits, interface, destination_address='127.0.0.1', **kwargs):
         packets = self._build_packets(bits, destination_address)
         for idx, packet in enumerate(packets):
-            bits = self._serialize_packet(packet)
-            self.lower_layer.transmit(bits, interface)
+            self._transmit_packet(interface, packet)
+
+    def _transmit_packet(self, interface, packet):
+        bits = self._serialize_packet(packet)
+        self.lower_layer.transmit(bits, interface)
 
     def on_receive(self, bits):
-        pass
+        packet = self._deserialize_packet(bits)
+
+        if not packet.destination_address == self.address:
+            interface = self.get_interface_for_address(packet.destination_address)
+            self._transmit_packet(interface, packet)
+            return None
+
+        self._rx_buffer[packet.offset] = packet.payload
+        if packet.is_last:
+            self._last_received = True
+
+        if self._last_received and self._message_complete():
+            return self._rebuild_message()
+
+            return None
 
     def _build_packets(self, payload, destination_address):
         packets = []
@@ -93,3 +112,29 @@ class NetworkLayer(Layer):
 
     def _serialize_address(self):
         return serialize_ip_address(self.address, self.address_size)
+
+    def _message_complete(self):
+        # Returns true if the buffer contains no holes
+        offsets = sorted(self._rx_buffer.keys())
+
+        if not offsets:
+            return False
+
+        if offsets[0] != 0:  # message must begin in 0 - if not, then the message is incomplete
+            return False
+
+        for i, offset in enumerate(offsets):
+            if i > 0 and offset != offsets[i - 1] + self.packet_payload_size:
+                return False
+
+        return True
+
+    def _rebuild_message(self):
+        offsets = sorted(self._rx_buffer.keys())
+        message = np.concatenate([self._rx_buffer[o] for o in offsets])
+        self._clear_buffers()
+        return self._forward_up(message)
+
+    def _clear_buffers(self):
+        self._rx_buffer.clear()
+        self._last_received = False

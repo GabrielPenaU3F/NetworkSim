@@ -2,19 +2,32 @@ import numpy as np
 import pytest
 
 from src.network_layer.network_layer import NetworkLayer
+from src.network_layer.packets import IPPacket
 from src.utils import serialize_ip_address
-from tests.utilities.dummies import DummyLowerLayer
+from tests.utilities.dummies import DummyLowerLayer, DummyInterface
 
 
 @pytest.fixture
 def network_layer():
-    return NetworkLayer('192.168.0.1', address_size=32, offset_size=8, packet_payload_size=8)
+    layer = NetworkLayer('192.168.0.1', address_size=32, offset_size=8, packet_payload_size=8)
+    # Mock routing callback
+    dummy_interface = DummyInterface()
+    layer.get_interface_for_address = lambda address: dummy_interface
+    return layer
 
 @pytest.fixture
 def network_layer_with_dummy_lower(network_layer):
     dummy_lower = DummyLowerLayer()
     network_layer.lower_layer = dummy_lower
     return network_layer, dummy_lower
+
+@pytest.fixture
+def last_packet_for_me(tile_bits):
+    return IPPacket('127.0.0.1', '192.168.0.1', 1, 0, tile_bits(4))
+
+@pytest.fixture
+def nonlast_packet_for_me(tile_bits):
+    return IPPacket('127.0.0.1', '192.168.0.1', 0, 0, tile_bits(4))
 
 class TestPacketBuilding:
 
@@ -152,7 +165,42 @@ class TestPacketDeserialization:
         assert np.all(deserialized.payload == expected_payload)
 
 
-class TestNetworkLayer:
+class TestMessageComplete:
+
+    def test_empty_buffer_is_not_complete(self, network_layer):
+        assert network_layer._message_complete() == False
+
+    def test_single_packet_starting_at_zero_is_complete(self, network_layer):
+        network_layer._rx_buffer = {0: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == True
+
+    def test_single_packet_not_starting_at_zero_is_not_complete(self, network_layer):
+        network_layer._rx_buffer = {8: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == False
+
+    def test_two_contiguous_packets_are_complete(self, network_layer):
+        network_layer._rx_buffer = {0: np.zeros(8), 8: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == True
+
+    def test_two_packets_with_hole_are_not_complete(self, network_layer):
+        network_layer._rx_buffer = {0: np.zeros(8), 16: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == False
+
+    def test_three_contiguous_packets_are_complete(self, network_layer):
+        network_layer._rx_buffer = {0: np.zeros(8), 8: np.zeros(8), 16: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == True
+
+    def test_three_packets_with_missing_middle_are_not_complete(self, network_layer):
+        network_layer._rx_buffer = {0: np.zeros(8), 16: np.zeros(8)}
+        network_layer._last_received = True
+        assert network_layer._message_complete() == False
+
+class TestNetworkLayerTX:
 
     def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits):
         layer, dummy = network_layer_with_dummy_lower
@@ -172,3 +220,80 @@ class TestNetworkLayer:
         layer.transmit(bits, interface=None, destination_address='192.168.0.2')
         expected_size = layer.address_size * 2 + layer.offset_size + 1 + layer.packet_payload_size
         assert len(dummy.sent_bits[0]) == expected_size
+
+
+class TestNetworkLayerRX:
+
+    def test_packet_for_this_node_is_accepted(self, network_layer_with_dummy_lower, last_packet_for_me):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = layer._serialize_packet(last_packet_for_me)
+        result = layer.on_receive(bits)
+        assert result is not None
+
+    def test_packet_for_another_node_is_forwarded(self, network_layer_with_dummy_lower, last_packet):
+        layer, dummy = network_layer_with_dummy_lower
+
+        bits = layer._serialize_packet(last_packet)
+        result = layer.on_receive(bits)
+        assert result is None
+        assert dummy.calls == 1  # Packet was re-sent
+
+    def test_single_packet_message_is_reconstructed(self, network_layer_with_dummy_lower, last_packet_for_me):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = layer._serialize_packet(last_packet_for_me)
+        result = layer.on_receive(bits)
+        assert np.all(result == last_packet_for_me.payload)
+
+    def test_incomplete_message_returns_none(self, network_layer_with_dummy_lower, nonlast_packet_for_me):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = layer._serialize_packet(nonlast_packet_for_me)
+        result = layer.on_receive(bits)
+        assert result is None
+
+    def test_two_packet_message_is_reconstructed(self, network_layer_with_dummy_lower):
+        layer, dummy = network_layer_with_dummy_lower
+        payload_1 = np.tile([0, 1], 4)  # 8 bits
+        payload_2 = np.tile([1, 0], 4)  # 8 bits
+        packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, payload=payload_1)
+        packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, payload=payload_2)
+
+        bits_1 = layer._serialize_packet(packet_1)
+        bits_2 = layer._serialize_packet(packet_2)
+        layer.on_receive(bits_1)
+        result = layer.on_receive(bits_2)
+        expected = np.concatenate([payload_1, payload_2])
+        assert np.all(result == expected)
+
+    def test_two_packets_reconstructed_in_correct_order(self, network_layer_with_dummy_lower):
+        layer, dummy = network_layer_with_dummy_lower
+        payload_1 = np.tile([0, 1], 4)
+        payload_2 = np.tile([1, 0], 4)
+        packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, payload=payload_1)
+        packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, payload=payload_2)
+
+        # reverse reception order
+        bits_2 = layer._serialize_packet(packet_2)
+        bits_1 = layer._serialize_packet(packet_1)
+        layer.on_receive(bits_2)
+        result = layer.on_receive(bits_1)
+        expected = np.concatenate([payload_1, payload_2])
+        assert np.all(result == expected)
+
+    def test_three_packets_reconstructed_in_correct_order(self, network_layer_with_dummy_lower):
+        layer, dummy = network_layer_with_dummy_lower
+        payload_1 = np.tile([0, 1], 4)
+        payload_2 = np.tile([1, 0], 4)
+        payload_3 = np.tile([1, 1], 4)
+        packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, payload=payload_1)
+        packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=0, payload=payload_2)
+        packet_3 = IPPacket('127.0.0.1', '192.168.0.1', offset=16, is_last=1, payload=payload_3)
+
+        # Shuffled reception order
+        bits_3 = layer._serialize_packet(packet_3)
+        bits_1 = layer._serialize_packet(packet_1)
+        bits_2 = layer._serialize_packet(packet_2)
+        layer.on_receive(bits_3)
+        layer.on_receive(bits_1)
+        result = layer.on_receive(bits_2)
+        expected = np.concatenate([payload_1, payload_2, payload_3])
+        assert np.all(result == expected)
