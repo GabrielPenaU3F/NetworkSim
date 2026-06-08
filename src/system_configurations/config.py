@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Type
 
+import numpy as np
+
 from src.link_layer.checksum import ParityChecksum, Checksum
 from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, ChannelCode
@@ -33,6 +35,7 @@ class PacketConfig:
 
     payload_size: int = 64
     offset_size: int = 16
+    real_length_size: int = 8
 
     def __post_init__(self):
         if 2 ** self.offset_size < self.payload_size:
@@ -40,6 +43,11 @@ class PacketConfig:
                 f'An offset size of {self.offset_size} bits cannot represent '
                 f'offsets up to a payload size of {self.payload_size} bits'
             )
+
+        min_real_length_size = int(np.ceil(np.log2(self.payload_size + 1)))
+        if self.real_length_size < min_real_length_size:
+            raise ValueError(f'Real length size should be at least {min_real_length_size} '
+                             f'bits to represent {self.payload_size} payload bits')
 
 # ------------- Network infrastructure ------------
 

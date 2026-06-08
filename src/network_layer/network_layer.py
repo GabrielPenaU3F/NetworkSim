@@ -10,29 +10,32 @@ from src.utils import serialize_ip_address, int_to_bits, deserialize_ip_address,
 class NetworkLayer(Layer):
 
     """
-        Current network (IPv4-like) protocol:
+        Current network (IPv4-style) protocol, but with fixed payload length:
 
             -HEADER:
                 >packet_address_size bits to represent origin_address
                 >packet_address_size bits to represent destination_address
                 >1 bit flag to mark if current packet is the last of a message
                 >offset_size bits to represent payload offset within the packet
-            Thus header size is 2 x packet_address_size bits
+                >real_length_size bits to represent payload length
+
             packet_address_size must be divisible by 16
 
 
             -PAYLOAD: packet_payload_size bits to represent payload
     """
+    get_interface_for_address = lambda x: None
 
-    def __init__(self, address, address_size, offset_size, packet_payload_size):
+    def __init__(self, address, address_size, offset_size, real_length_size, packet_payload_size):
         self.address = address
         self.address_size = address_size
         self.num_parts = self.address_size // 8
         if self.address is not None:
             self.serialized_address = self._serialize_address()
         self.offset_size = offset_size
+        self.real_length_size = real_length_size
         self.packet_payload_size = packet_payload_size
-        self.get_interface_for_address = None
+        self.get_interface_for_address = lambda x: None
         self._rx_buffer = {}  # { offset: payload }
         self._last_received = False
 
@@ -60,7 +63,7 @@ class NetworkLayer(Layer):
         if self._last_received and self._message_complete():
             return self._rebuild_message()
 
-            return None
+        return None
 
     def _build_packets(self, payload, destination_address):
         packets = []
@@ -69,6 +72,7 @@ class NetworkLayer(Layer):
             chunk = payload[start:start + self.packet_payload_size]
             is_last = int((start + self.packet_payload_size) >= total) # This is 1 if the message is complete
             offset = start
+            real_length = len(chunk)
 
             padded_payload = np.zeros(self.packet_payload_size, dtype=np.uint8)
             padded_payload[:len(chunk)] = chunk
@@ -76,8 +80,9 @@ class NetworkLayer(Layer):
             packet = IPPacket(
                 origin_address=self.address,
                 destination_address=destination_address,
-                offset=offset,
                 is_last=is_last,
+                offset=offset,
+                real_length=real_length,
                 payload=padded_payload
             )
             packets.append(packet)
@@ -91,9 +96,10 @@ class NetworkLayer(Layer):
         destination_address_bits = serialize_ip_address(packet.destination_address, self.address_size)
         is_last_bit = np.array([packet.is_last], dtype=np.uint8)
         offset = int_to_bits(packet.offset, self.offset_size)
+        real_length = int_to_bits(packet.real_length, self.real_length_size)
         payload = packet.payload
 
-        return np.concatenate([origin_address_bits, destination_address_bits, is_last_bit, offset, payload])
+        return np.concatenate([origin_address_bits, destination_address_bits, is_last_bit, offset, real_length, payload])
 
     def _deserialize_packet(self, received_bits: np.ndarray) -> IPPacket:
         origin_address = deserialize_ip_address(received_bits[:self.address_size], self.num_parts)
@@ -105,9 +111,10 @@ class NetworkLayer(Layer):
         offset_end = offset_start + self.offset_size
         offset = bits_to_int(received_bits[offset_start: offset_end])
 
-        payload = received_bits[offset_end: offset_end + self.packet_payload_size]
+        real_length = bits_to_int(received_bits[offset_end: offset_end + self.real_length_size])
+        payload = received_bits[-self.packet_payload_size:]
 
-        packet = IPPacket(origin_address, destination_address, is_last, offset, payload)
+        packet = IPPacket(origin_address, destination_address, is_last, offset, real_length, payload)
         return packet
 
     def _serialize_address(self):

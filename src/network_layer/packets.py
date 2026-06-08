@@ -12,8 +12,12 @@ class IPPacket:
     destination_address: str
     is_last: int
     offset: int
+    real_length: int
     payload: np.ndarray = field(default_factory=lambda: [])
 
     def __post_init__(self):
         if self.origin_address is None or self.destination_address is None:
             raise NetworkError('Origin and Destination addresses must be specified')
+
+    def get_true_payload(self):
+        return self.payload[:self.real_length]

@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 
 def test_on_receive_unpads_correctly_on_several_frames(example_link_layer, tile_bits):

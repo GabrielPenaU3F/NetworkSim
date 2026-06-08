@@ -11,9 +11,10 @@ def packet_to_serialize():
         origin_address = '192.168.0.1'
         destination_address = '192.168.0.2'
         offset = 0
-        payload = np.tile([0, 1], 2)
+        real_length = 4
+        payload = np.concatenate((np.zeros(4), np.tile([0, 1], 2)))
         packet = IPPacket(origin_address=origin_address, destination_address=destination_address,
-                          is_last=is_last, offset=offset, payload=payload)
+                          is_last=is_last, offset=offset, real_length=real_length, payload=payload)
         return packet
     return _make
 
@@ -26,12 +27,16 @@ def serialized_bits(tile_bits):
     def _make(is_last=0):
         serialized_origin = serialize_ip_address('192.168.0.1', 32)
         serialized_destination = serialize_ip_address('192.168.0.2', 32)
+        serialized_offset = np.zeros(8).astype(np.uint8)
+        serialized_real_length = np.array([0, 1, 0, 0], dtype=np.uint8)
+        serialized_payload = tile_bits(4)
         serialized = np.concatenate([
             serialized_origin,
             serialized_destination,
             np.array([is_last], dtype=np.uint8),
-            np.zeros(8).astype(np.uint8),
-            tile_bits(4)
+            serialized_offset,
+            serialized_real_length,
+            serialized_payload
         ], dtype=np.uint8)
         return serialized
     return _make
