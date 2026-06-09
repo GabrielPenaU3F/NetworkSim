@@ -48,14 +48,11 @@ class NetworkLayer(Layer):
 
     def on_receive(self, bits, interface=None):
         packet = self._deserialize_packet(bits)
-        print(f"[NL {self.address}] recibí para {packet.destination_address}")
 
         if not packet.destination_address == self.address:
             interface = self.get_interface_for_address(packet.destination_address)
-            print(f"[NL {self.address}] forwarding, iface={interface}")
             self._transmit_packet(interface, packet)
             return None
-        print(f"[NL {self.address}] es para mí, acumulando")
 
         self._rx_buffer[packet.offset] = (packet.payload, packet.real_length)
         if packet.is_last:
@@ -135,7 +132,6 @@ class NetworkLayer(Layer):
         return True
 
     def _rebuild_message(self):
-        print(f"[NL {self.address}] reconstruyendo mensaje")
         offsets = sorted(self._rx_buffer.keys())
         trimmed_buffer = [self._trim_payload(offset) for offset in offsets]
         message = np.concatenate(trimmed_buffer)

@@ -55,10 +55,8 @@ class Host(Node):
         self.protocol_stack.transmit(message, interface, destination_address)
 
     def on_receive(self, bits, interface=None) -> None:
-        print(f"[Node {self.address}] on_receive llamado")
         message = self.protocol_stack.on_receive(bits, interface)
         if message is not None:
-            print(f"[Node {self.address}] mensaje recibido: {message}")
             self._rx_messages.append(message)
 
     def read(self):

@@ -56,6 +56,24 @@ class TestIntegrationUpToLink:
         received = A.read()
         assert received == "sol sol mar viento"
 
+    def test_large_message_roundtrip(self, nodes, clean_channel):
+        A, B = nodes(clean_channel, top_layer='link')
+        A.send("sol sol mar viento")
+        received_B = B.read()
+        B.send(received_B)
+        received_A = A.read()
+        assert received_A == "sol sol mar viento"
+
+    def test_large_message_roundtrip_and_send_again(self, nodes, clean_channel):
+        A, B = nodes(clean_channel, top_layer='link')
+        A.send("sol sol mar viento")
+        received_B_1 = B.read()
+        B.send(received_B_1)
+        received_A = A.read()
+        A.send(received_A)
+        received_B_2 = B.read()
+        assert received_B_2 == "sol sol mar viento"
+
 
 class TestIntegrationUpToNetwork:
 
@@ -67,12 +85,12 @@ class TestIntegrationUpToNetwork:
         received = host_c.read()
         assert received == "sol"
 
-    # def test_packet_roundtrip(self, linear_network):
-    #     host_a = linear_network.get_node('192.168.0.1')
-    #     host_c = linear_network.get_node('192.168.0.3')
-    #     host_a.send("sol", destination_address='192.168.0.3')
-    #
-    #     received_c = host_c.read()
-    #     host_c.send(received_c, destination_address='192.168.0.1')
-    #     received_a = host_a.read()
-    #     assert received_a == "sol"
+    def test_packet_roundtrip(self, linear_network):
+        host_a = linear_network.get_node('192.168.0.1')
+        host_c = linear_network.get_node('192.168.0.3')
+        host_a.send("sol", destination_address='192.168.0.3')
+
+        received_c = host_c.read()
+        host_c.send(received_c, destination_address='192.168.0.1')
+        received_a = host_a.read()
+        assert received_a == "sol"

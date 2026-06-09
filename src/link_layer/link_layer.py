@@ -123,6 +123,7 @@ class LinkLayer(Layer):
     def _clear_buffers(self):
         self._rx_stream_buffer.clear()
         self._rx_message_buffer.clear()
+        self._expected_seq = 0
 
     def _serialize_frame(self, frame: Frame) -> npt.NDArray:
         seq_bits = int_to_bits(frame.seq, self.seq_size)
