@@ -32,7 +32,7 @@ def nonlast_packet_for_me(tile_bits):
 
 @pytest.fixture
 def nonfull_last_packet_for_me(tile_bits):
-    return IPPacket('127.0.0.1', '192.168.0.1', 1, 0, 4, np.concatenate((np.zeros(4), tile_bits(2))))
+    return IPPacket('127.0.0.1', '192.168.0.1', 1, 0, 4, np.concatenate((tile_bits(2), np.zeros(4))))
 
 class TestPacketBuilding:
 
@@ -218,6 +218,63 @@ class TestMessageComplete:
         network_layer._last_received = True
         assert network_layer._message_complete() == False
 
+
+class TestRebuildMessage:
+
+    def test_single_fragment_is_rebuilt_correctly(self, network_layer):
+        payload = np.tile([0, 1], 4)
+        network_layer._rx_buffer = {0: (payload, 8)}
+        result = network_layer._rebuild_message()
+        assert np.all(result == payload)
+
+    def test_two_fragments_are_rebuilt_in_correct_order(self, network_layer):
+        payload_1 = np.tile([0, 1], 4)
+        payload_2 = np.tile([1, 0], 4)
+        network_layer._rx_buffer = {0: (payload_1, 8), 8: (payload_2, 8)}
+        result = network_layer._rebuild_message()
+        expected = np.concatenate([payload_1, payload_2])
+        assert np.all(result == expected)
+
+    def test_fragments_arriving_out_of_order_are_rebuilt_correctly(self, network_layer):
+        payload_1 = np.tile([0, 1], 4)
+        payload_2 = np.tile([1, 0], 4)
+        # buffer desordenado
+        network_layer._rx_buffer = {8: (payload_2, 8), 0: (payload_1, 8)}
+        result = network_layer._rebuild_message()
+        expected = np.concatenate([payload_1, payload_2])
+        assert np.all(result == expected)
+
+    def test_buffer_is_cleared_after_rebuild(self, network_layer):
+        network_layer._rx_buffer = {0: (np.zeros(8), 0)}
+        network_layer._rebuild_message()
+        assert network_layer._rx_buffer == {}
+
+    def test_last_received_flag_is_reset_after_rebuild(self, network_layer):
+        network_layer._rx_buffer = {0: (np.zeros(8), 0)}
+        network_layer._last_received = True
+        network_layer._rebuild_message()
+        assert network_layer._last_received == False
+
+    def test_payload_is_trimmed_to_real_length(self, network_layer):
+        expected_payload = np.tile([1, 0], 2).astype(np.uint8)
+        payload_last = np.array([1, 0, 1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        network_layer._rx_buffer = {0: (payload_last, 4)}
+        assert np.all(network_layer._trim_payload(0) == expected_payload)
+
+    def test_complete_payload_is_not_trimmed(self, network_layer):
+        expected_payload = np.tile([1, 0], 4).astype(np.uint8)
+        network_layer._rx_buffer = {0: (expected_payload, 8)}
+        assert np.all(network_layer._trim_payload(0) == expected_payload)
+
+    def test_last_fragment_is_trimmed_to_real_length(self, network_layer):
+        payload_1 = np.tile([0, 1], 4)  # 8 bits reales
+        payload_last = np.array([1, 0, 1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        network_layer._rx_buffer = {0: (payload_1, 8), 8: (payload_last, 4)}
+        result = network_layer._rebuild_message()
+        expected = np.concatenate([payload_1, payload_last[:4]])
+        assert np.all(result == expected)
+
+
 class TestNetworkLayerTX:
 
     def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits):
@@ -269,11 +326,11 @@ class TestNetworkLayerRX:
         assert result is None
 
     def test_incomplete_packet_message_is_correctly_reconstructed(self, network_layer_with_dummy_lower,
-                                                                  nonfull_last_packet_for_me):
+                                                                  nonfull_last_packet_for_me, tile_bits):
         layer, dummy = network_layer_with_dummy_lower
         bits = layer._serialize_packet(nonfull_last_packet_for_me)
         result = layer.on_receive(bits)
-        assert np.all(result == nonfull_last_packet_for_me.payload)
+        assert np.all(result == tile_bits(2))
 
     def test_two_packet_message_is_reconstructed(self, network_layer_with_dummy_lower):
         layer, dummy = network_layer_with_dummy_lower
@@ -289,10 +346,10 @@ class TestNetworkLayerRX:
         expected = np.concatenate([payload_1, payload_2])
         assert np.all(result == expected)
 
-    def test_nonfulL_two_packet_message_is_reconstructed(self, network_layer_with_dummy_lower):
+    def test_nonfulL_two_packet_message_is_reconstructed(self, network_layer_with_dummy_lower, tile_bits):
         layer, dummy = network_layer_with_dummy_lower
-        payload_1 = np.tile([0, 1], 4)  # 8 bits
-        payload_2 = np.concatenate((np.zeros(4), np.tile([1, 0], 2))) # 8 bits
+        payload_1 = tile_bits(4)  # 8 bits
+        payload_2 = np.concatenate((np.zeros(4), tile_bits(4))) # 8 bits
         packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, real_length=8, payload=payload_1)
         packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, real_length=4, payload=payload_2)
 
@@ -300,7 +357,7 @@ class TestNetworkLayerRX:
         bits_2 = layer._serialize_packet(packet_2)
         layer.on_receive(bits_1)
         result = layer.on_receive(bits_2)
-        expected = np.concatenate([payload_1, payload_2])
+        expected = tile_bits(6)
         assert np.all(result == expected)
 
     def test_two_packets_reconstructed_in_correct_order(self, network_layer_with_dummy_lower):
@@ -336,3 +393,18 @@ class TestNetworkLayerRX:
         result = layer.on_receive(bits_2)
         expected = np.concatenate([payload_1, payload_2, payload_3])
         assert np.all(result == expected)
+
+
+def test_packet_roundtrip(network_layer, tile_bits):
+    bits = tile_bits(7)
+    packets = network_layer._build_packets(bits, '192.168.0.1')
+
+    for p in packets:
+        serialized = network_layer._serialize_packet(p)
+        deserialized = network_layer._deserialize_packet(serialized)
+        assert deserialized.is_last == p.is_last
+        assert deserialized.offset == p.offset
+        assert deserialized.real_length == p.real_length
+        assert np.all(deserialized.payload == p.payload)
+        assert deserialized.origin_address == p.origin_address
+        assert deserialized.destination_address == p.destination_address

@@ -39,39 +39,28 @@ def test_get_interface_callback_injected_when_tables_are_built(tableless_network
     ending_node = network_layer.get_interface_for_address('192.168.0.2').edge.get_other_node(starting_node)
     assert ending_node.address == '192.168.0.2'
 
-# def test_message_reconstructed_after_several_packets(example_network_layer, tile_bits):
-#     bits = tile_bits(7)
-#     packets = example_network_layer._build_packets(bits, '192.168.0.1')
-#
-#     result = None
-#     for p in packets:
-#         serialized = example_network_layer._serialize_packet(p)
-#         result = example_network_layer.on_receive(serialized)
-#
-#     assert np.all(result == bits)
-#
-# def test_total_serialized_packet_length(example_network_layer, tile_bits):
-#     bits = tile_bits(7)
-#     packets = example_network_layer._build_packets(bits, '192.168.0.1')
-#     serialized = [example_network_layer._serialize_packet(p) for p in packets]
-#
-#     expected_size = (example_network_layer.address_size * 2
-#                     + 1
-#                     + example_network_layer.offset_size
-#                     + example_network_layer.packet_payload_size)
-#
-#     assert len(packets) == 2
-#     assert len(serialized[0]) == expected_size
-#     assert len(serialized[1]) == expected_size
-#
-# def test_packet_roundtrip(example_network_layer, tile_bits):
-#     bits = tile_bits(7)
-#     packets = example_network_layer._build_packets(bits, '192.168.0.1')
-#
-#     for p in packets:
-#         serialized = example_network_layer._serialize_packet(p)
-#         deserialized = example_network_layer._deserialize_packet(serialized)
-#         assert deserialized.is_last == p.is_last
-#         assert deserialized.offset == p.offset
-#         assert deserialized.origin_address == p.origin_address
-#         assert deserialized.destination_address == p.destination_address
+def test_message_reconstructed_after_several_packets(example_network_layer, tile_bits):
+    bits = tile_bits(7)
+    packets = example_network_layer._build_packets(bits, '192.168.0.1')
+
+    result = None
+    for p in packets:
+        serialized = example_network_layer._serialize_packet(p)
+        result = example_network_layer.on_receive(serialized)
+
+    assert np.all(result == bits)
+
+def test_total_serialized_packet_length(example_network_layer, tile_bits):
+    bits = tile_bits(7)
+    packets = example_network_layer._build_packets(bits, '192.168.0.1')
+    serialized = [example_network_layer._serialize_packet(p) for p in packets]
+
+    expected_size = (example_network_layer.address_size * 2
+                    + 1
+                    + example_network_layer.offset_size
+                    + example_network_layer.real_length_size
+                    + example_network_layer.packet_payload_size)
+
+    assert len(packets) == 2
+    assert len(serialized[0]) == expected_size
+    assert len(serialized[1]) == expected_size

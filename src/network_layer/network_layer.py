@@ -30,13 +30,11 @@ class NetworkLayer(Layer):
         self.address = address
         self.address_size = address_size
         self.num_parts = self.address_size // 8
-        if self.address is not None:
-            self.serialized_address = self._serialize_address()
         self.offset_size = offset_size
         self.real_length_size = real_length_size
         self.packet_payload_size = packet_payload_size
         self.get_interface_for_address = lambda x: None
-        self._rx_buffer = {}  # { offset: payload }
+        self._rx_buffer = {}  # { offset: (payload, real_length) }
         self._last_received = False
 
     def transmit(self, bits, interface, destination_address='127.0.0.1', **kwargs):
@@ -48,15 +46,18 @@ class NetworkLayer(Layer):
         bits = self._serialize_packet(packet)
         self.lower_layer.transmit(bits, interface)
 
-    def on_receive(self, bits):
+    def on_receive(self, bits, interface=None):
         packet = self._deserialize_packet(bits)
+        print(f"[NL {self.address}] recibí para {packet.destination_address}")
 
         if not packet.destination_address == self.address:
             interface = self.get_interface_for_address(packet.destination_address)
+            print(f"[NL {self.address}] forwarding, iface={interface}")
             self._transmit_packet(interface, packet)
             return None
+        print(f"[NL {self.address}] es para mí, acumulando")
 
-        self._rx_buffer[packet.offset] = packet.payload
+        self._rx_buffer[packet.offset] = (packet.payload, packet.real_length)
         if packet.is_last:
             self._last_received = True
 
@@ -92,7 +93,7 @@ class NetworkLayer(Layer):
         self.get_interface_for_address = callback
 
     def _serialize_packet(self, packet: IPPacket) -> npt.NDArray:
-        origin_address_bits = self.serialized_address
+        origin_address_bits = serialize_ip_address(packet.origin_address, self.address_size)
         destination_address_bits = serialize_ip_address(packet.destination_address, self.address_size)
         is_last_bit = np.array([packet.is_last], dtype=np.uint8)
         offset = int_to_bits(packet.offset, self.offset_size)
@@ -117,11 +118,8 @@ class NetworkLayer(Layer):
         packet = IPPacket(origin_address, destination_address, is_last, offset, real_length, payload)
         return packet
 
-    def _serialize_address(self):
-        return serialize_ip_address(self.address, self.address_size)
-
+    # Returns true if the buffer contains no holes
     def _message_complete(self):
-        # Returns true if the buffer contains no holes
         offsets = sorted(self._rx_buffer.keys())
 
         if not offsets:
@@ -137,11 +135,17 @@ class NetworkLayer(Layer):
         return True
 
     def _rebuild_message(self):
+        print(f"[NL {self.address}] reconstruyendo mensaje")
         offsets = sorted(self._rx_buffer.keys())
-        message = np.concatenate([self._rx_buffer[o] for o in offsets])
+        trimmed_buffer = [self._trim_payload(offset) for offset in offsets]
+        message = np.concatenate(trimmed_buffer)
         self._clear_buffers()
         return self._forward_up(message)
 
     def _clear_buffers(self):
         self._rx_buffer.clear()
         self._last_received = False
+
+    def _trim_payload(self, offset):
+        payload, real_length = self._rx_buffer[offset]
+        return payload[:real_length]
