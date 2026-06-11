@@ -24,7 +24,6 @@ class NetworkLayer(Layer):
 
             -PAYLOAD: packet_payload_size bits to represent payload
     """
-    get_interface_for_address = lambda x: None
 
     def __init__(self, address, address_size, offset_size, real_length_size, packet_payload_size):
         self.address = address

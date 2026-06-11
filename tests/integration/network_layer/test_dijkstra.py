@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_can_select_the_correct_interface_from_routing_table(linear_network):
     a = linear_network.get_node('192.168.0.1')
     b = linear_network.get_node('192.168.0.2')

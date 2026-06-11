@@ -1,8 +1,24 @@
+import pytest
+
+from errors import LinkError, NetworkError
 from src.infrastructure.nodes import Host
 from src.system_configurations.config_manager import ConfigManager
 
 class TestNode:
 
+    def test_an_unconnected_host_in_link_layer_cannot_send(self):
+        cfg_manager = ConfigManager(top_layer='link')
+        a = Host(cfg_manager, '192.168.0.1')
+        b = Host(cfg_manager, '192.168.0.2')
+        with pytest.raises(LinkError, match='Destination interface is not connected'):
+            a.send('Hello', destination_address='192.168.0.2')
+
+    def test_an_unconnected_host_in_network_layer_cannot_send(self):
+        cfg_manager = ConfigManager(top_layer='network')
+        a = Host(cfg_manager, '192.168.0.1')
+        b = Host(cfg_manager, '192.168.0.2')
+        with pytest.raises(NetworkError, match='Routing tables have not been built'):
+            a.send('Hello', destination_address='192.168.0.2')
 
     def test_hosts_with_equal_addresses_are_the_same(self):
         cfg_manager = ConfigManager()

@@ -1,10 +1,7 @@
 import pytest
 
-from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
-from src.system_configurations.config_manager import ConfigManager
-from tests.conftest import CleanChannel
-from tests.utilities.dummies import DummyNode
+from tests.utilities.dummies import DummyNode, CleanChannel
 from tests.utilities.utils import make_link, make_network_level_hosts
 
 @pytest.fixture

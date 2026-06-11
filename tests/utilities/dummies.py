@@ -25,8 +25,7 @@ class DummyLowerLayer:
 class DummyNode(Node):
 
     def __init__(self, address='0'):
-        super().__init__()
-        self.address = address
+        super().__init__(address)
         self.interfaces = []
         self._rx_bits = []
 

@@ -6,7 +6,7 @@ class ProtocolError(Exception):
 
 class LinkError(Exception):
 
-    def __init__(self, message, retries):
+    def __init__(self, message, retries=0):
         super().__init__(message)
         self.retries = retries
 

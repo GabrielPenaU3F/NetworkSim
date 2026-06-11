@@ -85,8 +85,6 @@ class LinkLayer(Layer):
                 raise LinkError('Maximum number of retries exceeded.', self.max_retries)
 
     def on_receive(self, bits, interface=None):
-        print(f"[LL] on_receive, expected_seq={self._expected_seq}, buffer={len(self._rx_message_buffer)}")
-
         self._rx_stream_buffer.extend(bits)
 
         while len(self._rx_stream_buffer) >= self._get_frame_size():

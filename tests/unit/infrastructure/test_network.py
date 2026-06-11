@@ -64,10 +64,6 @@ def test_cannot_connect_host_from_another_network(simple_network, clean_channel)
 
 class TestAddresses:
 
-    def test_network_host_default_address(self, simple_network):
-        host = simple_network.create_host()
-        assert host.address == '192.168.0.1'
-
     def test_cannot_create_two_hosts_with_equal_addresses(self, simple_network):
         with pytest.raises(NetworkError, match='Address 192.168.0.1 already in use'):
             host_1 = simple_network.create_host(address='192.168.0.1')

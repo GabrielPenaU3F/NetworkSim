@@ -3,9 +3,9 @@ import types
 import pytest
 import numpy as np
 
-from infrastructure.network import Network
-from system_configurations.config import NetworkConfig, PacketConfig
-from system_configurations.config_manager import ConfigManager
+from src.infrastructure.network import Network
+from src.system_configurations.config import NetworkConfig, PacketConfig
+from src.system_configurations.config_manager import ConfigManager
 
 
 @pytest.fixture

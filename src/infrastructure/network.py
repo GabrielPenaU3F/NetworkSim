@@ -23,7 +23,7 @@ class Network:
         self.graph = NetworkGraph()
         self.routing = self.routing_algorithm()
 
-    def create_host(self, address='192.168.0.1'):
+    def create_host(self, address):
         self._validate_address(address)
 
         host = Host(self.cfg_manager, address=address)

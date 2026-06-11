@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 
+from errors import NetworkError, LinkError
 from src.protocol_stack.protocol_stack import ProtocolStack
 
 
@@ -44,11 +45,17 @@ class Host(Node):
 
     def __init__(self, cfg_manager, address=None):
         super().__init__(address)
+        self.cfg_manager = cfg_manager
         self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
         self._rx_messages = []
 
     def send(self, message, interface=0, destination_address=None) -> None:
+        if self.cfg_manager.top_layer in ['physical', 'link']:
+            self.check_if_interface_is_connected(interface)
+        
         if destination_address is not None: # if we are in network layer or above
+            if self.routing_table is None:
+                raise NetworkError('Routing tables have not been built')
             interface = self.routing_table.get_interface_to_address(destination_address)
         else: # if we are in physical or link layer
             interface = self.interfaces[interface]
@@ -62,3 +69,7 @@ class Host(Node):
     def read(self):
         if self._rx_messages:
             return self._rx_messages.pop(0)
+
+    def check_if_interface_is_connected(self, interface):
+        if not self.interfaces or interface >= len(self.interfaces):
+            raise LinkError('Destination interface is not connected')
