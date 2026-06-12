@@ -1,10 +1,9 @@
 class ProtocolError(Exception):
-
-    def __init__(self, message):
-        super().__init__(message)
+    """Raised when the protocol stack is misconfigured or used incorrectly."""
 
 
 class LinkError(Exception):
+    """Raised when the link layer exceeds its retry budget while transmitting a frame."""
 
     def __init__(self, message, retries=0):
         super().__init__(message)
@@ -12,12 +11,8 @@ class LinkError(Exception):
 
 
 class NetworkError(Exception):
-
-    def __init__(self, message):
-        super().__init__(message)
+    """Raised for invalid network-level operations (routing, topology, connectivity)."""
 
 
 class AddressError(Exception):
-
-    def __init__(self, message):
-        super().__init__(message)
+    """Raised when an address is malformed, missing, or already in use."""

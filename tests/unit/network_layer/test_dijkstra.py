@@ -40,7 +40,7 @@ def test_origin_not_in_first_hops(make_routing, example_graph, three_dummy_hosts
     first_hops = routing.get_first_hops(a)
     assert a not in first_hops
 
-def test_first_hop_chooses_shortest_path(network_cfg_manager, three_dummy_hosts, make_routing, clean_channel):
+def test_first_hop_chooses_shortest_path(three_dummy_hosts, make_routing):
     graph = NetworkGraph()
     routing = make_routing(graph)
     a, b, c = three_dummy_hosts
@@ -59,7 +59,7 @@ def test_first_hop_chooses_shortest_path(network_cfg_manager, three_dummy_hosts,
 
     assert first_hops[d] == b
 
-def test_unreachable_node_raises_exception(network_cfg_manager, make_routing, three_dummy_hosts, clean_channel):
+def test_unreachable_node_raises_exception(make_routing, three_dummy_hosts):
     graph = NetworkGraph()
     routing = make_routing(graph)
     a, b, _ = three_dummy_hosts
@@ -69,7 +69,7 @@ def test_unreachable_node_raises_exception(network_cfg_manager, make_routing, th
     with pytest.raises(NetworkError, match=err_msg):
         routing.get_first_hops(a)
 
-def test_cache_is_invalidated_when_node_is_added(make_routing, three_dummy_hosts, clean_channel):
+def test_cache_is_invalidated_when_node_is_added(make_routing, three_dummy_hosts):
     graph = NetworkGraph()
     routing = make_routing(graph)
     a, b, c = three_dummy_hosts
@@ -88,7 +88,7 @@ def test_cache_is_invalidated_when_node_is_added(make_routing, three_dummy_hosts
     first_hops = routing.get_first_hops(a)
     assert c in first_hops
 
-def test_cache_is_invalidated_when_edge_is_added(make_routing, three_dummy_hosts, clean_channel):
+def test_cache_is_invalidated_when_edge_is_added(make_routing, three_dummy_hosts):
     graph = NetworkGraph()
     routing = make_routing(graph)
     a, b, c = three_dummy_hosts
