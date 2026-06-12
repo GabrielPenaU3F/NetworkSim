@@ -3,6 +3,7 @@ import types
 import pytest
 import numpy as np
 
+from errors import AddressError
 from src.infrastructure.network import Network
 from src.system_configurations.config import NetworkConfig, PacketConfig
 from src.system_configurations.config_manager import ConfigManager

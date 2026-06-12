@@ -1,3 +1,4 @@
+from infrastructure.address_registry import AddressRegistry
 from src.errors import NetworkError
 from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
@@ -13,31 +14,19 @@ from src.network_layer.routing_table import RoutingTable
 
 class Network:
 
-    _address_registry = None
-    cfg_manager = None
-
     def __init__(self, cfg_manager):
         self._validate_config(cfg_manager)
         self.cfg_manager = cfg_manager
-        self._address_registry = set()
+        ip_address_size = self.cfg_manager.network_layer_cfg.address_size
+        self._address_registry = AddressRegistry(ip_address_size)
         self.graph = NetworkGraph()
         self.routing = self.routing_algorithm()
 
     def create_host(self, address):
-        self._validate_address(address)
-
+        self._address_registry.register_ip(address)
         host = Host(self.cfg_manager, address=address)
-        self._address_registry.add(address)
         self.graph.add_node(host)
         return host
-
-    def _validate_address(self, address):
-        expected_parts = self.cfg_manager.network_layer_cfg.address_size // 8
-        actual_parts = len(address.split('.'))
-        if actual_parts != expected_parts:
-            raise NetworkError(f'Addresses must have {expected_parts} parts, got {actual_parts}')
-        if address in self._address_registry:
-            raise NetworkError(f'Address {address} already in use')
 
     def _validate_config(self, cfg_manager):
         top_layer = cfg_manager.top_layer
@@ -48,7 +37,7 @@ class Network:
         return self.graph
 
     def connect(self, node_a, node_b, channel):
-        if not all(node.address in self._address_registry for node in (node_a, node_b)):
+        if not all(self._address_registry.is_ip_registered(node.address) for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
         LinkFactory.create_network_link(self.graph, node_a, node_b, channel)
 

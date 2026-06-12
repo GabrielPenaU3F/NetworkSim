@@ -1,12 +1,16 @@
 # NETWORK SIM BACKLOG
 
+## In progress
+- Separar routing de envío de mensajes.
+- Implementar direcciones MAC en las interfaces.
+- Implementar hubs y switches.
+
 ## Completados
 - Revisar si hay más clases triviales que puedan modelarse como dataclasses para simplificar el diseño.
 - Revisar si hay validaciones que falten.
 - Implementar un método que dibuje el grafo de la red.
 - Completar la capa de red.
 - Agregar tests de integración de capa de red y test de integración del sistema completo (hasta red).
-
 
 ## Permanente 
 - Revisar si hay otros aspectos del diseño que puedan mejorarse o simplificarse.
