@@ -7,10 +7,21 @@ from src.system_configurations.config_manager import ConfigManager
 from system_configurations.config import NetworkConfig
 
 
-def test_cannot_create_network_without_network_protocol():
-    with pytest.raises(NetworkError, match='Top layer should be at least Network Layer'):
-        cfg_manager = ConfigManager(top_layer='link')
-        Network(cfg_manager)
+def test_host_without_address_is_allowed_in_link_layer_network():
+    cfg = ConfigManager(top_layer='link')
+    network = Network(cfg)
+    host = network.create_host()
+    assert host.address is None
+
+def test_host_without_address_is_allowed_in_physical_layer_network():
+    cfg = ConfigManager(top_layer='physical')
+    network = Network(cfg)
+    host = network.create_host()
+    assert host.address is None
+
+def test_cannot_create_host_without_ip_in_network_layer(simple_network):
+    with pytest.raises(NetworkError, match='An IP address is required for this network'):
+        simple_network.create_host()
 
 def test_cannot_create_two_hosts_with_equal_addresses(simple_network):
     with pytest.raises(AddressError, match='IP address 192.168.0.1 already in use'):

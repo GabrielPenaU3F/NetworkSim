@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import numpy as np
 import pytest
 
@@ -7,8 +9,7 @@ from src.link_layer.checksum import ParityChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyLowerLayer, CleanChannel
-from tests.utilities.utils import make_network_level_hosts
+from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode
 
 
 @pytest.fixture
@@ -25,8 +26,11 @@ def empty_graph():
     return NetworkGraph()
 
 @pytest.fixture
-def hosts():
-    return make_network_level_hosts()
+def three_dummy_hosts():
+    a = DummyNode(address='192.168.0.1')
+    b = DummyNode(address='192.168.0.2')
+    c = DummyNode(address='192.168.0.3')
+    return a, b, c
 
 @pytest.fixture
 def tile_bits():
@@ -60,3 +64,9 @@ def linear_network(simple_network, clean_channel):
     simple_network.connect(host_b, host_c, clean_channel)
     simple_network.build_routing_tables()
     return simple_network
+
+@pytest.fixture
+def mock_graph():
+    graph = Mock()
+    graph.add_edge.return_value = Mock()
+    return graph

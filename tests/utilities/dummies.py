@@ -29,9 +29,6 @@ class DummyNode(Node):
         self.interfaces = []
         self._rx_bits = []
 
-    def add_interface(self, interface, **kwargs):
-        self.interfaces.append(interface)
-
     def on_receive(self, bits, interface=None):
         self._rx_bits.append(bits)
 
@@ -39,7 +36,7 @@ class DummyNode(Node):
         if self._rx_bits:
             return self._rx_bits.pop(0)
 
-    def send(self, message, interface=0) -> None:
+    def send(self, message, interface=0, **kwargs) -> None:
         pass
 
 

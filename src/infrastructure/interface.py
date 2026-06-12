@@ -1,9 +1,10 @@
 class Interface:
 
-    def __init__(self, node):
+    def __init__(self, node, mac=0):
         self.edge = None
         self.link = None
         self.node = node
+        self.mac = mac
 
     def send(self, bits):
         self.link.transmit(self, bits)

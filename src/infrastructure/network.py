@@ -1,5 +1,5 @@
 from infrastructure.address_registry import AddressRegistry
-from src.errors import NetworkError
+from src.errors import NetworkError, AddressError
 from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
 from src.infrastructure.nodes import Host
@@ -15,31 +15,31 @@ from src.network_layer.routing_table import RoutingTable
 class Network:
 
     def __init__(self, cfg_manager):
-        self._validate_config(cfg_manager)
         self.cfg_manager = cfg_manager
         ip_address_size = self.cfg_manager.network_layer_cfg.address_size
         self._address_registry = AddressRegistry(ip_address_size)
+        self.link_factory = LinkFactory(self._address_registry)
         self.graph = NetworkGraph()
         self.routing = self.routing_algorithm()
 
-    def create_host(self, address):
-        self._address_registry.register_ip(address)
+    def create_host(self, address=None):
+        if address is None and self._requires_ip_address():
+            raise NetworkError('An IP address is required for this network')
+
+        if address is not None:
+            self._address_registry.register_ip(address)
+
         host = Host(self.cfg_manager, address=address)
         self.graph.add_node(host)
         return host
-
-    def _validate_config(self, cfg_manager):
-        top_layer = cfg_manager.top_layer
-        if top_layer in ['physical', 'link']:
-            raise NetworkError('Top layer should be at least Network Layer')
 
     def get_topology_graph(self):
         return self.graph
 
     def connect(self, node_a, node_b, channel):
-        if not all(self._address_registry.is_ip_registered(node.address) for node in (node_a, node_b)):
+        if not all(node in self.graph.nodes for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
-        LinkFactory.create_network_link(self.graph, node_a, node_b, channel)
+        self.link_factory.create_link(self.graph, node_a, node_b, channel)
 
     def build_routing_tables(self):
         all_nodes = self.graph.nodes
@@ -67,3 +67,6 @@ class Network:
             if node.address == address:
                 return node
         return None
+
+    def _requires_ip_address(self):
+        return self.cfg_manager.top_layer not in ('physical', 'link')

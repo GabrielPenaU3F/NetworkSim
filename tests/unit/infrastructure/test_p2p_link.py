@@ -1,8 +1,9 @@
+from unittest.mock import Mock
+
 import pytest
 import numpy as np
 
 from src.infrastructure.channels import BinarySymmetricChannel
-from src.infrastructure.link_factory import LinkFactory
 from tests.unit.conftest import DummyNode
 
 
@@ -11,11 +12,11 @@ def noisy_channel():
     return BinarySymmetricChannel(1)
 
 @pytest.fixture
-def make_dummy_nodes():
+def make_dummy_nodes(link_factory, mock_graph):
     def _make(channel):
         A = DummyNode()
         B = DummyNode()
-        LinkFactory.create_physical_link(A, B, channel)
+        link_factory.create_link(mock_graph, A, B, channel)
         return A, B
     return _make
 
