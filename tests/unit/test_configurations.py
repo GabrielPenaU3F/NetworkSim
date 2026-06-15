@@ -1,12 +1,13 @@
 import numpy as np
 import pytest
 
-from src.link_layer.checksum import ParityChecksum, CRCChecksum
 from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 from src.system_configurations.config import ChecksumConfig, LinkConfig, CRCConfig, FrameConfig, NetworkConfig, \
     PacketConfig
 from src.system_configurations.config_manager import ConfigManager
+from infrastructure.checksum import CRCChecksum, ParityChecksum
+
 
 @pytest.fixture
 def cfg_manager():

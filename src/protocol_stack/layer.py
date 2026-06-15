@@ -27,5 +27,5 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def on_receive(self, bits):
+    def on_receive(self, bits, interface=None):
         pass

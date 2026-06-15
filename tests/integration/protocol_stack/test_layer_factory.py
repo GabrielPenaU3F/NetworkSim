@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.link_layer.checksum import CRCChecksum
+from infrastructure.checksum import CRCChecksum
 from src.link_layer.link_layer import LinkLayer
 from src.network_layer.network_layer import NetworkLayer
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, HammingChannelCode
@@ -30,46 +30,47 @@ class TestPhysicalLayerBuilder:
         assert type(layer.channel_code) is HammingChannelCode
 
 
-class TestLinkLayerBuilder:
-
-    def test_builds_link_layer_instance(self):
-        config = ConfigManager(top_layer='link')
-        layer = LayerFactory.build_link_layer(config)
-        assert type(layer) is LinkLayer
-
-    def test_link_layer_has_correct_checksum(self):
-        config = ConfigManager(top_layer='link',
-                                   link=LinkConfig(checksum_cfg=ChecksumConfig(
-                                           cls=CRCChecksum,
-                                           params={'generator': [1, 0, 0, 1]},
-                                       )
-                                   )
-                               )
-        layer = LayerFactory.build_link_layer(config)
-        assert type(layer.checksum) is CRCChecksum
-        assert np.all(layer.checksum.generator == [1, 0, 0, 1])
-
-    def test_link_layer_has_correct_max_retries(self):
-        config = ConfigManager(top_layer='link',
-                               link=LinkConfig(max_retries=10))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.max_retries == 10
-
-    def test_link_layer_has_correct_payload_size(self):
-        config = ConfigManager(top_layer='link', link=LinkConfig(
-                                       frame_cfg=FrameConfig(payload_size=16)
-                                   )
-                               )
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.payload_size == 16
-
-    def test_link_layer_has_correct_seq_size(self):
-        config = ConfigManager(top_layer='link', link=LinkConfig(
-                                        frame_cfg=FrameConfig(seq_size=4)
-                                   )
-                               )
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.seq_size == 4
+# # #This will possibly be used on a future TransportLayer
+# class TestLinkLayerBuilder:
+#
+#     def test_builds_link_layer_instance(self):
+#         config = ConfigManager(top_layer='link')
+#         layer = LayerFactory.build_link_layer(config)
+#         assert type(layer) is LinkLayer
+#
+#     def test_link_layer_has_correct_checksum(self):
+#         config = ConfigManager(top_layer='link',
+#                                    link=LinkConfig(checksum_cfg=ChecksumConfig(
+#                                            cls=CRCChecksum,
+#                                            params={'generator': [1, 0, 0, 1]},
+#                                        )
+#                                    )
+#                                )
+#         layer = LayerFactory.build_link_layer(config)
+#         assert type(layer.checksum) is CRCChecksum
+#         assert np.all(layer.checksum.generator == [1, 0, 0, 1])
+#
+#     def test_link_layer_has_correct_max_retries(self):
+#         config = ConfigManager(top_layer='link',
+#                                link=LinkConfig(max_retries=10))
+#         layer = LayerFactory.build_link_layer(config)
+#         assert layer.max_retries == 10
+#
+#     def test_link_layer_has_correct_payload_size(self):
+#         config = ConfigManager(top_layer='link', link=LinkConfig(
+#                                        frame_cfg=FrameConfig(payload_size=16)
+#                                    )
+#                                )
+#         layer = LayerFactory.build_link_layer(config)
+#         assert layer.payload_size == 16
+#
+#     def test_link_layer_has_correct_seq_size(self):
+#         config = ConfigManager(top_layer='link', link=LinkConfig(
+#                                         frame_cfg=FrameConfig(seq_size=4)
+#                                    )
+#                                )
+#         layer = LayerFactory.build_link_layer(config)
+#         assert layer.seq_size == 4
 
 
 class TestNetworkLayerBuilder:

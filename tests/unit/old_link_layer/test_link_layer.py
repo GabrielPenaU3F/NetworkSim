@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from src.errors import LinkError
-from tests.unit.link_layer.conftest import frame_to_serialize
+from tests.unit.old_link_layer.conftest import frame_to_serialize
 
 
 class TestFrameSerialization:

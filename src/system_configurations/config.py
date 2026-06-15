@@ -3,9 +3,9 @@ from typing import Type
 
 import numpy as np
 
-from src.link_layer.checksum import ParityChecksum, Checksum
 from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, ChannelCode
+from infrastructure.checksum import Checksum, ParityChecksum, CRCChecksum
 
 
 @dataclass
@@ -20,7 +20,6 @@ class ChecksumConfig:
 
     @classmethod
     def from_crc(cls, crc: CRCConfig):
-        from src.link_layer.checksum import CRCChecksum
         return cls(cls=CRCChecksum, params={'generator': crc.generator})
 
 

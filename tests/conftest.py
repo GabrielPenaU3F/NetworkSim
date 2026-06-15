@@ -5,11 +5,11 @@ import pytest
 
 from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
-from src.link_layer.checksum import ParityChecksum
-from src.link_layer.link_layer import LinkLayer
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
 from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode
+from infrastructure.checksum import ParityChecksum
+from transport_layer.old_link_layer import OldLinkLayer
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def link_stack():
 def example_link_layer():
     dummy_physical = DummyLowerLayer()
     checksum = ParityChecksum()
-    link_layer = LinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
+    link_layer = OldLinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
     link_layer.attach_lower(dummy_physical)
     return link_layer
 

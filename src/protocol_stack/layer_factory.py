@@ -36,8 +36,9 @@ class LayerFactory:
         checksum = link_cfg.build_checksum()
         fc = link_cfg.frame_cfg
 
-        link_layer = LinkLayer(checksum, link_cfg.max_retries,
-                     fc.payload_size, fc.seq_size, fc.checksum_size)
+        # link_layer = LinkLayer(checksum, link_cfg.max_retries,
+        #              fc.payload_size, fc.seq_size, fc.checksum_size)
+        link_layer = LinkLayer()
         link_layer.attach_lower(physical_layer)
         return link_layer
 

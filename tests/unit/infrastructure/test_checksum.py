@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from src.link_layer.checksum import ParityChecksum, SumChecksum, CRCChecksum
+from infrastructure.checksum import ParityChecksum, SumChecksum, CRCChecksum
+
 
 @pytest.fixture
 def example_four_bits():

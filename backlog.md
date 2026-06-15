@@ -2,7 +2,9 @@
 
 ## In progress
 - Separar routing de envío de mensajes.
+- Separar control de errores y retransmisiones (mover a capa de transporte)
 - Implementar direcciones MAC en las interfaces.
+- Implementar capa de enlace Ethernet-like
 - Implementar hubs y switches.
 
 ## Completados

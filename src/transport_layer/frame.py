@@ -1,9 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Type
 
 import numpy as np
-
-from src.link_layer.checksum import Checksum, ParityChecksum
 
 
 @dataclass
