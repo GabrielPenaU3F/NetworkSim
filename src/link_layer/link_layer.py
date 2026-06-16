@@ -1,16 +1,39 @@
 import numpy as np
 
 from link_layer.ether_frame import EthernetFrame
+from protocol_constants import ethernet
 from protocol_stack.layer import Layer
-from utils import serialize_mac_address, int_to_bits, deserialize_mac_address, bits_to_int
+from utils import int_to_bits, deserialize_mac_address, bits_to_int
 
 
 class LinkLayer(Layer):
 
-    def __init__(self, mac_size=48, ethernet_type_size=16, checksum_size=32):
-        self.MAC_SIZE = mac_size
-        self.ETHER_TYPE_SIZE = ethernet_type_size
-        self.CHECKSUM_SIZE = checksum_size
+
+    def __init__(self):
+        super().__init__()
+
+    def _build_frames(self, bits, src_mac, dst_mac, ether_type):
+        frames = []
+        total = len(bits)
+
+        for start in range(0, total, ethernet.MAX_PAYLOAD_BITS):
+            chunk = bits[start:start + ethernet.MAX_PAYLOAD_BITS]
+            real_length = len(chunk)
+
+            if real_length < ethernet.MIN_PAYLOAD_BITS:
+                padding = np.zeros(ethernet.MIN_PAYLOAD_BITS - real_length, dtype=np.uint8)
+                chunk = np.concatenate([chunk, padding])
+
+            frame = EthernetFrame(
+                src_mac=src_mac,
+                dst_mac=dst_mac,
+                ether_type=ether_type,
+                real_length=real_length,
+                payload=chunk
+            )
+            frames.append(frame)
+
+        return frames
 
     def transmit(self, bits, interface, **kwargs):
         interface.send(bits)
@@ -19,27 +42,30 @@ class LinkLayer(Layer):
         return self._forward_up(bits, interface)
 
     def _serialize_frame(self, ether_frame) -> np.ndarray:
-        dst_bits = serialize_mac_address(ether_frame.dst_mac, self.MAC_SIZE)
-        src_bits = serialize_mac_address(ether_frame.src_mac, self.MAC_SIZE)
-        ether_type_bits = int_to_bits(ether_frame.ether_type, self.ETHER_TYPE_SIZE)
-        checksum_bits = int_to_bits(ether_frame.checksum, self.CHECKSUM_SIZE)
+        body_bits = ether_frame.serialize_body()
+        checksum_bits = int_to_bits(ether_frame.checksum, ethernet.CHECKSUM_SIZE)
 
-        return np.concatenate([dst_bits, src_bits, ether_type_bits, ether_frame.payload, checksum_bits])
+        return np.concatenate([body_bits, checksum_bits])
 
     def _deserialize_frame(self, bits: np.ndarray, payload_size: int) -> EthernetFrame:
-        dst_mac = deserialize_mac_address(bits[:self.MAC_SIZE])
+        dst_mac = deserialize_mac_address(bits[:ethernet.MAC_SIZE])
 
-        src_start = self.MAC_SIZE
-        src_end = src_start + self.MAC_SIZE
+        src_start = ethernet.MAC_SIZE
+        src_end = src_start + ethernet.MAC_SIZE
         src_mac = deserialize_mac_address(bits[src_start:src_end])
 
-        ether_type_end = src_end + self.ETHER_TYPE_SIZE
+        ether_type_end = src_end + ethernet.ETHER_TYPE_SIZE
         ether_type = bits_to_int(bits[src_end:ether_type_end])
 
-        payload_end = ether_type_end + payload_size
-        payload = bits[ether_type_end:payload_end]
+        real_length_end = ether_type_end + ethernet.REAL_LENGTH_SIZE
+        real_length = bits_to_int(bits[ether_type_end:real_length_end])
 
-        checksum = bits_to_int(bits[payload_end:payload_end + self.CHECKSUM_SIZE])
+        payload_end = real_length_end + payload_size
+        payload = bits[real_length_end:payload_end]
 
+        '''
+        The real checksum - need to compare
+        checksum = bits_to_int(bits[payload_end:payload_end + ethernet.CHECKSUM_SIZE])
+        '''
         return EthernetFrame(src_mac=src_mac, dst_mac=dst_mac, ether_type=ether_type,
-                   payload=payload, checksum=checksum)
+                   real_length=real_length, payload=payload)
