@@ -1,3 +1,7 @@
+import numpy as np
+from numpy import typing as npt
+
+from infrastructure.checksum import Checksum
 from src.infrastructure.interface import Interface
 from src.infrastructure.nodes import Node
 
@@ -48,3 +52,13 @@ class DummyInterface(Interface):
 
     def send(self, bits):
         self.sent_bits = bits
+
+
+class DummyChecksum(Checksum):
+
+    @property
+    def size(self):
+        return 1
+
+    def compute(self, bits) -> npt.NDArray[np.uint8]:
+        return np.array([1], dtype=np.uint8)

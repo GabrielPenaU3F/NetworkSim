@@ -34,11 +34,16 @@ class LayerFactory:
         physical_layer = LayerFactory.build_physical_layer(cfg_manager)
         link_cfg = cfg_manager.link_layer_cfg
         checksum = link_cfg.build_checksum()
-        fc = link_cfg.frame_cfg
 
-        # link_layer = LinkLayer(checksum, link_cfg.max_retries,
-        #              fc.payload_size, fc.seq_size, fc.checksum_size)
-        link_layer = LinkLayer()
+        link_layer = LinkLayer(
+            checksum=checksum,
+            min_payload_bits=link_cfg.min_payload_bits,
+            max_payload_bits=link_cfg.max_payload_bits,
+            mac_size=link_cfg.mac_size,
+            ether_type_size=link_cfg.ether_type_size,
+            real_length_size=link_cfg.real_length_size,
+            checksum_size=link_cfg.checksum_size,
+        )
         link_layer.attach_lower(physical_layer)
         return link_layer
 

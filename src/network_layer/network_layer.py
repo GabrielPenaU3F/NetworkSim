@@ -43,7 +43,10 @@ class NetworkLayer(Layer):
 
     def _transmit_packet(self, interface, packet):
         bits = self._serialize_packet(packet)
-        self.lower_layer.transmit(bits, interface)
+        # This should be improved when we have ARP and MAC resolution available
+        src_mac = interface.mac_address
+        dst_mac = interface.link.get_other_interface(interface).mac_address
+        self.lower_layer.transmit(bits, interface, src_mac=src_mac, dst_mac=dst_mac)
 
     def on_receive(self, bits, interface=None):
         packet = self._deserialize_packet(bits)

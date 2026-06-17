@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from protocol_constants import ethernet
 from src.link_layer.ether_frame import EthernetFrame
 from utils import int_to_bits
 
@@ -10,9 +11,10 @@ def example_frame(tile_bits):
     return EthernetFrame(
         src_mac='02:00:00:00:00:01',
         dst_mac='02:00:00:00:00:02',
-        ether_type=0x0800,
+        ether_type=ethernet.IPV4,
         real_length=8,
         payload=tile_bits(4),  # 8 bits
+        checksum=1,
     )
 
 @pytest.fixture
@@ -24,7 +26,7 @@ class TestSerialization:
 
     def test_serialized_frame_has_correct_total_length(self, example_link_layer, example_frame):
         serialized = example_link_layer._serialize_frame(example_frame)
-        expected_length = 48 + 48 + 16 + 16 + 8 + 32  # macs + ether_type + payload + checksum
+        expected_length = 48 + 48 + 16 + 8 + 8 + 1  # macs + ether_type + payload + checksum
         assert len(serialized) == expected_length
 
     def test_serialized_dst_mac_comes_first(self, example_link_layer, example_frame):
@@ -42,24 +44,24 @@ class TestSerialization:
     def test_serialized_ether_type(self, example_link_layer, example_frame):
         from src.utils import int_to_bits
         serialized = example_link_layer._serialize_frame(example_frame)
-        expected = int_to_bits(0x0800, 16)
+        expected = int_to_bits(ethernet.IPV4, 16)
         assert np.all(serialized[96:112] == expected)
 
     def test_serialized_real_length(self, example_link_layer, example_frame, tile_bits):
         serialized = example_link_layer._serialize_frame(example_frame)
-        expected_real_length = int_to_bits(8, 16)
-        real_length = serialized[112:128]
+        expected_real_length = int_to_bits(8, 8)
+        real_length = serialized[112:120]
         assert np.all(real_length == expected_real_length)
 
     def test_serialized_payload(self, example_link_layer, example_frame, tile_bits):
         serialized = example_link_layer._serialize_frame(example_frame)
-        payload = serialized[128:136]
+        payload = serialized[120:128]
         assert np.all(payload == tile_bits(4))
 
-    def test_serialized_checksum_is_zero_by_default(self, example_link_layer, example_frame):
+    def test_serialized_checksum_is_one(self, example_link_layer, example_frame):
         serialized = example_link_layer._serialize_frame(example_frame)
-        checksum = serialized[-32:]
-        assert np.all(checksum == 0)
+        checksum = serialized[-1:]
+        assert np.all(checksum == 1)
 
 
 class TestDeserialization:
@@ -74,7 +76,7 @@ class TestDeserialization:
 
     def test_deserialize_recovers_ether_type(self, example_link_layer, frame_to_deserialize):
         deserialized = example_link_layer._deserialize_frame(frame_to_deserialize, payload_size=8)
-        assert deserialized.ether_type == 0x0800
+        assert deserialized.ether_type == ethernet.IPV4
 
     def test_deserialize_recovers_real_length(self, example_link_layer, frame_to_deserialize, tile_bits):
         deserialized = example_link_layer._deserialize_frame(frame_to_deserialize, payload_size=8)
@@ -86,7 +88,7 @@ class TestDeserialization:
 
     def test_deserialize_recovers_checksum(self, example_link_layer, frame_to_deserialize):
         deserialized = example_link_layer._deserialize_frame(frame_to_deserialize, payload_size=8)
-        assert deserialized.checksum == 0
+        assert deserialized.checksum == 1
 
 
 class TestRoundtrip:

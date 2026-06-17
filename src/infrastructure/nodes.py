@@ -59,7 +59,7 @@ class Host(Node):
             interface = self.routing_table.get_interface_to_address(destination_address)
         else: # if we are in physical or link layer
             interface = self.interfaces[interface]
-        self.protocol_stack.transmit(message, interface, destination_address)
+        self.protocol_stack.transmit(message, interface, destination_address=destination_address)
 
     def on_receive(self, bits, interface=None) -> None:
         message = self.protocol_stack.on_receive(bits, interface)

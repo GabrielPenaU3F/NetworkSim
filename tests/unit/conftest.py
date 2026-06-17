@@ -1,9 +1,15 @@
 import pytest
 
 from infrastructure.address_registry import AddressRegistry
+from infrastructure.checksum import ParityChecksum
 from infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
-from tests.utilities.dummies import DummyNode, CleanChannel
+from tests.utilities.dummies import DummyNode
+
+
+@pytest.fixture
+def parity_checksum():
+    return ParityChecksum()
 
 @pytest.fixture
 def address_registry():

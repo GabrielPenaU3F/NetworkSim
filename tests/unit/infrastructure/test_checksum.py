@@ -9,10 +9,6 @@ def example_four_bits():
     return [1, 0, 1, 1]
 
 @pytest.fixture
-def parity_checksum():
-    return ParityChecksum()
-
-@pytest.fixture
 def sum_checksum():
     return SumChecksum()
 

@@ -5,4 +5,7 @@ MAX_PAYLOAD_BITS: Final[int] = 1500 * 8  # 12000 bits
 MAC_SIZE: Final[int] = 48
 ETHER_TYPE_SIZE: Final[int] = 16
 REAL_LENGTH_SIZE: Final[int] = 16
+HEADER_SIZE: Final[int] = 48 * 2 + 16 + 16
 CHECKSUM_SIZE: Final[int] = 32
+IPV4: Final[int] = 0x0800
+IPV6: Final[int] = 0x0806
