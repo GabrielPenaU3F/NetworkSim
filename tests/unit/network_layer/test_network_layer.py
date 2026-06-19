@@ -5,15 +5,30 @@ from src.network_layer.network_layer import NetworkLayer
 from src.network_layer.packets import IPPacket
 from src.utils import serialize_ip_address, int_to_bits
 from tests.utilities.dummies import DummyLowerLayer, DummyInterface
+from unittest.mock import Mock
 
 
 @pytest.fixture
-def network_layer():
+def dummy_interface_with_peer():
+    interface = DummyInterface()
+    interface.mac_address = '02:00:00:00:00:01'
+
+    peer_interface = DummyInterface()
+    peer_interface.mac_address = '02:00:00:00:00:02'
+
+    mock_link = Mock()
+    mock_link.get_other_interface.return_value = peer_interface
+    interface.link = mock_link
+
+    return interface
+
+
+@pytest.fixture
+def network_layer(dummy_interface_with_peer):
     layer = NetworkLayer('192.168.0.1', address_size=32,
                          offset_size=8, real_length_size=4, packet_payload_size=8)
     # Mock routing callback
-    dummy_interface = DummyInterface()
-    layer.get_interface_for_address = lambda address: dummy_interface
+    layer.get_interface_for_address = lambda address: dummy_interface_with_peer
     return layer
 
 @pytest.fixture
@@ -277,22 +292,22 @@ class TestRebuildMessage:
 
 class TestNetworkLayerTX:
 
-    def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits):
+    def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(4)  # 1 packet
-        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
         assert dummy.calls == 1
 
-    def test_transmit_sends_one_call_per_packet(self, network_layer_with_dummy_lower, tile_bits):
+    def test_transmit_sends_one_call_per_packet(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(8)  # 2 packets
-        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
         assert dummy.calls == 2
 
-    def test_transmit_sends_correct_bit_length(self, network_layer_with_dummy_lower, tile_bits):
+    def test_transmit_sends_correct_bit_length(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(4)  # 1 packet
-        layer.transmit(bits, interface=None, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
         expected_size = layer.address_size * 2 + 1 + layer.offset_size + layer.real_length_size + layer.packet_payload_size
         assert len(dummy.sent_bits[0]) == expected_size
 

@@ -1,118 +1,20 @@
 import numpy as np
 
-from utils import int_to_bits, serialize_mac_address
 
+def test_build_frames_delegates_consistently_with_link_module(example_link_layer, tile_bits, frame_header):
+    src_mac, dst_mac, ether_type = frame_header
+    bits = tile_bits(4)  # 8 bits, single frame, no padding needed
+    frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
 
-class TestBuildBody:
+    direct_frame = example_link_layer._link_module.build_frame(src_mac, dst_mac, ether_type, 8, bits)
 
-    def test_build_body_has_correct_total_length(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)  # 8 bits
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        expected_length = example_link_layer.header_size + len(payload)
-        assert len(body) == expected_length
-
-    def test_build_body_places_dst_mac_first(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        mac_size = example_link_layer.mac_size
-        expected = serialize_mac_address('02:00:00:00:00:02', mac_size)
-        assert np.all(body[:mac_size] == expected)
-
-    def test_build_body_places_src_mac_second(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        mac_size = example_link_layer.mac_size
-        expected = serialize_mac_address('02:00:00:00:00:01', mac_size)
-        assert np.all(body[mac_size:mac_size * 2] == expected)
-
-    def test_build_body_places_ether_type_after_macs(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        start = example_link_layer.mac_size * 2
-        end = start + example_link_layer.ether_type_size
-        expected = int_to_bits(0x0800, example_link_layer.ether_type_size)
-        assert np.all(body[start:end] == expected)
-
-    def test_build_body_places_real_length_after_ether_type(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        start = example_link_layer.mac_size * 2 + example_link_layer.ether_type_size
-        end = start + example_link_layer.real_length_size
-        expected = int_to_bits(8, example_link_layer.real_length_size)
-        assert np.all(body[start:end] == expected)
-
-    def test_build_body_places_payload_last(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        assert np.all(body[example_link_layer.header_size:] == payload)
-
-
-class TestPeekRealLength:
-
-    def test_peek_real_length_reads_correct_value(self, example_link_layer, tile_bits):
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        header_bits = body[:example_link_layer.header_size]
-        assert example_link_layer._peek_real_length(header_bits) == 8
-
-    def test_peek_real_length_reads_zero(self, example_link_layer, tile_bits):
-        payload = np.zeros(example_link_layer.min_payload_bits, dtype=np.uint8)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=0, payload=payload
-        )
-        header_bits = body[:example_link_layer.header_size]
-        assert example_link_layer._peek_real_length(header_bits) == 0
-
-    def test_peek_real_length_reads_maximum_payload_size(self, example_link_layer, tile_bits):
-        payload = np.zeros(example_link_layer.max_payload_bits, dtype=np.uint8)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800,
-            real_length=example_link_layer.max_payload_bits, payload=payload
-        )
-        header_bits = body[:example_link_layer.header_size]
-        assert example_link_layer._peek_real_length(header_bits) == example_link_layer.max_payload_bits
-
-    def test_peek_real_length_only_reads_header_portion(self, example_link_layer, tile_bits):
-        # Even if extra bits (payload + checksum) are appended, peek should only look at the header
-        payload = tile_bits(4)
-        body = example_link_layer._build_body(
-            '02:00:00:00:00:01', '02:00:00:00:00:02', 0x0800, real_length=8, payload=payload
-        )
-        cs = example_link_layer._compute_checksum(body)
-        checksum_bits = int_to_bits(cs, example_link_layer.checksum_size)
-        full_frame = np.concatenate([body, checksum_bits])
-
-        header_bits = full_frame[:example_link_layer.header_size]
-        assert example_link_layer._peek_real_length(header_bits) == 8
+    assert frames[0].real_length == direct_frame.real_length
+    assert np.all(frames[0].payload == direct_frame.payload)
+    assert frames[0].checksum == direct_frame.checksum
 
 
 class TestBuildFrames:
 
-    def test_build_a_single_frame_header(self, example_link_layer, tile_bits, frame_header):
-        src_mac, dst_mac, ether_type = frame_header
-        real_length = 16
-        bits = tile_bits(8)
-        eth_frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        frame = eth_frames[0]
-
-        assert frame.src_mac == src_mac
-        assert frame.dst_mac == dst_mac
-        assert frame.ether_type == ether_type
-        assert frame.real_length == real_length
 
     def test_build_a_single_frame_payload_is_padded_to_minimum(self, example_link_layer, tile_bits, frame_header):
         src_mac, dst_mac, ether_type = frame_header
@@ -132,14 +34,6 @@ class TestBuildFrames:
 
         assert len(frame.payload) == 8
         assert frame.real_length == 8
-
-    def test_build_a_single_frame_checksum(self, example_link_layer, tile_bits, frame_header):
-        src_mac, dst_mac, ether_type = frame_header
-        bits = tile_bits(8)
-        eth_frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        frame = eth_frames[0]
-        body_bits = example_link_layer._build_body(src_mac, dst_mac, ether_type, 8, bits)
-        assert frame.checksum == example_link_layer._compute_checksum(body_bits)
 
     def test_message_larger_than_max_is_split_into_multiple_frames(self, example_link_layer, frame_header, tile_bits):
         src_mac, dst_mac, ether_type = frame_header
@@ -190,7 +84,7 @@ class TestLinkLayerRX:
         src_mac, dst_mac, ether_type = frame_header
         bits = tile_bits(4)  # 8 bits, exact minimum
         frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        serialized = example_link_layer._serialize_frame(frames[0])
+        serialized = example_link_layer._link_module.serialize_frame(frames[0])
 
         result = example_link_layer.on_receive(serialized)
         assert np.all(result == bits)
@@ -199,7 +93,7 @@ class TestLinkLayerRX:
         src_mac, dst_mac, ether_type = frame_header
         bits = tile_bits(2)  # 4 bits, below minimum, gets padded to 8
         frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        serialized = example_link_layer._serialize_frame(frames[0])
+        serialized = example_link_layer._link_module.serialize_frame(frames[0])
 
         result = example_link_layer.on_receive(serialized)
         assert np.all(result == bits)
@@ -212,7 +106,7 @@ class TestLinkLayerRX:
 
         result = None
         for frame in frames:
-            serialized = example_link_layer._serialize_frame(frame)
+            serialized = example_link_layer._link_module.serialize_frame(frame)
             result = example_link_layer.on_receive(serialized)
 
         assert result is not None
@@ -222,7 +116,7 @@ class TestLinkLayerRX:
         src_mac, dst_mac, ether_type = frame_header
         bits = tile_bits(10)  # 2 frames
         frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        serialized_first = example_link_layer._serialize_frame(frames[0])
+        serialized_first = example_link_layer._link_module.serialize_frame(frames[0])
 
         result = example_link_layer.on_receive(serialized_first)
         assert result is None
@@ -231,7 +125,7 @@ class TestLinkLayerRX:
         src_mac, dst_mac, ether_type = frame_header
         bits = tile_bits(4)  # single frame, 8 bits + header + checksum
         frames = example_link_layer._build_frames(bits, src_mac, dst_mac, ether_type)
-        serialized = example_link_layer._serialize_frame(frames[0])
+        serialized = example_link_layer._link_module.serialize_frame(frames[0])
 
         midpoint = len(serialized) // 2
         first_chunk = serialized[:midpoint]

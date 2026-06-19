@@ -1,11 +1,22 @@
 import numpy as np
 import pytest
 
+from link_layer.link_module import LinkModule
 from protocol_constants import ethernet
 from src.link_layer.link_layer import LinkLayer
 from src.link_layer.ether_frame import EthernetFrame
 from tests.utilities.dummies import DummyLowerLayer, DummyChecksum
 
+
+@pytest.fixture
+def example_link_module():
+    return LinkModule(DummyChecksum(),
+                      min_payload_bits=8,
+                      max_payload_bits=16,
+                      mac_size=48,
+                      ether_type_size=16,
+                      real_length_size=8,
+                      checksum_size=1)
 
 @pytest.fixture
 def example_link_layer():

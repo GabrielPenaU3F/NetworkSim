@@ -21,7 +21,7 @@ class DummyLowerLayer:
     def attach_upper(self, upper):
         self.upper_layer = upper
 
-    def transmit(self, bits, interface=None):
+    def transmit(self, bits, interface=None, **kwargs):
         self.sent_bits.append(bits)
         self.calls += 1
 
@@ -48,6 +48,7 @@ class DummyInterface(Interface):
 
     def __init__(self, node=None):
         super().__init__(node)
+        self.mac_address = '02:00:00:00:00:01'
         self.sent_bits = None
 
     def send(self, bits):

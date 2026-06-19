@@ -88,45 +88,45 @@ class TestEthernetLinkLayerBuilder:
                                    )
                                )
                            )
-        layer = LayerFactory.build_link_layer(config)
-        assert type(layer.checksum) is CRCChecksum
-        assert np.all(layer.checksum.generator == [1, 0, 0, 1])
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert type(link_module.checksum) is CRCChecksum
+        assert np.all(link_module.checksum.generator == [1, 0, 0, 1])
 
     def test_link_layer_has_correct_min_payload_bits(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(min_payload_bits=8, max_payload_bits=16))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.min_payload_bits == 8
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.min_payload_bits == 8
 
     def test_link_layer_has_correct_max_payload_bits(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(min_payload_bits=8, max_payload_bits=16))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.max_payload_bits == 16
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.max_payload_bits == 16
 
     def test_link_layer_has_correct_mac_size(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(mac_size=32))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.mac_size == 32
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.mac_size == 32
 
     def test_link_layer_has_correct_ether_type_size(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(ether_type_size=8))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.ether_type_size == 8
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.ether_type_size == 8
 
     def test_link_layer_has_correct_real_length_size(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(real_length_size=12, max_payload_bits=400))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.real_length_size == 12
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.real_length_size == 12
 
     def test_link_layer_has_correct_checksum_size(self):
         config = ConfigManager(top_layer='link',
                                link=EthernetLinkConfig(checksum_size=16))
-        layer = LayerFactory.build_link_layer(config)
-        assert layer.checksum_size == 16
+        link_module = LayerFactory.build_link_layer(config)._link_module
+        assert link_module.checksum_size == 16
 
     def test_link_layer_has_physical_layer_below(self):
         config = ConfigManager(top_layer='link')
