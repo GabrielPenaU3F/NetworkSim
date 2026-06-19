@@ -1,8 +1,8 @@
 from infrastructure.address_registry import AddressRegistry
-from src.errors import NetworkError, AddressError
+from infrastructure.nodes.host import Host
+from src.errors import NetworkError
 from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
-from src.infrastructure.nodes import Host
 from src.network_layer.routing_table import RoutingTable
 
 

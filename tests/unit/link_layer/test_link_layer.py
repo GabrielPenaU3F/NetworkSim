@@ -74,7 +74,7 @@ class TestLinkLayerTX:
 
         example_link_layer.transmit(bits, interface=None, src_mac=src_mac, dst_mac=dst_mac, ether_type=ether_type)
 
-        for sent in physical.sent_bits:
+        for sent in physical.last_sent_bits:
             assert isinstance(sent, np.ndarray)
 
 

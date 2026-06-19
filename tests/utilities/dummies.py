@@ -2,8 +2,8 @@ import numpy as np
 from numpy import typing as npt
 
 from infrastructure.checksum import Checksum
+from infrastructure.nodes.node import Node
 from src.infrastructure.interface import Interface
-from src.infrastructure.nodes import Node
 
 
 class CleanChannel:
@@ -49,10 +49,12 @@ class DummyInterface(Interface):
     def __init__(self, node=None):
         super().__init__(node)
         self.mac_address = '02:00:00:00:00:01'
-        self.sent_bits = None
+        self.last_sent_bits = None
+        self.sent_bits = []
 
     def send(self, bits):
-        self.sent_bits = bits
+        self.last_sent_bits = bits
+        self.sent_bits.append(bits)
 
 
 class DummyChecksum(Checksum):

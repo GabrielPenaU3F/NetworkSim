@@ -3,8 +3,9 @@ import pytest
 from infrastructure.address_registry import AddressRegistry
 from infrastructure.checksum import ParityChecksum
 from infrastructure.link_factory import LinkFactory
+from link_layer.link_module import LinkModule
 from src.infrastructure.network_graph import NetworkGraph
-from tests.utilities.dummies import DummyNode
+from tests.utilities.dummies import DummyNode, DummyChecksum
 
 
 @pytest.fixture
@@ -35,3 +36,13 @@ def example_graph(three_dummy_hosts):
     graph.add_edge(a, b)
     graph.add_edge(b, c)
     return graph
+
+@pytest.fixture
+def example_link_module():
+    return LinkModule(DummyChecksum(),
+                      min_payload_bits=8,
+                      max_payload_bits=16,
+                      mac_size=48,
+                      ether_type_size=16,
+                      real_length_size=8,
+                      checksum_size=1)

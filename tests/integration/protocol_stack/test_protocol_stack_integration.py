@@ -20,5 +20,5 @@ def test_physical_has_channel_code_config():
 def test_stack_transmits_through_layers(link_stack):
     interface = DummyInterface()
     link_stack.transmit("sol", interface, src_mac='02:00:00:00:00:01', dst_mac='02:00:00:00:00:02')
-    assert interface.sent_bits is not None
+    assert interface.last_sent_bits is not None
 

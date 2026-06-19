@@ -1,10 +1,10 @@
 import pytest
 
 from errors import LinkError, NetworkError
-from src.infrastructure.nodes import Host
+from infrastructure.nodes.host import Host
 from src.system_configurations.config_manager import ConfigManager
 
-class TestNode:
+class TestHost:
 
     def test_an_unconnected_host_in_link_layer_cannot_send(self):
         cfg_manager = ConfigManager(top_layer='link')

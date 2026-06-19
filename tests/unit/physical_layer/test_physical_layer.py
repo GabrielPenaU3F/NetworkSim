@@ -26,11 +26,11 @@ class TestPhysicalLayer:
         physical = layer_factory(NoChannelCode())
         interface = DummyInterface()
         physical.transmit(bits, interface)
-        assert np.all(interface.sent_bits == bits)
+        assert np.all(interface.last_sent_bits == bits)
 
     def test_transmit_encodes_bits(self, layer_factory, bits):
         physical = layer_factory(RepetitionChannelCode(3))
         interface = DummyInterface()
         physical.transmit(bits, interface)
         expected_bits = np.tile([0, 0, 0, 1, 1, 1], 4).astype(np.uint8)
-        assert np.all(interface.sent_bits == expected_bits)
+        assert np.all(interface.last_sent_bits == expected_bits)

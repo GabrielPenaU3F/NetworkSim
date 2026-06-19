@@ -1,9 +1,7 @@
 import numpy as np
-import pytest
 
-from link_layer.link_module import LinkModule
 from protocol_constants import ethernet
-from tests.utilities.dummies import DummyChecksum
+from tests.unit.link_layer.conftest import example_link_module
 from utils import serialize_mac_address, int_to_bits
 
 
@@ -102,6 +100,22 @@ class TestPeekRealLength:
 
         header_bits = full_frame[:example_link_module.header_size]
         assert example_link_module.peek_real_length(header_bits) == 8
+
+
+class TestPeekNextFrameSize:
+
+    def test_incomplete_frame_returns_none(self, example_link_module):
+        example_bitstring = np.array([1, 1, 0, 1], dtype=np.uint8)
+        assert example_link_module.peek_next_frame_size(example_bitstring) is None
+
+    def test_complete_frame_returns_correct_length(self, example_link_module, frame_to_deserialize):
+        size = example_link_module.peek_next_frame_size(frame_to_deserialize)
+        assert size == 48 * 2 + 16 + 8 + 8 + 1
+
+    def test_complete_frame_plus_something_returns_correct_length(self, example_link_module, frame_to_deserialize):
+        frame_plus_something = np.concatenate((frame_to_deserialize, np.zeros(6)))
+        size = example_link_module.peek_next_frame_size(frame_plus_something)
+        assert size == 48 * 2 + 16 + 8 + 8 + 1
 
 
 class TestBuildFrame:

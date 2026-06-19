@@ -1,44 +1,6 @@
-from abc import abstractmethod, ABC
-
 from errors import NetworkError, LinkError
+from infrastructure.nodes.node import Node
 from src.protocol_stack.protocol_stack import ProtocolStack
-
-
-class Node(ABC):
-
-    def __init__(self, address=None):
-        self.address = address
-        self.interfaces = []
-        self.routing_table = None
-
-    def add_interface(self, interface, edge=None):
-        if edge is not None:
-            interface.connect_edge(edge)
-        self.interfaces.append(interface)
-
-    @abstractmethod
-    def send(self, message, interface=0, destination=None) -> None:
-        pass
-
-    @abstractmethod
-    def on_receive(self, bits, interface=0) -> None:
-        pass
-
-    def get_interface_for_edge(self, edge):
-        for interface in self.interfaces:
-            if interface.edge == edge:
-                return interface
-        return None
-
-    def __eq__(self, other):
-        if not isinstance(other, Node): # Validate they're both nodes
-            return False
-        if self.address is None or other.address is None: # If any does not have an address
-            return super().__eq__(other)
-        return self.address == other.address # Then compare addresses
-
-    def __hash__(self):
-        return hash(self.address)
 
 
 class Host(Node):
@@ -49,16 +11,16 @@ class Host(Node):
         self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
         self._rx_messages = []
 
-    def send(self, message, interface=0, destination_address=None) -> None:
+    def send(self, message, interface_idx=0, destination_address=None) -> None:
         if self.cfg_manager.top_layer in ['physical', 'link']:
-            self.check_if_interface_is_connected(interface)
+            self.check_if_interface_is_connected(interface_idx)
         
         if destination_address is not None: # if we are in network layer or above
             if self.routing_table is None:
                 raise NetworkError('Routing tables have not been built')
             interface = self.routing_table.get_interface_to_address(destination_address)
         else: # if we are in physical or link layer
-            interface = self.interfaces[interface]
+            interface = self.interfaces[interface_idx]
         self.protocol_stack.transmit(message, interface, destination_address=destination_address)
 
     def on_receive(self, bits, interface=None) -> None:
