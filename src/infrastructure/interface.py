@@ -17,3 +17,6 @@ class Interface:
 
     def connect_edge(self, edge):
         self.edge = edge
+
+    def get_other_interface(self):
+        return self.link.get_other_interface(self)

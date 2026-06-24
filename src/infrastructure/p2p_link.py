@@ -15,7 +15,6 @@ class P2PLink:
     def get_interfaces(self):
         return self.iface_a, self.iface_b
 
-    # Temporal method - will be erased later when it is not needed anymore
     def get_other_interface(self, interface):
         if interface == self.iface_a:
             return self.iface_b

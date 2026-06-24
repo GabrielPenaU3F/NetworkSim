@@ -1,7 +1,6 @@
 import numpy as np
 
 from protocol_constants import ethernet
-from tests.unit.link_layer.conftest import example_link_module
 from utils import serialize_mac_address, int_to_bits
 
 

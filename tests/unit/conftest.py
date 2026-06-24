@@ -5,8 +5,19 @@ from infrastructure.checksum import ParityChecksum
 from infrastructure.link_factory import LinkFactory
 from link_layer.link_module import LinkModule
 from src.infrastructure.network_graph import NetworkGraph
+from system_configurations.config_manager import ConfigManager
 from tests.utilities.dummies import DummyNode, DummyChecksum
 
+
+@pytest.fixture
+def phys_cfg_manager():
+    cfg = ConfigManager(top_layer='physical')
+    return cfg
+
+@pytest.fixture
+def link_cfg_manager():
+    cfg = ConfigManager(top_layer='link')
+    return cfg
 
 @pytest.fixture
 def parity_checksum():

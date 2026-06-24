@@ -13,6 +13,7 @@ class CleanChannel:
 
 
 class DummyLowerLayer:
+
     def __init__(self):
         self.upper_layer = None
         self.sent_bits = []

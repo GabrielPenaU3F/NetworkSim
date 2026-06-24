@@ -1,6 +1,6 @@
 import pytest
 
-from src.infrastructure.nodes import Host
+from infrastructure.nodes.host import Host
 from src.network_visualizer import _build_nx_graph
 
 
