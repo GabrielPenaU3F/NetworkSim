@@ -1,3 +1,4 @@
+from link_layer.link_module import LinkModule
 from src.errors import ProtocolError
 from src.link_layer.link_layer import LinkLayer
 from src.network_layer.network_layer import NetworkLayer

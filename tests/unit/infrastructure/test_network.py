@@ -1,8 +1,9 @@
 import pytest
 
+from infrastructure.nodes.host import Host
+from infrastructure.nodes.switch import Switch
 from src.errors import NetworkError, AddressError
 from src.infrastructure.network import Network
-from src.infrastructure.nodes import Host
 from src.system_configurations.config_manager import ConfigManager
 from system_configurations.config import NetworkConfig
 
@@ -74,3 +75,40 @@ def test_cannot_connect_host_from_another_network(simple_network, clean_channel)
     external_host = Host(ConfigManager(top_layer='network'), address='192.168.0.2')
     with pytest.raises(NetworkError, match='Cannot connect nodes that do not belong to this network'):
         simple_network.connect(host_a, external_host, clean_channel)
+
+
+class TestCreateSwitch:
+
+    def test_create_switch_returns_a_switch_instance(self, simple_network):
+        switch = simple_network.create_switch()
+        assert isinstance(switch, Switch)
+
+    def test_switch_is_registered_in_graph(self, simple_network):
+        switch = simple_network.create_switch()
+        assert switch in simple_network.graph.nodes
+
+    def test_switch_has_a_link_module(self, simple_network):
+        switch = simple_network.create_switch()
+        assert switch.link_module is not None
+
+    def test_switch_link_module_uses_config_checksum(self, simple_network):
+        switch = simple_network.create_switch()
+        link_cfg = simple_network.cfg_manager.link_layer_cfg
+        assert type(switch.link_module.checksum) is type(link_cfg.build_checksum())
+
+    def test_switch_link_module_uses_config_payload_sizes(self, simple_network):
+        switch = simple_network.create_switch()
+        link_cfg = simple_network.cfg_manager.link_layer_cfg
+        assert switch.link_module.min_payload_bits == link_cfg.min_payload_bits
+        assert switch.link_module.max_payload_bits == link_cfg.max_payload_bits
+
+    def test_multiple_switches_can_be_created_in_the_same_network(self, simple_network):
+        switch_a = simple_network.create_switch()
+        switch_b = simple_network.create_switch()
+        assert switch_a is not switch_b
+        assert simple_network.graph.node_count() == 2
+
+    def test_switch_can_coexist_with_hosts_in_the_same_network(self, simple_network):
+        host = simple_network.create_host(address='192.168.0.1')
+        switch = simple_network.create_switch()
+        assert simple_network.graph.node_count() == 2

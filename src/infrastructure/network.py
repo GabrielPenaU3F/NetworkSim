@@ -1,5 +1,9 @@
+from typing import Any
+
 from infrastructure.address_registry import AddressRegistry
 from infrastructure.nodes.host import Host
+from infrastructure.nodes.switch import Switch
+from protocol_stack.layer_factory import LayerFactory
 from src.errors import NetworkError
 from src.infrastructure.link_factory import LinkFactory
 from src.infrastructure.network_graph import NetworkGraph
@@ -32,6 +36,11 @@ class Network:
         host = Host(self.cfg_manager, address=address)
         self.graph.add_node(host)
         return host
+
+    def create_switch(self):
+        switch = Switch(self.cfg_manager)
+        self.graph.add_node(switch)
+        return switch
 
     def get_topology_graph(self):
         return self.graph

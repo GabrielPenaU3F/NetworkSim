@@ -24,42 +24,6 @@ class ChecksumConfig:
         return cls(cls=CRCChecksum, params={'generator': crc.generator})
 
 
-# @dataclass
-# class FrameConfig:
-#     payload_size: int = 8
-#     seq_size: int = 8
-#     checksum_size: int = 4
-
-@dataclass
-class EthernetLinkConfig:
-    checksum_cfg: ChecksumConfig = field(default_factory=ChecksumConfig)
-    min_payload_bits: int = ethernet.MIN_PAYLOAD_BITS   # 46 bytes
-    max_payload_bits: int = ethernet.MAX_PAYLOAD_BITS  # 1500 bytes
-    mac_size: int = ethernet.MAC_SIZE
-    ether_type_size: int = ethernet.ETHER_TYPE_SIZE
-    real_length_size: int = ethernet.REAL_LENGTH_SIZE
-    checksum_size: int = ethernet.CHECKSUM_SIZE
-
-    def __post_init__(self):
-        if self.min_payload_bits > self.max_payload_bits:
-            raise ValueError('min_payload_bits cannot exceed max_payload_bits')
-
-        max_real_length = 2 ** self.real_length_size - 1
-        if self.max_payload_bits > max_real_length:
-            raise ValueError(
-                f'A real length size of {self.real_length_size} bits cannot represent '
-                f'a payload size of {self.max_payload_bits} bits'
-            )
-
-    @property
-    def header_size(self):
-        return self.mac_size * 2 + self.ether_type_size + self.real_length_size
-
-    def build_checksum(self):
-        params = self.checksum_cfg.params
-        self.checksum_cfg.cls.validate(params)
-        return self.checksum_cfg.cls(**params)
-
 @dataclass
 class PacketConfig:
 
@@ -97,16 +61,35 @@ class PhysicalConfig:
         return self.channel_code(**self.code_params)
 
 
-# @dataclass
-# class LinkConfig:
-#     max_retries: int = 5
-#     checksum_cfg: ChecksumConfig = field(default_factory=ChecksumConfig)
-#     frame_cfg: FrameConfig = field(default_factory=FrameConfig)
-#
-#     def build_checksum(self):
-#         params = self.checksum_cfg.params
-#         self.checksum_cfg.cls.validate(params)
-#         return self.checksum_cfg.cls(**params)
+@dataclass
+class EthernetLinkConfig:
+    checksum_cfg: ChecksumConfig = field(default_factory=ChecksumConfig)
+    min_payload_bits: int = ethernet.MIN_PAYLOAD_BITS   # 46 bytes
+    max_payload_bits: int = ethernet.MAX_PAYLOAD_BITS  # 1500 bytes
+    mac_size: int = ethernet.MAC_SIZE
+    ether_type_size: int = ethernet.ETHER_TYPE_SIZE
+    real_length_size: int = ethernet.REAL_LENGTH_SIZE
+    checksum_size: int = ethernet.CHECKSUM_SIZE
+
+    def __post_init__(self):
+        if self.min_payload_bits > self.max_payload_bits:
+            raise ValueError('min_payload_bits cannot exceed max_payload_bits')
+
+        max_real_length = 2 ** self.real_length_size - 1
+        if self.max_payload_bits > max_real_length:
+            raise ValueError(
+                f'A real length size of {self.real_length_size} bits cannot represent '
+                f'a payload size of {self.max_payload_bits} bits'
+            )
+
+    @property
+    def header_size(self):
+        return self.mac_size * 2 + self.ether_type_size + self.real_length_size
+
+    def build_checksum(self):
+        params = self.checksum_cfg.params
+        self.checksum_cfg.cls.validate(params)
+        return self.checksum_cfg.cls(**params)
 
 
 @dataclass

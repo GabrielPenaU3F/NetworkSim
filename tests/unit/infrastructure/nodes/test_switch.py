@@ -3,12 +3,23 @@ import pytest
 
 from infrastructure.nodes.switch import Switch
 from protocol_constants import ethernet
-from tests.utilities.dummies import DummyInterface
+from system_configurations.config import EthernetLinkConfig, ChecksumConfig
+from system_configurations.config_manager import ConfigManager
+from tests.utilities.dummies import DummyInterface, DummyChecksum
+
 
 
 @pytest.fixture
 def switch(example_link_module):
-    return Switch(example_link_module)
+    cfg_manager = ConfigManager(link=EthernetLinkConfig(checksum_cfg=ChecksumConfig(cls=DummyChecksum),
+                                                        min_payload_bits=8,
+                                                        max_payload_bits=16,
+                                                        mac_size=48,
+                                                        ether_type_size=16,
+                                                        real_length_size=8,
+                                                        checksum_size=1)
+                                )
+    return Switch(cfg_manager)
 
 @pytest.fixture
 def make_interface():

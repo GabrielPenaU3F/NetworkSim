@@ -3,6 +3,9 @@ from typing import Any
 
 import numpy as np
 
+from link_layer.link_module import LinkModule
+from system_configurations.config_manager import ConfigManager
+
 logger = logging.getLogger(__name__)
 
 from infrastructure.nodes.node import Node
@@ -10,9 +13,9 @@ from infrastructure.nodes.node import Node
 
 class Switch(Node):
 
-    def __init__(self, link_module):
+    def __init__(self, cfg_manager):
         super().__init__(address=None)
-        self.link_module = link_module
+        self.link_module = self._build_link_module(cfg_manager)
         self._mac_table = {}
         self._rx_buffers = {} # one buffer per interface
 
@@ -64,3 +67,16 @@ class Switch(Node):
         for interface in self.interfaces:
             if interface != incoming_interface:
                 interface.send(raw_bits)
+
+    def _build_link_module(self, cfg_manager: ConfigManager):
+        link_cfg = cfg_manager.link_layer_cfg
+        checksum = link_cfg.build_checksum()
+        return LinkModule(
+            checksum=checksum,
+            min_payload_bits=link_cfg.min_payload_bits,
+            max_payload_bits=link_cfg.max_payload_bits,
+            mac_size=link_cfg.mac_size,
+            ether_type_size=link_cfg.ether_type_size,
+            real_length_size=link_cfg.real_length_size,
+            checksum_size=link_cfg.checksum_size,
+        )
