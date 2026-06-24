@@ -53,6 +53,11 @@ class TestIntegrationUpToLink:
         received = A.read()
         assert received == "sol sol mar viento"
 
+    def test_cannot_deliver_to_indirectly_connected_host(self, make_triangle_hosts):
+        A, B, C = make_triangle_hosts(top_layer='link')
+        with pytest.raises(AddressError, match='Destination MAC is not connected to this host'):
+            A.send("sol sol mar viento", destination_mac='02:00:00:00:00:03')
+
     def test_large_message_roundtrip(self, make_two_hosts):
         A, B = make_two_hosts(top_layer='link')
         A.send("sol sol mar viento", destination_mac='02:00:00:00:00:01')
