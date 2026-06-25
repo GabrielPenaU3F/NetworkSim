@@ -35,7 +35,7 @@ class TestBuildNxGraph:
         assert set(nx_example_graph.nodes) == {'192.168.0.1', '192.168.0.2', '192.168.0.3'}
 
     def test_node_without_address_uses_id_as_label(self, network_cfg_manager, empty_graph):
-        node = Host(network_cfg_manager, address=None)
+        node = Host(network_cfg_manager, ip_address=None)
         empty_graph.add_node(node)
         G = _build_nx_graph(empty_graph)
         assert id(node) in G.nodes
@@ -44,7 +44,7 @@ class TestBuildNxGraph:
         assert set(nx_example_graph.neighbors('192.168.0.2')) == {'192.168.0.1', '192.168.0.3'}
 
     def test_isolated_node_has_no_neighbors(self, network_cfg_manager, empty_graph):
-        node = Host(network_cfg_manager, address='10.0.0.1')
+        node = Host(network_cfg_manager, ip_address='10.0.0.1')
         empty_graph.add_node(node)
         G = _build_nx_graph(empty_graph)
         assert list(G.neighbors('10.0.0.1')) == []

@@ -6,11 +6,6 @@ from src.system_configurations.config_manager import ConfigManager
 
 class TestHost:
 
-    def test_an_unconnected_host_in_link_layer_cannot_send(self, link_cfg_manager):
-        a = Host(link_cfg_manager, '192.168.0.1')
-        with pytest.raises(AddressError, match='Destination MAC is not connected to this host'):
-            a.send('Hello', destination_mac='02:00:00:00:00:02')
-
     def test_an_unconnected_host_in_network_layer_cannot_send(self):
         cfg_manager = ConfigManager(top_layer='network')
         a = Host(cfg_manager, '192.168.0.1')
@@ -45,5 +40,5 @@ class TestAddresses:
         assert host.address is None
 
     def test_host_accepts_an_address(self):
-        host = Host(ConfigManager(), address='192.168.0.1')
+        host = Host(ConfigManager(), ip_address='192.168.0.1')
         assert host.address == '192.168.0.1'

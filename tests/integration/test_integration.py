@@ -47,11 +47,6 @@ class TestIntegrationUpToLink:
         received = B.read()
         assert received == "sol sol mar viento"
 
-    def test_cannot_send_to_unknown_mac(self, make_two_hosts):
-        A, B = make_two_hosts(top_layer='link')
-        with pytest.raises(AddressError, match='Destination MAC is not connected to this host'):
-            A.send("sol", destination_mac='02:00:00:00:00:0f')
-
     def test_large_message_triangle_delivery(self, make_triangle_hosts):
         A, B, C = make_triangle_hosts(top_layer='link')
         A.send("sol sol mar viento", destination_mac='02:00:00:00:00:01')
@@ -61,11 +56,6 @@ class TestIntegrationUpToLink:
         C.send(received_C, destination_mac='02:00:00:00:00:05')
         received = A.read()
         assert received == "sol sol mar viento"
-
-    def test_cannot_deliver_to_indirectly_connected_host(self, make_triangle_hosts):
-        A, B, C = make_triangle_hosts(top_layer='link')
-        with pytest.raises(AddressError, match='Destination MAC is not connected to this host'):
-            A.send("sol sol mar viento", destination_mac='02:00:00:00:00:03')
 
     def test_large_message_roundtrip(self, make_two_hosts):
         A, B = make_two_hosts(top_layer='link')
@@ -94,54 +84,94 @@ class TestIntegrationUpToLink:
         assert received_A == "sol sol"
         assert received_C == "mar mar"
 
-    # def test_message_delivery_through_switch(self, network_with_switch):
-    #     host_a, host_b, switch = network_with_switch
-    #     mac_b = host_b.interfaces[0].mac_address
-    #
-    #     host_a.send("sol", destination_mac=mac_b)
-    #     received = host_b.read()
-    #     assert received == "sol"
-    #
-    # def test_switch_learns_mac_after_first_transmission(self, network_with_switch):
-    #     network, host_a, host_b, switch = network_with_switch
-    #     mac_a = host_a.interfaces[0].mac_address
-    #     mac_b = host_b.interfaces[0].mac_address
-    #
-    #     host_a.send("sol", destination_mac=mac_b)
-    #
-    #     # After A sends, switch should have learned A's MAC
-    #     assert mac_a in switch._mac_table
-    #
-    # def test_switch_forwards_to_correct_interface_after_learning(self, network_with_switch):
-    #     network, host_a, host_b, switch = network_with_switch
-    #     mac_a = host_a.interfaces[0].mac_address
-    #     mac_b = host_b.interfaces[0].mac_address
-    #
-    #     # First: A sends to B, switch learns A's MAC
-    #     host_a.send("sol", destination_mac=mac_b)
-    #     host_b.read()
-    #
-    #     # Second: B replies to A, switch should forward directly (not flood)
-    #     host_b.send("luna", destination_mac=mac_a)
-    #     received = host_a.read()
-    #
-    #     assert received == "luna"
-    #     # Switch should now know both MACs
-    #     assert mac_a in switch._mac_table
-    #     assert mac_b in switch._mac_table
-    #
-    # def test_message_roundtrip_through_switch(self, network_with_switch):
-    #     network, host_a, host_b, switch = network_with_switch
-    #     mac_a = host_a.interfaces[0].mac_address
-    #     mac_b = host_b.interfaces[0].mac_address
-    #
-    #     host_a.send("sol", destination_mac=mac_b)
-    #     received_b = host_b.read()
-    #     host_b.send(received_b, destination_mac=mac_a)
-    #     received_a = host_a.read()
-    #
-    #     assert received_a == "sol"
+    def test_message_delivery_through_switch(self, topo_two_hosts_with_switch):
+        host_a, host_b, switch = topo_two_hosts_with_switch
+        mac_b = host_b.interfaces[0].mac_address
 
+        host_a.send("sol", destination_mac=mac_b)
+        received = host_b.read()
+        assert received == "sol"
+
+    def test_switch_learns_mac_after_first_transmission(self, topo_two_hosts_with_switch):
+        host_a, host_b, switch = topo_two_hosts_with_switch
+        mac_a = host_a.interfaces[0].mac_address
+        mac_b = host_b.interfaces[0].mac_address
+
+        host_a.send("sol", destination_mac=mac_b)
+
+        # After A sends, switch should have learned A's MAC
+        assert mac_a in switch._mac_table
+
+    def test_switch_forwards_to_correct_interface_after_learning(self, topo_two_hosts_with_switch):
+        host_a, host_b, switch = topo_two_hosts_with_switch
+        mac_a = host_a.interfaces[0].mac_address
+        mac_b = host_b.interfaces[0].mac_address
+
+        # First: A sends to B, switch learns A's MAC
+        host_a.send("sol", destination_mac=mac_b)
+        assert mac_a in switch._mac_table
+
+        # Second: B replies to A, switch should forward directly (not flood)
+        host_b.send("luna", destination_mac=mac_a)
+        received_A = host_a.read()
+
+        assert received_A == "luna"
+        received_B = host_b.read()
+        assert received_B == "sol" # Received message was not overwritten by a flood
+
+        # Switch should now know B's MAC too
+        assert mac_b in switch._mac_table
+
+    def test_message_roundtrip_through_switch(self, topo_two_hosts_with_switch):
+        host_a, host_b, switch = topo_two_hosts_with_switch
+        mac_a = host_a.interfaces[0].mac_address
+        mac_b = host_b.interfaces[0].mac_address
+
+        host_a.send("sol", destination_mac=mac_b)
+        received_b = host_b.read()
+        host_b.send(received_b, destination_mac=mac_a)
+        received_a = host_a.read()
+
+        assert received_a == "sol"
+
+    def test_message_delivery_through_two_switches(self, topo_four_hosts_with_two_switches):
+        host_a, _, _, _, host_d, _ = topo_four_hosts_with_two_switches
+        mac_d = host_d.interfaces[0].mac_address
+
+        host_a.send("sol", destination_mac=mac_d)
+        received = host_d.read()
+        assert received == "sol"
+
+    def test_switches_learn_after_flood(self, topo_four_hosts_with_two_switches):
+        host_a, host_b, switch_ab, host_c, host_d, switch_cd = topo_four_hosts_with_two_switches
+        mac_a = host_a.interfaces[0].mac_address
+        mac_d = host_d.interfaces[0].mac_address
+
+        # A sends to B, switch AB learns A's MAC and every host receives the message
+        host_a.send("sol", destination_mac=mac_d)
+        received_msgs = [host_b.read(), host_c.read(), host_d.read()]
+        assert mac_a in switch_ab._mac_table
+        assert mac_a in switch_cd._mac_table
+        assert all(msg == "sol" for msg in received_msgs)
+
+    def test_switches_forward_directly_after_flood(self, topo_four_hosts_with_two_switches):
+        host_a, host_b, switch_ab, host_c, host_d, switch_cd = topo_four_hosts_with_two_switches
+        mac_a = host_a.interfaces[0].mac_address
+        mac_d = host_d.interfaces[0].mac_address
+
+        # First: A sends to B
+        host_a.send("sol", destination_mac=mac_d)
+
+        # # Second: D replies to A, switch should forward directly (not flood)
+        host_d.send("luna", destination_mac=mac_a)
+        received_A = host_a.read()
+        assert received_A == "luna"
+        other_buffered_msgs = [host_b.read(), host_c.read(), host_d.read()]
+        assert all(msg == "sol" for msg in other_buffered_msgs) # Received message was not overwritten by a flood
+
+        # Both switches should now know D's MAC too
+        assert mac_d in switch_ab._mac_table
+        assert mac_d in switch_cd._mac_table
 
 class TestIntegrationUpToNetwork:
 

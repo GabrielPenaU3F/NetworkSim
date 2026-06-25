@@ -72,7 +72,7 @@ def test_network_graph_is_updated_when_nodes_are_connected(simple_network, clean
 
 def test_cannot_connect_host_from_another_network(simple_network, clean_channel):
     host_a = simple_network.create_host('192.168.0.1')
-    external_host = Host(ConfigManager(top_layer='network'), address='192.168.0.2')
+    external_host = Host(ConfigManager(top_layer='network'), ip_address='192.168.0.2')
     with pytest.raises(NetworkError, match='Cannot connect nodes that do not belong to this network'):
         simple_network.connect(host_a, external_host, clean_channel)
 

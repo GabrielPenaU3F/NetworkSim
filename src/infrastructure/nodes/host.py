@@ -5,8 +5,8 @@ from src.protocol_stack.protocol_stack import ProtocolStack
 
 class Host(Node):
 
-    def __init__(self, cfg_manager, address=None):
-        super().__init__(address)
+    def __init__(self, cfg_manager, ip_address=None):
+        super().__init__(ip_address)
         self.cfg_manager = cfg_manager
         self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
         self._rx_messages = []
@@ -18,16 +18,19 @@ class Host(Node):
             if interface_idx >= len(self.interfaces):
                 raise ProtocolError('Requested interface does not exist')
 
-            src_mac, dst_mac = None, None
             interface = self.interfaces[interface_idx]
+            self._transmit(message, dst_ip=destination_ip,
+                           src_mac=None, dst_mac=None, interface=interface)
 
         elif top_layer == 'link':
             if destination_mac is None:
                 raise ProtocolError('Destination MAC is required')
 
-            interface = self._select_interface_for_mac(destination_mac)
-            src_mac = interface.mac_address
-            dst_mac = destination_mac
+            outgoing_interfaces = self._select_outgoing_interfaces(destination_mac)
+            for interface in outgoing_interfaces:
+                src_mac = interface.mac_address
+                self._transmit(message, dst_ip=None,
+                               src_mac=src_mac, dst_mac=destination_mac, interface=interface)
 
         else:  # network layer and above
             if destination_ip is None:
@@ -39,9 +42,13 @@ class Host(Node):
             interface = self.routing_table.get_interface_to_address(destination_ip)
             src_mac = interface.mac_address
             dst_mac = interface.link.get_other_interface(interface).mac_address
+            self._transmit(message, dst_ip=destination_ip,
+                           src_mac=src_mac, dst_mac=dst_mac, interface=interface)
 
-        self.protocol_stack.transmit(message, interface,
-                                     destination_address=destination_ip,
+    def _transmit(self, message, dst_ip, src_mac, dst_mac, interface):
+        self.protocol_stack.transmit(message,
+                                     interface=interface,
+                                     destination_address=dst_ip,
                                      src_mac=src_mac,
                                      dst_mac=dst_mac)
 
@@ -54,10 +61,12 @@ class Host(Node):
         if self._rx_messages:
             return self._rx_messages.pop(0)
 
-    def _select_interface_for_mac(self, destination_mac):
+    def _select_outgoing_interfaces(self, destination_mac):
+        # First: check if destination is a direct neighbor
         for interface in self.interfaces:
             other_interface = interface.get_other_interface()
             if other_interface.mac_address == destination_mac:
-                return interface
+                return [interface]
 
-        raise AddressError('Destination MAC is not connected to this host')
+        # Otherwise: flood to all interfaces
+        return self.interfaces

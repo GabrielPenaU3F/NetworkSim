@@ -43,11 +43,33 @@ def make_triangle_hosts(clean_channel):
     return _make
 
 @pytest.fixture
-def network_with_switch(link_cfg_manager, clean_channel):
+def topo_two_hosts_with_switch(link_cfg_manager, clean_channel):
     network = Network(link_cfg_manager)
-    host_a = network.create_host(address='192.168.0.1')
-    host_b = network.create_host(address='192.168.0.2')
+    host_a = network.create_host()
+    host_b = network.create_host()
     switch = network.create_switch()
     network.connect(host_a, switch, clean_channel)
     network.connect(switch, host_b, clean_channel)
     return host_a, host_b, switch
+
+@pytest.fixture
+def topo_four_hosts_with_two_switches(link_cfg_manager, clean_channel):
+    network = Network(link_cfg_manager)
+
+    host_a = network.create_host()
+    host_b = network.create_host()
+    switch_ab = network.create_switch()
+
+    host_c = network.create_host()
+    host_d = network.create_host()
+    switch_cd = network.create_switch()
+
+    network.connect(host_a, switch_ab, clean_channel)
+    network.connect(host_b, switch_ab, clean_channel)
+
+    network.connect(host_c, switch_cd, clean_channel)
+    network.connect(host_d, switch_cd, clean_channel)
+
+    network.connect(switch_ab, switch_cd, clean_channel)
+
+    return host_a, host_b, switch_ab, host_c, host_d, switch_cd

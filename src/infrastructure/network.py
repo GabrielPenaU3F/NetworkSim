@@ -32,7 +32,7 @@ class Network:
         if address is not None:
             self._address_registry.register_ip(address)
 
-        host = Host(self.cfg_manager, address=address)
+        host = Host(self.cfg_manager, ip_address=address)
         self.graph.add_node(host)
         return host
 
