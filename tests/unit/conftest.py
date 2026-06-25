@@ -15,11 +15,6 @@ def phys_cfg_manager():
     return cfg
 
 @pytest.fixture
-def link_cfg_manager():
-    cfg = ConfigManager(top_layer='link')
-    return cfg
-
-@pytest.fixture
 def parity_checksum():
     return ParityChecksum()
 

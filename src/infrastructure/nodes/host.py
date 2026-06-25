@@ -11,14 +11,15 @@ class Host(Node):
         self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
         self._rx_messages = []
 
-    def send(self, message, destination_ip=None, destination_mac=None) -> None:
+    def send(self, message, interface_idx=0, destination_ip=None, destination_mac=None) -> None:
         top_layer = self.cfg_manager.top_layer
 
         if top_layer == 'physical':
-            if len(self.interfaces) != 1:
-                raise ProtocolError('Physical layer hosts must have exactly one point-to-point link')
-            interface = self.interfaces[0]
+            if interface_idx >= len(self.interfaces):
+                raise ProtocolError('Requested interface does not exist')
+
             src_mac, dst_mac = None, None
+            interface = self.interfaces[interface_idx]
 
         elif top_layer == 'link':
             if destination_mac is None:
@@ -34,6 +35,7 @@ class Host(Node):
 
             if self.routing_table is None:
                 raise NetworkError('Routing tables have not been built')
+
             interface = self.routing_table.get_interface_to_address(destination_ip)
             src_mac = interface.mac_address
             dst_mac = interface.link.get_other_interface(interface).mac_address

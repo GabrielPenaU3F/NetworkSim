@@ -11,6 +11,10 @@ from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode
 from infrastructure.checksum import ParityChecksum
 from transport_layer.old_link_layer import OldLinkLayer
 
+@pytest.fixture
+def link_cfg_manager():
+    cfg = ConfigManager(top_layer='link')
+    return cfg
 
 @pytest.fixture
 def network_cfg_manager():

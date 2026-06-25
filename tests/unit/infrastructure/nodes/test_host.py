@@ -1,6 +1,6 @@
 import pytest
 
-from errors import NetworkError, LinkError
+from errors import NetworkError, AddressError
 from infrastructure.nodes.host import Host
 from src.system_configurations.config_manager import ConfigManager
 
@@ -8,7 +8,7 @@ class TestHost:
 
     def test_an_unconnected_host_in_link_layer_cannot_send(self, link_cfg_manager):
         a = Host(link_cfg_manager, '192.168.0.1')
-        with pytest.raises(LinkError, match='Destination interface is not connected'):
+        with pytest.raises(AddressError, match='Destination MAC is not connected to this host'):
             a.send('Hello', destination_mac='02:00:00:00:00:02')
 
     def test_an_unconnected_host_in_network_layer_cannot_send(self):
