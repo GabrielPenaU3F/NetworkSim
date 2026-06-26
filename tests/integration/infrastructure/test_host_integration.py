@@ -1,6 +1,8 @@
+import numpy as np
 import pytest
 
 from errors import ProtocolError
+from network_layer.packets import IPPacket
 
 
 class TestHostSend:
@@ -29,3 +31,19 @@ class TestHostSend:
         a = linear_network.get_node('192.168.0.1')
         with pytest.raises(ProtocolError, match='Destination IP is required'):
             a.send('sol')
+
+    def test_network_host_cannot_forward_packets(self, linear_network):
+        a = linear_network.get_node('192.168.0.1')
+        c = linear_network.get_node('192.168.0.3')
+        a.send('sol', destination_ip='192.168.0.3')
+        received = c.read()
+        assert received is None
+
+    def test_network_host_discards_packets_for_other_hosts(self, linear_network):
+        a = linear_network.get_node('192.168.0.2')
+        packet = IPPacket(origin_address='192.168.0.1', destination_address='192.168.0.2',
+                          payload=np.zeros(8), is_last=1, real_length=8, offset=0)
+        serialized_packet = a.protocol_stack.top_layer._serialize_packet(packet)
+        a.on_receive(bits=serialized_packet)
+        received = a.read()
+        assert received is None

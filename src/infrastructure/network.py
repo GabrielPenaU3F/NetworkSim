@@ -25,14 +25,14 @@ class Network:
         self.graph = NetworkGraph()
         self.routing = self.routing_algorithm()
 
-    def create_host(self, address=None):
-        if address is None and self._requires_ip_address():
+    def create_host(self, ip_address=None):
+        if ip_address is None and self._requires_ip_address():
             raise NetworkError('An IP address is required for this network')
 
-        if address is not None:
-            self._address_registry.register_ip(address)
+        if ip_address is not None:
+            self._address_registry.register_ip(ip_address)
 
-        host = Host(self.cfg_manager, ip_address=address)
+        host = Host(self.cfg_manager, ip_address=ip_address)
         self.graph.add_node(host)
         return host
 
@@ -47,8 +47,10 @@ class Network:
     def connect(self, node_a, node_b, channel):
         if not all(node in self.graph.nodes for node in (node_a, node_b)):
             raise NetworkError('Cannot connect nodes that do not belong to this network')
+
         self.link_factory.create_link(self.graph, node_a, node_b, channel)
 
+    # TODO: this does nothing now. Will be incorporated on Routers later
     def build_routing_tables(self):
         all_nodes = self.graph.nodes
         for node in all_nodes:
@@ -63,8 +65,8 @@ class Network:
             node.routing_table = table
 
             network_layer = node.protocol_stack.get_layer('network')
-            if network_layer is not None:
-                network_layer.set_routing_callback(node.routing_table.get_interface_to_address)
+            # if network_layer is not None:
+            #     network_layer.set_routing_callback(node.routing_table.get_interface_to_address)
 
     def routing_algorithm(self):
         routing_class = self.cfg_manager.network_layer_cfg.routing

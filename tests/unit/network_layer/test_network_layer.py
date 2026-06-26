@@ -295,19 +295,19 @@ class TestNetworkLayerTX:
     def test_transmit_sends_bits_downward(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(4)  # 1 packet
-        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, dst_mac='02:00:00:00:00:02')
         assert dummy.calls == 1
 
     def test_transmit_sends_one_call_per_packet(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(8)  # 2 packets
-        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, dst_mac='02:00:00:00:00:02')
         assert dummy.calls == 2
 
     def test_transmit_sends_correct_bit_length(self, network_layer_with_dummy_lower, tile_bits, dummy_interface_with_peer):
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(4)  # 1 packet
-        layer.transmit(bits, interface=dummy_interface_with_peer, destination_address='192.168.0.2')
+        layer.transmit(bits, interface=dummy_interface_with_peer, dst_mac='02:00:00:00:00:02')
         expected_size = layer.address_size * 2 + 1 + layer.offset_size + layer.real_length_size + layer.packet_payload_size
         assert len(dummy.sent_bits[0]) == expected_size
 
@@ -319,14 +319,6 @@ class TestNetworkLayerRX:
         bits = layer._serialize_packet(last_packet_for_me)
         result = layer.on_receive(bits)
         assert result is not None
-
-    def test_packet_for_another_node_is_forwarded(self, network_layer_with_dummy_lower, last_packet):
-        layer, dummy = network_layer_with_dummy_lower
-
-        bits = layer._serialize_packet(last_packet)
-        result = layer.on_receive(bits)
-        assert result is None
-        assert dummy.calls == 1  # Packet was re-sent
 
     def test_single_packet_message_is_reconstructed(self, network_layer_with_dummy_lower, last_packet_for_me):
         layer, dummy = network_layer_with_dummy_lower

@@ -1,10 +1,9 @@
 import numpy as np
 import logging
 
-from link_layer.link_module import LinkModule
-
 logger = logging.getLogger(__name__)
 
+from link_layer.link_module import LinkModule
 from protocol_constants.ethernet import IPV4
 from protocol_stack.layer import Layer
 

@@ -1,4 +1,4 @@
-from errors import NetworkError, LinkError, ProtocolError, AddressError
+from errors import ProtocolError
 from infrastructure.nodes.node import Node
 from src.protocol_stack.protocol_stack import ProtocolStack
 
@@ -36,14 +36,13 @@ class Host(Node):
             if destination_ip is None:
                 raise ProtocolError('Destination IP is required')
 
-            if self.routing_table is None:
-                raise NetworkError('Routing tables have not been built')
-
-            interface = self.routing_table.get_interface_to_address(destination_ip)
-            src_mac = interface.mac_address
-            dst_mac = interface.link.get_other_interface(interface).mac_address
-            self._transmit(message, dst_ip=destination_ip,
-                           src_mac=src_mac, dst_mac=dst_mac, interface=interface)
+            # TODO: when subnetworks are implemented,
+            #  this could be improved to choose the correct interface instead of flooding
+            for interface in self.interfaces:
+                src_mac = interface.mac_address
+                # TODO: resolve dst_mac via ARP
+                self._transmit(message, dst_ip=destination_ip,
+                               src_mac=src_mac, dst_mac=None, interface=interface)
 
     def _transmit(self, message, dst_ip, src_mac, dst_mac, interface):
         self.protocol_stack.transmit(message,

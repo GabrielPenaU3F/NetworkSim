@@ -61,12 +61,11 @@ def simple_network(network_cfg_manager):
 
 @pytest.fixture
 def linear_network(simple_network, clean_channel):
-    host_a = simple_network.create_host(address='192.168.0.1')
-    host_b = simple_network.create_host(address='192.168.0.2')
-    host_c = simple_network.create_host(address='192.168.0.3')
+    host_a = simple_network.create_host(ip_address='192.168.0.1')
+    host_b = simple_network.create_host(ip_address='192.168.0.2')
+    host_c = simple_network.create_host(ip_address='192.168.0.3')
     simple_network.connect(host_a, host_b, clean_channel)
     simple_network.connect(host_b, host_c, clean_channel)
-    simple_network.build_routing_tables()
     return simple_network
 
 @pytest.fixture

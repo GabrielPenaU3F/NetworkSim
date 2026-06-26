@@ -6,13 +6,6 @@ from src.system_configurations.config_manager import ConfigManager
 
 class TestHost:
 
-    def test_an_unconnected_host_in_network_layer_cannot_send(self):
-        cfg_manager = ConfigManager(top_layer='network')
-        a = Host(cfg_manager, '192.168.0.1')
-        b = Host(cfg_manager, '192.168.0.2')
-        with pytest.raises(NetworkError, match='Routing tables have not been built'):
-            a.send('Hello', destination_ip='192.168.0.2')
-
     def test_hosts_with_equal_addresses_are_the_same(self):
         cfg_manager = ConfigManager()
         a = Host(cfg_manager, '1')

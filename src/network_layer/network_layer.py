@@ -1,4 +1,7 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.network_layer.packets import IPPacket
 from src.protocol_stack.layer import Layer
@@ -32,28 +35,29 @@ class NetworkLayer(Layer):
         self.offset_size = offset_size
         self.real_length_size = real_length_size
         self.packet_payload_size = packet_payload_size
-        self.get_interface_for_address = lambda x: None
         self._rx_buffer = {}  # { offset: (payload, real_length) }
         self._last_received = False
 
-    def transmit(self, bits, interface, destination_address='127.0.0.1', **kwargs):
-        packets = self._build_packets(bits, destination_address)
+    def transmit(self, bits, interface, dst_ip='127.0.0.1', dst_mac=None, **kwargs):
+        packets = self._build_packets(bits, dst_ip)
         for idx, packet in enumerate(packets):
-            self._transmit_packet(interface, packet)
+            self._transmit_packet(packet, interface, dst_mac)
 
-    def _transmit_packet(self, interface, packet):
+    def _transmit_packet(self, packet, interface, dst_mac):
+        if dst_mac is None:
+            logger.debug("No destination MAC available, dropping packet")
+            return
+
         bits = self._serialize_packet(packet)
         # This should be improved when we have ARP and MAC resolution available
         src_mac = interface.mac_address
-        dst_mac = interface.link.get_other_interface(interface).mac_address
         self.lower_layer.transmit(bits, interface, src_mac=src_mac, dst_mac=dst_mac)
 
     def on_receive(self, bits, interface=None):
         packet = self._deserialize_packet(bits)
 
-        if not packet.destination_address == self.address:
-            interface = self.get_interface_for_address(packet.destination_address)
-            self._transmit_packet(interface, packet)
+        if packet.destination_address != self.address:
+            logger.debug(f"Packet for {packet.destination_address} discarded (not for this node)")
             return None
 
         self._rx_buffer[packet.offset] = (packet.payload, packet.real_length)
@@ -87,9 +91,6 @@ class NetworkLayer(Layer):
             )
             packets.append(packet)
         return packets
-
-    def set_routing_callback(self, callback):
-        self.get_interface_for_address = callback
 
     def _serialize_packet(self, packet: IPPacket) -> npt.NDArray:
         origin_address_bits = serialize_ip_address(packet.origin_address, self.address_size)

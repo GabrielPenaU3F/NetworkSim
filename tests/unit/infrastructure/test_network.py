@@ -26,8 +26,8 @@ def test_cannot_create_host_without_ip_in_network_layer(simple_network):
 
 def test_cannot_create_two_hosts_with_equal_addresses(simple_network):
     with pytest.raises(AddressError, match='IP address 192.168.0.1 already in use'):
-        host_1 = simple_network.create_host(address='192.168.0.1')
-        host_2 = simple_network.create_host(address='192.168.0.1')
+        host_1 = simple_network.create_host(ip_address='192.168.0.1')
+        host_2 = simple_network.create_host(ip_address='192.168.0.1')
 
 def test_can_create_host_with_correct_address_format():
     cfg = ConfigManager(top_layer='network', network=NetworkConfig(address_size=24))
@@ -109,6 +109,6 @@ class TestCreateSwitch:
         assert simple_network.graph.node_count() == 2
 
     def test_switch_can_coexist_with_hosts_in_the_same_network(self, simple_network):
-        host = simple_network.create_host(address='192.168.0.1')
+        host = simple_network.create_host(ip_address='192.168.0.1')
         switch = simple_network.create_switch()
         assert simple_network.graph.node_count() == 2
