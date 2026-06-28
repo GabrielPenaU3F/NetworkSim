@@ -1,0 +1,2 @@
+ARP_REQUEST = 0
+ARP_REPLY = 1

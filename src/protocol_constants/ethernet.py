@@ -7,5 +7,8 @@ ETHER_TYPE_SIZE: Final[int] = 16
 REAL_LENGTH_SIZE: Final[int] = 16
 HEADER_SIZE: Final[int] = 48 * 2 + 16 + 16
 CHECKSUM_SIZE: Final[int] = 32
+
+# Protocol types
 IPV4: Final[int] = 0x0800
-IPV6: Final[int] = 0x0806
+IPV6: Final[int] = 0x86DD
+ARP = 0x0806

@@ -21,3 +21,18 @@ class IPPacket:
 
     def get_true_payload(self):
         return self.payload[:self.real_length]
+
+
+@dataclass
+class ARPPacket:
+
+    operation: int        # 0 = REQUEST, 1 = REPLY
+    sender_mac: str
+    sender_ip: str
+    target_mac: str       # '00:00:00:00:00:00' when it is unknown
+    target_ip: str
+
+    def __post_init__(self):
+        if any(f is None for f in [self.operation, self.sender_mac,
+                                    self.sender_ip, self.target_mac, self.target_ip]):
+            raise NetworkError('All ARP fields must be specified')
