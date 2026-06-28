@@ -3,8 +3,8 @@ from abc import abstractmethod, ABC
 
 class Node(ABC):
 
-    def __init__(self, address=None):
-        self.address = address
+    def __init__(self, ip_address=None):
+        self.ip_address = ip_address
         self.interfaces = []
         self.routing_table = None
 
@@ -26,9 +26,9 @@ class Node(ABC):
     def __eq__(self, other):
         if not isinstance(other, Node): # Validate they're both nodes
             return False
-        if self.address is None or other.address is None: # If any does not have an address
+        if self.ip_address is None or other.ip_address is None: # If any does not have an address
             return super().__eq__(other)
-        return self.address == other.address # Then compare addresses
+        return self.ip_address == other.ip_address # Then compare addresses
 
     def __hash__(self):
-        return hash(self.address)
+        return hash(self.ip_address)

@@ -8,7 +8,7 @@ class Host(Node):
     def __init__(self, cfg_manager, ip_address=None):
         super().__init__(ip_address)
         self.cfg_manager = cfg_manager
-        self.protocol_stack = ProtocolStack(cfg_manager, address=self.address)
+        self.protocol_stack = ProtocolStack(cfg_manager, address=self.ip_address)
         self._rx_messages = []
 
     def send(self, message, interface_idx=0, destination_ip=None, destination_mac=None) -> None:

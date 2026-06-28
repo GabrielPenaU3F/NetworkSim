@@ -41,18 +41,18 @@ def _build_nx_graph(graph: NetworkGraph) -> nx.Graph:
     G = nx.Graph()
 
     for node in graph.nodes:
-        label = node.address if node.address is not None else id(node)
+        label = node.ip_address if node.ip_address is not None else id(node)
         G.add_node(label)
 
     visited_edges = set()
     for node in graph.nodes:
-        node_label = node.address if node.address is not None else id(node)
+        node_label = node.ip_address if node.ip_address is not None else id(node)
         for edge in graph._adjacency[node]:
             edge_id = id(edge)
             if edge_id not in visited_edges:
                 visited_edges.add(edge_id)
                 other = edge.get_other_node(node)
-                other_label = other.address if other.address is not None else id(other)
+                other_label = other.ip_address if other.ip_address is not None else id(other)
                 G.add_edge(node_label, other_label)
 
     return G

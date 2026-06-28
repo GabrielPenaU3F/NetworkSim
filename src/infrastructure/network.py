@@ -60,7 +60,7 @@ class Network:
             for destination, first_hop in first_hops.items():
                 edge = self.graph.get_edge_to(node, first_hop)
                 iface = edge.get_interface_for(node)
-                table.add_entry(destination.address, iface)
+                table.add_entry(destination.ip, iface)
 
             node.routing_table = table
 
@@ -72,9 +72,9 @@ class Network:
         routing_class = self.cfg_manager.network_layer_cfg.routing
         return routing_class(self.graph)
 
-    def get_node(self, address):
+    def get_node(self, ip_address):
         for node in self.graph.nodes:
-            if node.address == address:
+            if node.ip_address == ip_address:
                 return node
         return None
 

@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
+from network_layer.network_modules.ip_module import IPModule
 from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
 from src.protocol_stack.protocol_stack import ProtocolStack
@@ -31,9 +32,9 @@ def empty_graph():
 
 @pytest.fixture
 def three_dummy_hosts():
-    a = DummyNode(address='192.168.0.1')
-    b = DummyNode(address='192.168.0.2')
-    c = DummyNode(address='192.168.0.3')
+    a = DummyNode(ip_address='192.168.0.1')
+    b = DummyNode(ip_address='192.168.0.2')
+    c = DummyNode(ip_address='192.168.0.3')
     return a, b, c
 
 @pytest.fixture
@@ -73,3 +74,13 @@ def mock_graph():
     graph = Mock()
     graph.add_edge.return_value = Mock()
     return graph
+
+@pytest.fixture
+def example_ip_module():
+    return IPModule(
+        ip='192.168.0.1',
+        address_size=32,
+        offset_size=8,
+        real_length_size=4,
+        packet_payload_size=8
+    )

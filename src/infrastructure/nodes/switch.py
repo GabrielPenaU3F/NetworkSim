@@ -14,7 +14,7 @@ from infrastructure.nodes.node import Node
 class Switch(Node):
 
     def __init__(self, cfg_manager):
-        super().__init__(address=None)
+        super().__init__(ip_address=None)
         self.link_module = self._build_link_module(cfg_manager)
         self._mac_table = {}
         self._rx_buffers = {} # one buffer per interface

@@ -44,7 +44,7 @@ def test_first_hop_chooses_shortest_path(three_dummy_hosts, make_routing):
     graph = NetworkGraph()
     routing = make_routing(graph)
     a, b, c = three_dummy_hosts
-    d = DummyNode(address='192.168.0.4')
+    d = DummyNode(ip_address='192.168.0.4')
 
     for node in (a, b, c, d):
         graph.add_node(node)

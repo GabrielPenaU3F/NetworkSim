@@ -30,8 +30,8 @@ class TestAddresses:
 
     def test_host_default_address_is_none(self):
         host = Host(ConfigManager())
-        assert host.address is None
+        assert host.ip_address is None
 
     def test_host_accepts_an_address(self):
         host = Host(ConfigManager(), ip_address='192.168.0.1')
-        assert host.address == '192.168.0.1'
+        assert host.ip_address == '192.168.0.1'

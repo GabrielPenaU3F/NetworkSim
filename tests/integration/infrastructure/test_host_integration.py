@@ -43,7 +43,7 @@ class TestHostSend:
         a = linear_network.get_node('192.168.0.2')
         packet = IPPacket(origin_address='192.168.0.1', destination_address='192.168.0.2',
                           payload=np.zeros(8), is_last=1, real_length=8, offset=0)
-        serialized_packet = a.protocol_stack.top_layer._serialize_packet(packet)
+        serialized_packet = a.protocol_stack.top_layer.ip_module.serialize_packet(packet)
         a.on_receive(bits=serialized_packet)
         received = a.read()
         assert received is None

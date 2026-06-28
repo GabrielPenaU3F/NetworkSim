@@ -12,13 +12,13 @@ def test_host_without_address_is_allowed_in_link_layer_network():
     cfg = ConfigManager(top_layer='link')
     network = Network(cfg)
     host = network.create_host()
-    assert host.address is None
+    assert host.ip_address is None
 
 def test_host_without_address_is_allowed_in_physical_layer_network():
     cfg = ConfigManager(top_layer='physical')
     network = Network(cfg)
     host = network.create_host()
-    assert host.address is None
+    assert host.ip_address is None
 
 def test_cannot_create_host_without_ip_in_network_layer(simple_network):
     with pytest.raises(NetworkError, match='An IP address is required for this network'):
@@ -33,7 +33,7 @@ def test_can_create_host_with_correct_address_format():
     cfg = ConfigManager(top_layer='network', network=NetworkConfig(address_size=24))
     network = Network(cfg)
     host = network.create_host('192.168.0')
-    assert host.address == '192.168.0'
+    assert host.ip_address == '192.168.0'
 
 def test_network_address_registry_is_updated_when_a_host_is_created(simple_network):
     simple_network.create_host('192.168.0.1')
