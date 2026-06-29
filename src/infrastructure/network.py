@@ -19,7 +19,7 @@ class Network:
 
     def __init__(self, cfg_manager):
         self.cfg_manager = cfg_manager
-        ip_address_size = self.cfg_manager.network_layer_cfg.address_size
+        ip_address_size = self.cfg_manager.network_layer_cfg.ip_address_size
         self._address_registry = AddressRegistry(ip_address_size)
         self.link_factory = LinkFactory(self._address_registry)
         self.graph = NetworkGraph()

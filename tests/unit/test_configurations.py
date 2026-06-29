@@ -4,7 +4,7 @@ import pytest
 from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode
 from src.system_configurations.config import ChecksumConfig, EthernetLinkConfig, CRCConfig, NetworkConfig, \
-    PacketConfig
+    IPPacketConfig
 from src.system_configurations.config_manager import ConfigManager
 from infrastructure.checksum import CRCChecksum, ParityChecksum
 
@@ -154,7 +154,7 @@ class TestNetworkLayerConfig:
     def test_network_config_defaults(self, cfg_manager):
         network = cfg_manager.network_layer_cfg
         assert network.routing is ShortestPathRouting
-        assert network.address_size == 32
+        assert network.ip_address_size == 32
 
     def test_packet_config_defaults(self, cfg_manager):
         packet_cfg = cfg_manager.network_layer_cfg.packet_cfg
@@ -163,7 +163,7 @@ class TestNetworkLayerConfig:
 
     def test_link_config_override(self):
         manager = ConfigManager(network=NetworkConfig(
-                packet_cfg=PacketConfig(real_length_size=8),
+                packet_cfg=IPPacketConfig(real_length_size=8),
             )
         )
         network_cfg = manager.network_layer_cfg
@@ -171,25 +171,25 @@ class TestNetworkLayerConfig:
 
     def test_network_config_override_does_not_affect_other_parameters(self):
         manager = ConfigManager(network=NetworkConfig(
-                packet_cfg=PacketConfig(real_length_size=16),
+                packet_cfg=IPPacketConfig(real_length_size=16),
             )
         )
         network_cfg = manager.network_layer_cfg
         assert network_cfg.routing is ShortestPathRouting
-        assert network_cfg.address_size == 32
+        assert network_cfg.ip_address_size == 32
         assert network_cfg.packet_cfg.offset_size == 16
         assert network_cfg.packet_cfg.payload_size == 64
 
     def test_network_config_rejects_invalid_address_size(self):
         with pytest.raises(ValueError, match='Address size must be divisible by 8'):
-            manager = ConfigManager(network=NetworkConfig(address_size=12))
+            manager = ConfigManager(network=NetworkConfig(ip_address_size=12))
 
     def test_network_config_rejects_invalid_offset_size(self):
         with pytest.raises(ValueError, match=f'An offset size of 4 bits cannot represent '
             f'offsets up to a payload size of 64 bits'):
-            manager = ConfigManager(network=NetworkConfig(packet_cfg=PacketConfig(offset_size=4)))
+            manager = ConfigManager(network=NetworkConfig(packet_cfg=IPPacketConfig(offset_size=4)))
 
     def test_network_config_rejects_invalid_real_length_size(self):
         with pytest.raises(ValueError, match=f'Real length size should be at least 7 '
                              f'bits to represent 64 payload bits'):
-            manager = ConfigManager(network=NetworkConfig(packet_cfg=PacketConfig(real_length_size=2)))
+            manager = ConfigManager(network=NetworkConfig(packet_cfg=IPPacketConfig(real_length_size=2)))

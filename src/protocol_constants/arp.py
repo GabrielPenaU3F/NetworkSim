@@ -1,2 +1,4 @@
-ARP_REQUEST = 0
-ARP_REPLY = 1
+from typing import Final
+
+ARP_REQUEST: Final[int] = 0
+ARP_REPLY: Final[int] = 1

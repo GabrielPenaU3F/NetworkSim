@@ -30,7 +30,7 @@ def test_cannot_create_two_hosts_with_equal_addresses(simple_network):
         host_2 = simple_network.create_host(ip_address='192.168.0.1')
 
 def test_can_create_host_with_correct_address_format():
-    cfg = ConfigManager(top_layer='network', network=NetworkConfig(address_size=24))
+    cfg = ConfigManager(top_layer='network', network=NetworkConfig(ip_address_size=24))
     network = Network(cfg)
     host = network.create_host('192.168.0')
     assert host.ip_address == '192.168.0'

@@ -4,6 +4,7 @@ from typing import Type
 import numpy as np
 
 from protocol_constants import ethernet
+from protocol_constants import ip
 from src.network_layer.routing import ShortestPathRouting
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, ChannelCode
 from infrastructure.checksum import Checksum, ParityChecksum, CRCChecksum
@@ -25,11 +26,11 @@ class ChecksumConfig:
 
 
 @dataclass
-class PacketConfig:
+class IPPacketConfig:
 
-    payload_size: int = 64
-    offset_size: int = 16
-    real_length_size: int = 8
+    payload_size: int = ip.PAYLOAD_SIZE
+    offset_size: int = ip.OFFSET_SIZE
+    real_length_size: int = ip.REAL_LENGTH_SIZE
 
     def __post_init__(self):
         if 2 ** self.offset_size < self.payload_size:
@@ -96,9 +97,9 @@ class EthernetLinkConfig:
 class NetworkConfig:
 
     routing: ShortestPathRouting = ShortestPathRouting
-    address_size: int = 32
-    packet_cfg: PacketConfig = field(default_factory=PacketConfig)
+    ip_address_size: int = ip.IP_SIZE
+    packet_cfg: IPPacketConfig = field(default_factory=IPPacketConfig)
 
     def __post_init__(self):
-        if self.address_size % 8 != 0:
+        if self.ip_address_size % 8 != 0:
             raise ValueError('Address size must be divisible by 8')

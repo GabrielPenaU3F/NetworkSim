@@ -11,4 +11,4 @@ CHECKSUM_SIZE: Final[int] = 32
 # Protocol types
 IPV4: Final[int] = 0x0800
 IPV6: Final[int] = 0x86DD
-ARP = 0x0806
+ARP: Final[int] = 0x0806

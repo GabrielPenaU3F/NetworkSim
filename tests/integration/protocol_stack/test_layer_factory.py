@@ -7,7 +7,7 @@ from src.physical_layer.channel_codes.channel_codes import NoChannelCode, Hammin
 from src.physical_layer.physical_layer import PhysicalLayer
 from src.protocol_stack.layer_factory import LayerFactory
 from src.system_configurations.config import PhysicalConfig, EthernetLinkConfig, NetworkConfig, \
-    PacketConfig, ChecksumConfig
+    IPPacketConfig, ChecksumConfig
 from src.system_configurations.config_manager import ConfigManager
 
 class TestPhysicalLayerBuilder:
@@ -150,19 +150,19 @@ class TestNetworkLayerBuilder:
 
     def test_network_layer_has_correct_packet_address_size(self):
         config = ConfigManager(top_layer='network',
-                               network=NetworkConfig(address_size=64))
+                               network=NetworkConfig(ip_address_size=64))
         layer = LayerFactory.build_network_layer(config)
         assert layer.ip_module.address_size == 64
 
     def test_network_layer_has_correct_offset_size(self):
-        packet_config = PacketConfig(offset_size=8)
+        packet_config = IPPacketConfig(offset_size=8)
         config = ConfigManager(top_layer='network',
                                network=NetworkConfig(packet_cfg=packet_config))
         layer = LayerFactory.build_network_layer(config)
         assert layer.ip_module.offset_size == 8
 
     def test_network_layer_has_correct_packet_payload_size(self):
-        packet_config = PacketConfig(payload_size=8)
+        packet_config = IPPacketConfig(payload_size=8)
         config = ConfigManager(top_layer='network',
                                network=NetworkConfig(packet_cfg=packet_config))
         layer = LayerFactory.build_network_layer(config)

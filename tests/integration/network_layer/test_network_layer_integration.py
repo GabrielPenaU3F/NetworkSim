@@ -5,7 +5,7 @@ import numpy as np
 
 from errors import AddressError
 from src.infrastructure.network import Network
-from src.system_configurations.config import NetworkConfig, PacketConfig
+from src.system_configurations.config import NetworkConfig, IPPacketConfig
 from src.system_configurations.config_manager import ConfigManager
 
 
@@ -13,7 +13,7 @@ from src.system_configurations.config_manager import ConfigManager
 def example_network_layer():
     cfg_manager = ConfigManager(top_layer='network',
                                 network=NetworkConfig(
-                                    packet_cfg=PacketConfig(payload_size=8))
+                                    packet_cfg=IPPacketConfig(payload_size=8))
                                 )
     network = Network(cfg_manager)
     host_a = network.create_host(ip_address='192.168.0.1')
@@ -44,10 +44,10 @@ def test_total_serialized_packet_length(example_ip_module, tile_bits):
     serialized = [example_ip_module.serialize_packet(p) for p in packets]
 
     expected_size = (example_ip_module.address_size * 2
-                    + 1
-                    + example_ip_module.offset_size
-                    + example_ip_module.real_length_size
-                    + example_ip_module.packet_payload_size)
+                     + 1
+                     + example_ip_module.offset_size
+                     + example_ip_module.real_length_size
+                     + example_ip_module.packet_payload_size)
 
     assert len(packets) == 2
     assert len(serialized[0]) == expected_size

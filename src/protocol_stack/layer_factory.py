@@ -51,7 +51,7 @@ class LayerFactory:
     @staticmethod
     def build_network_layer(cfg_manager: ConfigManager, address='127.0.0.1', **kwargs):
         network_cfg = cfg_manager.network_layer_cfg
-        address_size = network_cfg.address_size
+        address_size = network_cfg.ip_address_size
         offset_size = network_cfg.packet_cfg.offset_size
         real_length_size = network_cfg.packet_cfg.real_length_size
         packet_payload_size = network_cfg.packet_cfg.payload_size
