@@ -12,3 +12,6 @@ CHECKSUM_SIZE: Final[int] = 32
 IPV4: Final[int] = 0x0800
 IPV6: Final[int] = 0x86DD
 ARP: Final[int] = 0x0806
+
+# Reserved addresses
+BROADCAST_MAC: Final[str] = 'FF:FF:FF:FF:FF:FF'

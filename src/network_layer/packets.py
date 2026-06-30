@@ -1,12 +1,22 @@
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 
 import numpy as np
 
+from protocol_constants import ethernet
 from src.errors import NetworkError
+
+@dataclass
+class Packet(ABC):
+
+    @property
+    @abstractmethod
+    def ether_type(self):
+        pass
 
 
 @dataclass
-class IPPacket:
+class IPPacket(Packet):
 
     origin_address: str
     destination_address: str
@@ -22,6 +32,10 @@ class IPPacket:
     def get_true_payload(self):
         return self.payload[:self.real_length]
 
+    @property
+    def ether_type(self):
+        return ethernet.IPV4
+
 
 @dataclass
 class ARPPacket:
@@ -36,3 +50,7 @@ class ARPPacket:
         if any(f is None for f in [self.operation, self.sender_mac,
                                     self.sender_ip, self.target_mac, self.target_ip]):
             raise NetworkError('All ARP fields must be specified')
+
+    @property
+    def ether_type(self):
+        return ethernet.ARP

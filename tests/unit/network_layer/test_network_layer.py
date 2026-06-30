@@ -144,7 +144,7 @@ class TestNetworkLayerTX:
         layer, dummy = network_layer_with_dummy_lower
         bits = tile_bits(4)  # 1 packet
         layer.transmit(bits, interface=dummy_interface_with_peer, dst_mac='02:00:00:00:00:02')
-        module = layer.ip_module
+        module = layer._ip_module
         expected_size = module.address_size * 2 + 1 + module.offset_size + module.real_length_size + module.packet_payload_size
         assert len(dummy.sent_bits[0]) == expected_size
 
@@ -154,26 +154,26 @@ class TestNetworkLayerRX:
     def test_packet_for_this_node_is_accepted(self, network_layer_with_dummy_lower, last_packet_for_me):
         layer, dummy = network_layer_with_dummy_lower
 
-        bits = layer.ip_module.serialize_packet(last_packet_for_me)
+        bits = layer._ip_module.serialize_packet(last_packet_for_me)
         result = layer.on_receive(bits)
         assert result is not None
 
     def test_single_packet_message_is_reconstructed(self, network_layer_with_dummy_lower, last_packet_for_me):
         layer, dummy = network_layer_with_dummy_lower
-        bits = layer.ip_module.serialize_packet(last_packet_for_me)
+        bits = layer._ip_module.serialize_packet(last_packet_for_me)
         result = layer.on_receive(bits)
         assert np.all(result == last_packet_for_me.payload)
 
     def test_incomplete_message_returns_none(self, network_layer_with_dummy_lower, nonlast_packet_for_me):
         layer, dummy = network_layer_with_dummy_lower
-        bits = layer.ip_module.serialize_packet(nonlast_packet_for_me)
+        bits = layer._ip_module.serialize_packet(nonlast_packet_for_me)
         result = layer.on_receive(bits)
         assert result is None
 
     def test_incomplete_packet_message_is_correctly_reconstructed(self, network_layer_with_dummy_lower,
                                                                   nonfull_last_packet_for_me, tile_bits):
         layer, dummy = network_layer_with_dummy_lower
-        bits = layer.ip_module.serialize_packet(nonfull_last_packet_for_me)
+        bits = layer._ip_module.serialize_packet(nonfull_last_packet_for_me)
         result = layer.on_receive(bits)
         assert np.all(result == tile_bits(2))
 
@@ -184,8 +184,8 @@ class TestNetworkLayerRX:
         packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, real_length=8, payload=payload_1)
         packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, real_length=8, payload=payload_2)
 
-        bits_1 = layer.ip_module.serialize_packet(packet_1)
-        bits_2 = layer.ip_module.serialize_packet(packet_2)
+        bits_1 = layer._ip_module.serialize_packet(packet_1)
+        bits_2 = layer._ip_module.serialize_packet(packet_2)
         layer.on_receive(bits_1)
         result = layer.on_receive(bits_2)
         expected = np.concatenate([payload_1, payload_2])
@@ -198,8 +198,8 @@ class TestNetworkLayerRX:
         packet_1 = IPPacket('127.0.0.1', '192.168.0.1', offset=0, is_last=0, real_length=8, payload=payload_1)
         packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, real_length=4, payload=payload_2)
 
-        bits_1 = layer.ip_module.serialize_packet(packet_1)
-        bits_2 = layer.ip_module.serialize_packet(packet_2)
+        bits_1 = layer._ip_module.serialize_packet(packet_1)
+        bits_2 = layer._ip_module.serialize_packet(packet_2)
         layer.on_receive(bits_1)
         result = layer.on_receive(bits_2)
         expected = tile_bits(6)
@@ -213,8 +213,8 @@ class TestNetworkLayerRX:
         packet_2 = IPPacket('127.0.0.1', '192.168.0.1', offset=8, is_last=1, real_length=8, payload=payload_2)
 
         # reverse reception order
-        bits_2 = layer.ip_module.serialize_packet(packet_2)
-        bits_1 = layer.ip_module.serialize_packet(packet_1)
+        bits_2 = layer._ip_module.serialize_packet(packet_2)
+        bits_1 = layer._ip_module.serialize_packet(packet_1)
         layer.on_receive(bits_2)
         result = layer.on_receive(bits_1)
         expected = np.concatenate([payload_1, payload_2])
@@ -230,9 +230,9 @@ class TestNetworkLayerRX:
         packet_3 = IPPacket('127.0.0.1', '192.168.0.1', offset=16, is_last=1, real_length=8, payload=payload_3)
 
         # Shuffled reception order
-        bits_3 = layer.ip_module.serialize_packet(packet_3)
-        bits_1 = layer.ip_module.serialize_packet(packet_1)
-        bits_2 = layer.ip_module.serialize_packet(packet_2)
+        bits_3 = layer._ip_module.serialize_packet(packet_3)
+        bits_1 = layer._ip_module.serialize_packet(packet_1)
+        bits_2 = layer._ip_module.serialize_packet(packet_2)
         layer.on_receive(bits_3)
         layer.on_receive(bits_1)
         result = layer.on_receive(bits_2)

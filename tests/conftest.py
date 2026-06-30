@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
+from network_layer.network_layer import NetworkLayer
 from network_layer.network_modules.ip_module import IPModule
 from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
@@ -84,3 +85,15 @@ def example_ip_module():
         real_length_size=4,
         packet_payload_size=8
     )
+
+@pytest.fixture
+def example_network_layer():
+    layer = NetworkLayer('192.168.0.1', address_size=32,
+                         offset_size=8, real_length_size=4, packet_payload_size=8)
+    return layer
+
+@pytest.fixture
+def network_layer_with_dummy_lower(example_network_layer):
+    dummy_lower = DummyLowerLayer()
+    example_network_layer.lower_layer = dummy_lower
+    return example_network_layer, dummy_lower

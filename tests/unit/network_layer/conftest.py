@@ -46,17 +46,3 @@ def serialized_bits(tile_bits):
 @pytest.fixture
 def serialized_last_bits(serialized_bits):
     return serialized_bits(is_last=1)
-
-@pytest.fixture
-def example_network_layer(dummy_interface_with_peer):
-    layer = NetworkLayer('192.168.0.1', address_size=32,
-                         offset_size=8, real_length_size=4, packet_payload_size=8)
-    # Mock routing callback
-    layer.get_interface_for_address = lambda address: dummy_interface_with_peer
-    return layer
-
-@pytest.fixture
-def network_layer_with_dummy_lower(example_network_layer):
-    dummy_lower = DummyLowerLayer()
-    example_network_layer.lower_layer = dummy_lower
-    return example_network_layer, dummy_lower

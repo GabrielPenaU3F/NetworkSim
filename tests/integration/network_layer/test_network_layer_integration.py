@@ -28,7 +28,7 @@ def tableless_network(simple_network, clean_channel):
 
 def test_message_reconstructed_after_several_packets(example_network_layer, tile_bits):
     bits = tile_bits(7)
-    ip_module = example_network_layer.ip_module
+    ip_module = example_network_layer._ip_module
     packets = ip_module.build_packets(bits, '192.168.0.1')
 
     result = None

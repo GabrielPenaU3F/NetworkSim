@@ -17,6 +17,7 @@ class DummyLowerLayer:
     def __init__(self):
         self.upper_layer = None
         self.sent_bits = []
+        self.sent_kwargs = []
         self.calls = 0
 
     def attach_upper(self, upper):
@@ -24,6 +25,7 @@ class DummyLowerLayer:
 
     def transmit(self, bits, interface=None, **kwargs):
         self.sent_bits.append(bits)
+        self.sent_kwargs.append(kwargs)
         self.calls += 1
 
 

@@ -146,24 +146,24 @@ class TestNetworkLayerBuilder:
 
     def test_network_layer_has_correct_address(self, network_cfg_manager):
         layer = LayerFactory.build_network_layer(network_cfg_manager, address='192.168.0.1')
-        assert layer.ip_module.ip == '192.168.0.1'
+        assert layer._ip_module.ip == '192.168.0.1'
 
     def test_network_layer_has_correct_packet_address_size(self):
         config = ConfigManager(top_layer='network',
                                network=NetworkConfig(ip_address_size=64))
         layer = LayerFactory.build_network_layer(config)
-        assert layer.ip_module.address_size == 64
+        assert layer._ip_module.address_size == 64
 
     def test_network_layer_has_correct_offset_size(self):
         packet_config = IPPacketConfig(offset_size=8)
         config = ConfigManager(top_layer='network',
                                network=NetworkConfig(packet_cfg=packet_config))
         layer = LayerFactory.build_network_layer(config)
-        assert layer.ip_module.offset_size == 8
+        assert layer._ip_module.offset_size == 8
 
     def test_network_layer_has_correct_packet_payload_size(self):
         packet_config = IPPacketConfig(payload_size=8)
         config = ConfigManager(top_layer='network',
                                network=NetworkConfig(packet_cfg=packet_config))
         layer = LayerFactory.build_network_layer(config)
-        assert layer.ip_module.packet_payload_size == 8
+        assert layer._ip_module.packet_payload_size == 8

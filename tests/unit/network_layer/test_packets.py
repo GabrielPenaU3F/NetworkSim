@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from protocol_constants import ethernet
 from protocol_constants.arp import ARP_REQUEST, ARP_REPLY
 from src.errors import NetworkError
 from src.network_layer.packets import IPPacket, ARPPacket
@@ -26,6 +27,9 @@ def make_example_arp_packet():
 
 class TestIPPacket:
 
+    def test_ip_packet_has_correct_ethernet_type(self, example_ip_packet):
+        assert example_ip_packet.ether_type == ethernet.IPV4
+
     def test_ip_packet_knows_origin_address(self, example_ip_packet):
         assert example_ip_packet.origin_address == '192.168.0.1'
 
@@ -45,6 +49,10 @@ class TestIPPacket:
 
 
 class TestARPPacket:
+
+    def test_arp_packet_has_correct_ethernet_type(self, make_example_arp_packet):
+        packet = make_example_arp_packet(operation=ARP_REQUEST)
+        assert packet.ether_type == ethernet.ARP
 
     def test_arp_packet_knows_sender_addresses(self, make_example_arp_packet):
         packet = make_example_arp_packet(operation=ARP_REQUEST)

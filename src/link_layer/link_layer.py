@@ -1,10 +1,11 @@
 import numpy as np
 import logging
 
+from protocol_constants import ethernet
+
 logger = logging.getLogger(__name__)
 
 from link_layer.link_module import LinkModule
-from protocol_constants.ethernet import IPV4
 from protocol_stack.layer import Layer
 
 
@@ -36,7 +37,7 @@ class LinkLayer(Layer):
 
         return frames
 
-    def transmit(self, bits, interface, src_mac=None, dst_mac=None, ether_type=IPV4, **kwargs):
+    def transmit(self, bits, interface, src_mac=None, dst_mac=None, ether_type=ethernet.IPV4, **kwargs):
         frames = self._build_frames(bits, src_mac, dst_mac, ether_type)
         for frame in frames:
             serialized = self._link_module.serialize_frame(frame)

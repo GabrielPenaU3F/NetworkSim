@@ -8,9 +8,9 @@ class Layer(ABC):
     lower_layer = None
     upper_layer = None
 
-    def _forward_up(self, bits, interface=None):
+    def _forward_up(self, bits, interface=None, **kwargs):
         if self.upper_layer is not None:
-            return self.upper_layer.on_receive(bits, interface)
+            return self.upper_layer.on_receive(bits, interface, **kwargs)
 
         return bits
 
