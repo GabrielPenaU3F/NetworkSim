@@ -1,5 +1,6 @@
 import numpy as np
 
+from network_layer.packets import IPPacket
 from utils import int_to_bits, serialize_ip_address
 
 
@@ -182,3 +183,28 @@ class TestPacketDeserialization:
         deserialized = example_ip_module.deserialize_packet(serialized_last_bits)
         expected_payload = np.array([0, 1, 0, 1, 0, 1, 0, 1], dtype=np.uint8)
         assert np.all(deserialized.payload == expected_payload)
+
+
+class TestHandleIncomingPacket:
+
+    def test_packet_for_this_node_is_returned(self, example_ip_module, tile_bits):
+        packet = IPPacket('192.168.0.2', '192.168.0.1', is_last=1, offset=0,
+                         real_length=8, payload=tile_bits(4))
+        bits = example_ip_module.serialize_packet(packet)
+        result = example_ip_module.handle_incoming_packet(bits)
+        assert result is not None
+
+    def test_packet_for_another_node_is_discarded(self, example_ip_module, tile_bits):
+        packet = IPPacket('192.168.0.2', '192.168.0.3', is_last=1, offset=0,
+                         real_length=8, payload=tile_bits(4))
+        bits = example_ip_module.serialize_packet(packet)
+        result = example_ip_module.handle_incoming_packet(bits)
+        assert result is None
+
+    def test_returned_packet_has_correct_payload(self, example_ip_module, tile_bits):
+        payload = tile_bits(4)
+        packet = IPPacket('192.168.0.2', '192.168.0.1', is_last=1, offset=0,
+                         real_length=8, payload=payload)
+        bits = example_ip_module.serialize_packet(packet)
+        result = example_ip_module.handle_incoming_packet(bits)
+        assert np.all(result.payload == payload)

@@ -5,10 +5,10 @@ from network_layer.network_modules.arp_module import ARPModule
 from network_layer.network_modules.ip_module import IPModule
 from network_layer.packets import ARPPacket
 from protocol_constants import arp, ethernet, ip
+from src.protocol_stack.layer import Layer
 
 logger = logging.getLogger(__name__)
 
-from src.protocol_stack.layer import Layer
 
 
 class NetworkLayer(Layer):
@@ -34,20 +34,25 @@ class NetworkLayer(Layer):
         self.lower_layer.transmit(bits, interface,
                                   src_mac=interface.mac_address, dst_mac=dst_mac, ether_type=packet.ether_type)
 
-    def on_receive(self, bits, interface=None):
-        packet = self._ip_module.deserialize_packet(bits)
+    def on_receive(self, bits, interface=None, **kwargs):
+        ether_type = kwargs.get('ether_type', ethernet.IPV4)
+        if ether_type == ethernet.IPV4:
+            return self._handle_incoming_ip_packet(bits)
 
-        if not self._ip_module.packet_is_for_me(packet.destination_address):
-            logger.debug(f"Packet for {packet.destination_address} discarded (not for this node)")
+        elif ether_type == ethernet.ARP:
+            pass
+
+        return None
+
+    def _handle_incoming_ip_packet(self, bits):
+        packet = self._ip_module.handle_incoming_packet(bits)
+        if packet is None:
             return None
-
         self._rx_buffer[packet.offset] = (packet.payload, packet.real_length)
         if packet.is_last:
             self._last_received = True
-
         if self._last_received and self._message_complete():
             return self._rebuild_message()
-
         return None
 
     def send_arp_request(self, target_ip, interface):

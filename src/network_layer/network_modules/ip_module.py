@@ -1,8 +1,12 @@
+import logging
 import numpy as np
 
 from numpy import typing as npt
 from network_layer.packets import IPPacket
 from utils import int_to_bits, serialize_ip_address, deserialize_ip_address, bits_to_int
+
+logger = logging.getLogger(__name__)
+
 
 """
     Current network (IPv4-style) protocol, but with fixed payload length:
@@ -82,3 +86,11 @@ class IPModule:
 
     def packet_is_for_me(self, destination_ip):
         return destination_ip == self.ip
+
+    def handle_incoming_packet(self, bits):
+        packet = self.deserialize_packet(bits)
+        if not self.packet_is_for_me(packet.destination_address):
+            logger.debug(f"Packet for {packet.destination_address} discarded (not for this node)")
+            return None
+
+        return packet
