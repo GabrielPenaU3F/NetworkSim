@@ -31,6 +31,22 @@ def example_reply():
         target_ip='192.168.0.1'
     )
 
+@pytest.fixture
+def make_mac_for():
+    def _make(target_id):
+        if target_id is None:
+            return serialize_mac_address(f'00:00:00:00:00:00', ethernet.MAC_SIZE)
+        else:
+            return serialize_mac_address(f'02:00:00:00:00:0{target_id}', ethernet.MAC_SIZE)
+    return _make
+
+@pytest.fixture
+def make_ip_for():
+    def _make(target_id):
+        return serialize_ip_address(f'192.168.0.{target_id}', ip.IP_SIZE)
+    return _make
+
+
 class TestARPSerialization:
 
     def test_serialized_size_is_correct(self, arp_module, example_request):
@@ -72,68 +88,68 @@ class TestARPSerialization:
 
 class TestARPDeserialization:
 
-    def test_deserialize_operation_request(self, arp_module):
+    def test_deserialize_operation_request(self, arp_module, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE),
-            serialize_mac_address('00:00:00:00:00:00', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE)
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(0),
+            make_ip_for(2)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.operation == arp.ARP_REQUEST
 
-    def test_deserialize_operation_reply(self, arp_module):
+    def test_deserialize_operation_reply(self, arp_module, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REPLY], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:02', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE)
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(1),
+            make_ip_for(1)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.operation == arp.ARP_REPLY
 
-    def test_deserialize_sender_mac(self, arp_module, example_request):
+    def test_deserialize_sender_mac(self, arp_module, example_request, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE),
-            serialize_mac_address('00:00:00:00:00:00', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE)
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(0),
+            make_ip_for(2)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.sender_mac == '02:00:00:00:00:01'
 
-    def test_deserialize_sender_ip(self, arp_module, example_request):
+    def test_deserialize_sender_ip(self, arp_module, example_request, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE),
-            serialize_mac_address('00:00:00:00:00:00', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE)
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(0),
+            make_ip_for(2)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.sender_ip == '192.168.0.1'
 
-    def test_deserialize_target_mac(self, arp_module, example_request):
+    def test_deserialize_target_mac(self, arp_module, example_request, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE),
-            serialize_mac_address('00:00:00:00:00:00', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE)
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(2)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.target_mac == '00:00:00:00:00:00'
 
-    def test_deserialize_target_ip(self, arp_module, example_request):
+    def test_deserialize_target_ip(self, arp_module, example_request, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),
-            serialize_mac_address('02:00:00:00:00:01', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.1', ip.IP_SIZE),
-            serialize_mac_address('00:00:00:00:00:00', ethernet.MAC_SIZE),
-            serialize_ip_address('192.168.0.2', ip.IP_SIZE)
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(0),
+            make_ip_for(2)
         ])
         packet = arp_module.deserialize_packet(bits)
         assert packet.target_ip == '192.168.0.2'
@@ -158,3 +174,85 @@ class TestARPRoundtrip:
         assert packet.sender_ip == example_reply.sender_ip
         assert packet.target_mac == example_reply.target_mac
         assert packet.target_ip == example_reply.target_ip
+
+
+class TestARPHandleIncomingPacket:
+
+    def test_request_not_for_this_node_is_discarded(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(3)  # target is .3
+        ])
+        result = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02') # node is .2
+        assert result is None
+
+    def test_request_for_this_node_returns_reply(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(2)
+        ])
+        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        assert type(reply) == ARPPacket
+        assert reply.operation == arp.ARP_REPLY
+
+    def test_reply_fills_sender_mac_correctly(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(2)
+        ])
+        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        assert reply.sender_mac == '02:00:00:00:00:02'
+
+    def test_reply_fills_sender_ip_correctly(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(2)
+        ])
+        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        assert reply.sender_ip == '192.168.0.2'
+
+    def test_reply_targets_original_sender(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(1),
+            make_ip_for(1),
+            make_mac_for(None),
+            make_ip_for(2)
+        ])
+        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        assert reply.target_mac == '02:00:00:00:00:01'
+        assert reply.target_ip == '192.168.0.1'
+
+    def test_reply_is_stored_in_arp_cache(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REPLY], dtype=np.uint8),
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(1),
+            make_ip_for(1)
+        ])
+        arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01')
+        assert arp_module._arp_cache['192.168.0.2'] == '02:00:00:00:00:02'
+
+    def test_reply_not_for_this_node_is_discarded(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REPLY], dtype=np.uint8),
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(3),
+            make_ip_for(3)  # target is .3
+        ])
+        arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01') # node is .1
+        assert '192.168.0.2' not in arp_module._arp_cache

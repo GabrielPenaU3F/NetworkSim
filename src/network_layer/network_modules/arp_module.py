@@ -1,7 +1,11 @@
+import logging
 import numpy as np
 
 from network_layer.packets import ARPPacket
+from protocol_constants import arp
 from utils import serialize_mac_address, serialize_ip_address, deserialize_mac_address, deserialize_ip_address
+
+logger = logging.getLogger(__name__)
 
 
 class ARPModule:
@@ -10,6 +14,7 @@ class ARPModule:
         self.mac_address_size = mac_address_size
         self.ip_address_size = ip_address_size
         self.num_parts = ip_address_size // 8
+        self._arp_cache = {} # {ip: mac}'
 
     def serialize_packet(self, packet: ARPPacket) -> np.ndarray:
         operation_bit = np.array([packet.operation], dtype=np.uint8)
@@ -48,3 +53,26 @@ class ARPModule:
             target_mac=target_mac,
             target_ip=target_ip
         )
+
+    def handle_incoming_packet(self, bits, my_ip, my_mac):
+        packet = self.deserialize_packet(bits)
+        if packet.target_ip != my_ip:
+            logger.debug(f"Packet for {packet.target_ip} discarded (not for this node)")
+            return None  # It is not for this node
+
+        if packet.operation == arp.ARP_REQUEST:
+            return self._build_reply(packet, my_mac)
+
+        elif packet.operation == arp.ARP_REPLY:
+            self._arp_cache[packet.sender_ip] = packet.sender_mac
+            return None
+
+    def _build_reply(self, packet, my_mac):
+        reply_packet = ARPPacket(
+            operation=arp.ARP_REPLY,
+            sender_mac=my_mac,
+            sender_ip=packet.target_ip, # this is my IP
+            target_mac=packet.sender_mac,
+            target_ip=packet.sender_ip
+        )
+        return reply_packet
