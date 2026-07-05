@@ -40,7 +40,7 @@ class NetworkLayer(Layer):
             return self._handle_incoming_ip_packet(bits)
 
         elif ether_type == ethernet.ARP:
-            pass
+            self._handle_incoming_arp_packet(bits, interface)
 
         return None
 
@@ -53,6 +53,19 @@ class NetworkLayer(Layer):
             self._last_received = True
         if self._last_received and self._message_complete():
             return self._rebuild_message()
+        return None
+
+    def _handle_incoming_arp_packet(self, bits, interface=None):
+        reply = self._arp_module.handle_incoming_packet(bits, self._ip_module.ip, interface.mac_address)
+        if reply is None:
+            logger.debug("Discarding ARP packet, not for this node")
+            return None
+
+        reply_bits = self._arp_module.serialize_packet(reply)
+        self.lower_layer.transmit(reply_bits, interface,
+                                  src_mac=interface.mac_address,
+                                  dst_mac=reply.target_mac,
+                                  ether_type=ethernet.ARP)
         return None
 
     def send_arp_request(self, target_ip, interface):
