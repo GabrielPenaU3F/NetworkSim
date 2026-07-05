@@ -1,19 +1,15 @@
 import numpy as np
 import pytest
 
+from protocol_constants import arp, ethernet
 from src.network_layer.packets import IPPacket
-from src.utils import serialize_ip_address, int_to_bits
-from tests.utilities.dummies import DummyInterface
 from unittest.mock import Mock
 
 
 @pytest.fixture
-def dummy_interface_with_peer():
-    interface = DummyInterface()
-    interface.mac_address = '02:00:00:00:00:01'
-
-    peer_interface = DummyInterface()
-    peer_interface.mac_address = '02:00:00:00:00:02'
+def dummy_interface_with_peer(make_interface):
+    interface = make_interface('02:00:00:00:00:01')
+    peer_interface = make_interface('02:00:00:00:00:02')
 
     mock_link = Mock()
     mock_link.get_other_interface.return_value = peer_interface
@@ -238,3 +234,61 @@ class TestNetworkLayerRX:
         result = layer.on_receive(bits_2)
         expected = np.concatenate([payload_1, payload_2, payload_3])
         assert np.all(result == expected)
+
+
+# class TestNetworkLayerARP:
+#
+#     def test_send_arp_request_sends_broadcast(self, network_layer_with_dummy_lower, dummy_interface):
+#         layer, dummy = network_layer_with_dummy_lower
+#         layer.send_arp_request('192.168.0.2', dummy_interface)
+#         assert dummy.sent_kwargs[0]['dst_mac'] == ethernet.BROADCAST_MAC
+#
+#     def test_send_arp_request_sends_arp_ether_type(self, network_layer_with_dummy_lower, dummy_interface):
+#         layer, dummy = network_layer_with_dummy_lower
+#         layer.send_arp_request('192.168.0.2', dummy_interface)
+#         assert dummy.sent_kwargs[0]['ether_type'] == ethernet.ARP
+#
+#     def test_handle_arp_request_sends_reply(self, network_layer_with_dummy_lower, dummy_interface,
+#                                             make_mac_for, make_ip_for):
+#         layer, dummy = network_layer_with_dummy_lower
+#         bits = np.concatenate([
+#             np.array([arp.ARP_REQUEST], dtype=np.uint8),
+#             make_mac_for(2), make_ip_for(2),
+#             make_mac_for(None), make_ip_for(1)
+#         ])
+#         layer._handle_arp(bits, dummy_interface)
+#         assert dummy.calls == 1
+#         assert dummy.sent_kwargs[0]['ether_type'] == ethernet.ARP
+#
+#     def test_handle_arp_request_reply_goes_to_correct_mac(self, network_layer_with_dummy_lower, dummy_interface,
+#                                                           make_mac_for, make_ip_for):
+#         layer, dummy = network_layer_with_dummy_lower
+#         bits = np.concatenate([
+#             np.array([arp.ARP_REQUEST], dtype=np.uint8),
+#             make_mac_for(2), make_ip_for(2),
+#             make_mac_for(None), make_ip_for(1)
+#         ])
+#         layer._handle_arp(bits, dummy_interface)
+#         assert dummy.sent_kwargs[0]['dst_mac'] == '02:00:00:00:00:02'
+#
+#     def test_handle_arp_reply_stores_mac_in_cache(self, network_layer_with_dummy_lower, dummy_interface,
+#                                                   make_mac_for, make_ip_for):
+#         layer, dummy = network_layer_with_dummy_lower
+#         bits = np.concatenate([
+#             np.array([arp.ARP_REPLY], dtype=np.uint8),
+#             make_mac_for(2), make_ip_for(2),
+#             make_mac_for(1), make_ip_for(1)
+#         ])
+#         layer._handle_arp(bits, dummy_interface)
+#         assert layer._arp_module._arp_cache.get('192.168.0.2') == '02:00:00:00:00:02'
+#
+#     def test_handle_arp_request_not_for_this_node_is_discarded(self, network_layer_with_dummy_lower, dummy_interface,
+#                                                                 make_mac_for, make_ip_for):
+#         layer, dummy = network_layer_with_dummy_lower
+#         bits = np.concatenate([
+#             np.array([arp.ARP_REQUEST], dtype=np.uint8),
+#             make_mac_for(2), make_ip_for(2),
+#             make_mac_for(None), make_ip_for(3)  # target es .3, no .1
+#         ])
+#         layer._handle_arp(bits, dummy_interface)
+#         assert dummy.calls == 0

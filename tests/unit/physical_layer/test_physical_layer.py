@@ -3,8 +3,6 @@ import pytest
 
 from src.physical_layer.channel_codes.channel_codes import NoChannelCode, RepetitionChannelCode
 from src.physical_layer.physical_layer import PhysicalLayer
-from tests.utilities.dummies import DummyInterface
-
 
 @pytest.fixture
 def layer_factory():
@@ -22,15 +20,13 @@ class TestPhysicalLayer:
         physical = layer_factory(NoChannelCode())
         assert physical.lower_layer is None
 
-    def test_sent_bits(self, layer_factory, bits):
+    def test_sent_bits(self, layer_factory, bits, dummy_interface):
         physical = layer_factory(NoChannelCode())
-        interface = DummyInterface()
-        physical.transmit(bits, interface)
-        assert np.all(interface.last_sent_bits == bits)
+        physical.transmit(bits, dummy_interface)
+        assert np.all(dummy_interface.last_sent_bits == bits)
 
-    def test_transmit_encodes_bits(self, layer_factory, bits):
+    def test_transmit_encodes_bits(self, layer_factory, bits, dummy_interface):
         physical = layer_factory(RepetitionChannelCode(3))
-        interface = DummyInterface()
-        physical.transmit(bits, interface)
+        physical.transmit(bits, dummy_interface)
         expected_bits = np.tile([0, 0, 0, 1, 1, 1], 4).astype(np.uint8)
-        assert np.all(interface.last_sent_bits == expected_bits)
+        assert np.all(dummy_interface.last_sent_bits == expected_bits)

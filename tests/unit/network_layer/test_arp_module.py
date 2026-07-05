@@ -4,7 +4,7 @@ import pytest
 from network_layer.network_modules.arp_module import ARPModule
 from network_layer.packets import ARPPacket
 from protocol_constants import ethernet, ip, arp
-from utils import deserialize_mac_address, deserialize_ip_address, serialize_mac_address, serialize_ip_address
+from utils import deserialize_mac_address, deserialize_ip_address
 
 
 @pytest.fixture
@@ -30,21 +30,6 @@ def example_reply():
         target_mac='02:00:00:00:00:01',
         target_ip='192.168.0.1'
     )
-
-@pytest.fixture
-def make_mac_for():
-    def _make(target_id):
-        if target_id is None:
-            return serialize_mac_address(f'00:00:00:00:00:00', ethernet.MAC_SIZE)
-        else:
-            return serialize_mac_address(f'02:00:00:00:00:0{target_id}', ethernet.MAC_SIZE)
-    return _make
-
-@pytest.fixture
-def make_ip_for():
-    def _make(target_id):
-        return serialize_ip_address(f'192.168.0.{target_id}', ip.IP_SIZE)
-    return _make
 
 
 class TestARPSerialization:

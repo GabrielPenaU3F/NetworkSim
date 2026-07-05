@@ -5,7 +5,7 @@ from infrastructure.nodes.switch import Switch
 from protocol_constants import ethernet
 from system_configurations.config import EthernetLinkConfig, ChecksumConfig
 from system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyInterface, DummyChecksum
+from tests.utilities.dummies import DummyChecksum
 
 
 
@@ -20,14 +20,6 @@ def switch(example_link_module):
                                                         checksum_size=1)
                                 )
     return Switch(cfg_manager)
-
-@pytest.fixture
-def make_interface():
-    def _make(mac):
-        iface = DummyInterface()
-        iface.mac_address = mac
-        return iface
-    return _make
 
 @pytest.fixture
 def frame_bits(example_link_module, tile_bits):

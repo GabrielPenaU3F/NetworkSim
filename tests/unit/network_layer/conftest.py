@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
 
-from network_layer.network_layer import NetworkLayer
+from protocol_constants import ethernet, ip
 from src.network_layer.packets import IPPacket
-from src.utils import serialize_ip_address
-from tests.utilities.dummies import DummyLowerLayer
+from src.utils import serialize_ip_address, serialize_mac_address
 
 
 @pytest.fixture
@@ -46,3 +45,18 @@ def serialized_bits(tile_bits):
 @pytest.fixture
 def serialized_last_bits(serialized_bits):
     return serialized_bits(is_last=1)
+
+@pytest.fixture
+def make_mac_for():
+    def _make(target_id):
+        if target_id is None:
+            return serialize_mac_address(f'00:00:00:00:00:00', ethernet.MAC_SIZE)
+        else:
+            return serialize_mac_address(f'02:00:00:00:00:0{target_id}', ethernet.MAC_SIZE)
+    return _make
+
+@pytest.fixture
+def make_ip_for():
+    def _make(target_id):
+        return serialize_ip_address(f'192.168.0.{target_id}', ip.IP_SIZE)
+    return _make

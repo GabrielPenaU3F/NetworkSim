@@ -9,7 +9,7 @@ from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode
+from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode, DummyInterface
 from infrastructure.checksum import ParityChecksum
 from transport_layer.old_link_layer import OldLinkLayer
 
@@ -26,6 +26,10 @@ def network_cfg_manager():
 @pytest.fixture
 def clean_channel():
     return CleanChannel()
+
+@pytest.fixture
+def dummy_interface():
+    return DummyInterface()
 
 @pytest.fixture
 def empty_graph():

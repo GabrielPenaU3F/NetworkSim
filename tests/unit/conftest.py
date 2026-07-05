@@ -6,7 +6,7 @@ from infrastructure.link_factory import LinkFactory
 from link_layer.link_module import LinkModule
 from src.infrastructure.network_graph import NetworkGraph
 from system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyNode, DummyChecksum
+from tests.utilities.dummies import DummyNode, DummyChecksum, DummyInterface
 
 
 @pytest.fixture
@@ -52,3 +52,11 @@ def example_link_module():
                       ether_type_size=16,
                       real_length_size=8,
                       checksum_size=1)
+
+@pytest.fixture
+def make_interface():
+    def _make(mac):
+        interface = DummyInterface()
+        interface.mac_address = mac
+        return interface
+    return _make
