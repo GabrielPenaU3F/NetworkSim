@@ -8,7 +8,7 @@ class Host(Node):
     def __init__(self, cfg_manager, ip_address=None):
         super().__init__(ip_address)
         self.cfg_manager = cfg_manager
-        self.protocol_stack = ProtocolStack(cfg_manager, address=self.ip_address)
+        self._protocol_stack = ProtocolStack(cfg_manager, address=self.ip_address)
         self._rx_messages = []
 
     def send(self, message, interface_idx=0, destination_ip=None, destination_mac=None) -> None:
@@ -45,14 +45,14 @@ class Host(Node):
                                src_mac=src_mac, dst_mac=None, interface=interface)
 
     def _transmit(self, message, dst_ip, src_mac, dst_mac, interface):
-        self.protocol_stack.transmit(message,
-                                     interface=interface,
-                                     destination_address=dst_ip,
-                                     src_mac=src_mac,
-                                     dst_mac=dst_mac)
+        self._protocol_stack.transmit(message,
+                                      interface=interface,
+                                      destination_address=dst_ip,
+                                      src_mac=src_mac,
+                                      dst_mac=dst_mac)
 
     def on_receive(self, bits, interface=None) -> None:
-        message = self.protocol_stack.on_receive(bits, interface)
+        message = self._protocol_stack.on_receive(bits, interface)
         if message is not None:
             self._rx_messages.append(message)
 

@@ -1,9 +1,6 @@
-import types
-
 import pytest
 import numpy as np
 
-from errors import AddressError
 from src.infrastructure.network import Network
 from src.system_configurations.config import NetworkConfig, IPPacketConfig
 from src.system_configurations.config_manager import ConfigManager
@@ -17,14 +14,8 @@ def example_network_layer():
                                 )
     network = Network(cfg_manager)
     host_a = network.create_host(ip_address='192.168.0.1')
-    return host_a.protocol_stack.get_layer('network')
+    return host_a._protocol_stack.get_layer('network')
 
-@pytest.fixture
-def tableless_network(simple_network, clean_channel):
-    host_a = simple_network.create_host(ip_address='192.168.0.1')
-    host_b = simple_network.create_host(ip_address='192.168.0.2')
-    simple_network.connect(host_a, host_b, clean_channel)
-    return simple_network
 
 def test_message_reconstructed_after_several_packets(example_network_layer, tile_bits):
     bits = tile_bits(7)
@@ -52,3 +43,13 @@ def test_total_serialized_packet_length(example_ip_module, tile_bits):
     assert len(packets) == 2
     assert len(serialized[0]) == expected_size
     assert len(serialized[1]) == expected_size
+
+
+class TestARPCircuit:
+
+    pass
+    # def test_arp_circuit(self, make_topo_two_hosts_with_switch):
+    #     host_a, host_b, switch = make_topo_two_hosts_with_switch('network')
+    #     network_layer = host_a._protocol_stack.top_layer
+    #     interface_a = host_a.interfaces[0]
+    #     network_layer.send_arp_request(target_ip='192.168.0.2', interface=interface_a)

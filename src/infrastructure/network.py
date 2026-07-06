@@ -64,10 +64,6 @@ class Network:
 
             node.routing_table = table
 
-            network_layer = node.protocol_stack.get_layer('network')
-            # if network_layer is not None:
-            #     network_layer.set_routing_callback(node.routing_table.get_interface_to_address)
-
     def routing_algorithm(self):
         routing_class = self.cfg_manager.network_layer_cfg.routing
         return routing_class(self.graph)

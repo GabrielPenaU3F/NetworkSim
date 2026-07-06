@@ -3,12 +3,11 @@ import pytest
 from link_layer.ether_frame import EthernetFrame
 from protocol_constants import ethernet
 from src.link_layer.link_layer import LinkLayer
-from tests.utilities.dummies import DummyLowerLayer, DummyChecksum
+from tests.utilities.dummies import DummyLayer, DummyChecksum
 
 
 @pytest.fixture
-def example_link_layer():
-    dummy_physical = DummyLowerLayer()
+def example_link_layer(dummy_layer):
     link_layer = LinkLayer(DummyChecksum(),
                            min_payload_bits=8,
                            max_payload_bits=16,
@@ -16,7 +15,7 @@ def example_link_layer():
                            ether_type_size=16,
                            real_length_size=8,
                            checksum_size=1)
-    link_layer.attach_lower(dummy_physical)
+    link_layer.attach_lower(dummy_layer)
     return link_layer
 
 @pytest.fixture

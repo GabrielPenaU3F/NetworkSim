@@ -3,13 +3,16 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
+from link_layer.link_layer import LinkLayer
 from network_layer.network_layer import NetworkLayer
 from network_layer.network_modules.ip_module import IPModule
+from protocol_constants import ethernet
+from protocol_stack.layer_factory import LayerFactory
 from src.infrastructure.network import Network
 from src.infrastructure.network_graph import NetworkGraph
 from src.protocol_stack.protocol_stack import ProtocolStack
 from src.system_configurations.config_manager import ConfigManager
-from tests.utilities.dummies import DummyLowerLayer, CleanChannel, DummyNode, DummyInterface
+from tests.utilities.dummies import DummyLayer, CleanChannel, DummyNode, DummyInterface
 from infrastructure.checksum import ParityChecksum
 from transport_layer.old_link_layer import OldLinkLayer
 
@@ -30,6 +33,10 @@ def clean_channel():
 @pytest.fixture
 def dummy_interface():
     return DummyInterface()
+
+@pytest.fixture
+def dummy_layer():
+    return DummyLayer()
 
 @pytest.fixture
 def empty_graph():
@@ -54,11 +61,17 @@ def link_stack():
     return ProtocolStack(cfg)
 
 @pytest.fixture
-def example_link_layer():
-    dummy_physical = DummyLowerLayer()
-    checksum = ParityChecksum()
-    link_layer = OldLinkLayer(checksum, seq_size=2, payload_size=8, checksum_size=2)
-    link_layer.attach_lower(dummy_physical)
+def example_link_layer(link_cfg_manager, dummy_layer):
+    link_layer = LinkLayer(
+            checksum=ParityChecksum(),
+            min_payload_bits=ethernet.MIN_PAYLOAD_BITS,
+            max_payload_bits=ethernet.MAX_PAYLOAD_BITS,
+            mac_size=ethernet.MAC_SIZE,
+            ether_type_size=ethernet.ETHER_TYPE_SIZE,
+            real_length_size=ethernet.REAL_LENGTH_SIZE,
+            checksum_size=ethernet.CHECKSUM_SIZE,
+        )
+    link_layer.attach_lower(dummy_layer)
     return link_layer
 
 @pytest.fixture
@@ -97,7 +110,6 @@ def example_network_layer():
     return layer
 
 @pytest.fixture
-def network_layer_with_dummy_lower(example_network_layer):
-    dummy_lower = DummyLowerLayer()
-    example_network_layer.lower_layer = dummy_lower
-    return example_network_layer, dummy_lower
+def network_layer_with_dummy_lower(example_network_layer, dummy_layer):
+    example_network_layer.lower_layer = dummy_layer
+    return example_network_layer, dummy_layer

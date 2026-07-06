@@ -12,21 +12,33 @@ class CleanChannel:
         return bits
 
 
-class DummyLowerLayer:
+class DummyLayer:
 
     def __init__(self):
         self.upper_layer = None
+        self.lower_layer = None
         self.sent_bits = []
         self.sent_kwargs = []
+        self.received_bits = None
+        self.received_interface = None
+        self.received_kwargs = {}
         self.calls = 0
 
     def attach_upper(self, upper):
         self.upper_layer = upper
 
+    def attach_lower(self, lower):
+        self.lower_layer = lower
+
     def transmit(self, bits, interface=None, **kwargs):
         self.sent_bits.append(bits)
         self.sent_kwargs.append(kwargs)
         self.calls += 1
+
+    def on_receive(self, bits, interface=None, **kwargs):
+        self.received_bits = bits
+        self.received_interface = interface
+        self.received_kwargs = kwargs
 
 
 class DummyNode(Node):

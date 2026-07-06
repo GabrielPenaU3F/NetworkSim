@@ -175,21 +175,3 @@ class TestIntegrationUpToNetwork:
         host_a.send("sol", destination_ip='192.168.0.2')
         received = host_b.read()
         # assert received == "sol"
-
-    # def test_packet_is_forwarded_through_intermediate_node(self, linear_network):
-    #     host_a = linear_network.get_node('192.168.0.1')
-    #     host_c = linear_network.get_node('192.168.0.3')
-    #     host_a.send("sol", destination_ip='192.168.0.3')
-    #
-    #     received = host_c.read()
-    #     assert received == "sol"
-    #
-    # def test_packet_roundtrip(self, linear_network):
-    #     host_a = linear_network.get_node('192.168.0.1')
-    #     host_c = linear_network.get_node('192.168.0.3')
-    #     host_a.send("sol", destination_ip='192.168.0.3')
-    #
-    #     received_c = host_c.read()
-    #     host_c.send(received_c, destination_ip='192.168.0.1')
-    #     received_a = host_a.read()
-    #     assert received_a == "sol"

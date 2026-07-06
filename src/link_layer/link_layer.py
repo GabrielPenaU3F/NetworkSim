@@ -70,14 +70,14 @@ class LinkLayer(Layer):
             self._rx_message_buffer.append(frame.payload[:frame.real_length])
 
             if frame.real_length < self._link_module.max_payload_bits:
-                return self._rebuild_message(frame.ether_type)
+                return self._rebuild_message(frame.ether_type, interface)
 
         return None
 
-    def _rebuild_message(self, ether_type):
+    def _rebuild_message(self, ether_type, interface=None):
         message = np.concatenate(self._rx_message_buffer)
         self._clear_buffers()
-        return self._forward_up(message, ether_type=ether_type)
+        return self._forward_up(message, interface=interface, ether_type=ether_type)
 
     def _clear_buffers(self):
         self._rx_stream_buffer.clear()
