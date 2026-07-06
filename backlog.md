@@ -27,4 +27,4 @@
 - Construir una red de prueba de tamaño decente y persistirla.
 - Implementar capa de transporte con UDP.
 - Implementar capa de transporte con TCP.
-- Implementar concurrencia.
+- Implementar concurrencia (threading o múltiples procesos, estilo Mininet).

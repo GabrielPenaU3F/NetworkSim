@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 
-from network_layer.network_modules.arp_module import ARPModule
+from network_layer.network_modules.arp_module import ARPModule, ARP_ACTION_REPLY_RECEIVED
 from network_layer.network_modules.ip_module import IPModule
 from network_layer.packets import ARPPacket
 from protocol_constants import arp, ethernet, ip
@@ -40,9 +40,12 @@ class NetworkLayer(Layer):
             return self._handle_incoming_ip_packet(bits)
 
         elif ether_type == ethernet.ARP:
-            self._handle_incoming_arp_packet(bits, interface)
+            return self._handle_incoming_arp_packet(bits, interface)
 
         return None
+
+    def get_dst_mac_from_arp_cache(self, dst_ip):
+        return self._arp_module._arp_cache.get(dst_ip)
 
     def _handle_incoming_ip_packet(self, bits):
         packet = self._ip_module.handle_incoming_packet(bits)
@@ -56,15 +59,20 @@ class NetworkLayer(Layer):
         return None
 
     def _handle_incoming_arp_packet(self, bits, interface=None):
-        reply = self._arp_module.handle_incoming_packet(bits, self._ip_module.ip, interface.mac_address)
-        if reply is None:
+        result = self._arp_module.handle_incoming_packet(bits, self._ip_module.ip, interface.mac_address)
+        if result is None:
             logger.debug("Discarding ARP packet, not for this node")
             return None
 
-        reply_bits = self._arp_module.serialize_packet(reply)
+        action, packet = result
+        if action == ARP_ACTION_REPLY_RECEIVED:
+            return packet  # return it to the host
+
+        # If it is a REQUEST: send reply
+        reply_bits = self._arp_module.serialize_packet(packet)
         self.lower_layer.transmit(reply_bits, interface,
                                   src_mac=interface.mac_address,
-                                  dst_mac=reply.target_mac,
+                                  dst_mac=packet.target_mac,
                                   ether_type=ethernet.ARP)
         return None
 

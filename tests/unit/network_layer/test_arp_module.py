@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from network_layer.network_modules.arp_module import ARPModule
+from network_layer.network_modules.arp_module import ARPModule, ARP_ACTION_SEND_REPLY, ARP_ACTION_REPLY_RECEIVED
 from network_layer.packets import ARPPacket
 from protocol_constants import ethernet, ip, arp
 from utils import deserialize_mac_address, deserialize_ip_address
@@ -205,7 +205,8 @@ class TestARPHandleIncomingPacket:
             make_mac_for(None),
             make_ip_for(2)
         ])
-        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        action, reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        assert action == ARP_ACTION_SEND_REPLY
         assert type(reply) == ARPPacket
         assert reply.operation == arp.ARP_REPLY
 
@@ -217,7 +218,7 @@ class TestARPHandleIncomingPacket:
             make_mac_for(None),
             make_ip_for(2)
         ])
-        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        action, reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
         assert reply.sender_mac == '02:00:00:00:00:02'
 
     def test_reply_fills_sender_ip_correctly(self, arp_module, make_mac_for, make_ip_for):
@@ -228,7 +229,7 @@ class TestARPHandleIncomingPacket:
             make_mac_for(None),
             make_ip_for(2)
         ])
-        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        action, reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
         assert reply.sender_ip == '192.168.0.2'
 
     def test_reply_targets_original_sender(self, arp_module, make_mac_for, make_ip_for):
@@ -239,7 +240,7 @@ class TestARPHandleIncomingPacket:
             make_mac_for(None),
             make_ip_for(2)
         ])
-        reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
+        action, reply = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02')
         assert reply.target_mac == '02:00:00:00:00:01'
         assert reply.target_ip == '192.168.0.1'
 
@@ -264,3 +265,19 @@ class TestARPHandleIncomingPacket:
         ])
         arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01') # node is .1
         assert '192.168.0.2' not in arp_module._arp_cache
+
+    def test_reply_for_this_node_returns_action_and_packet(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REPLY], dtype=np.uint8),
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(1),
+            make_ip_for(1)  # target is us
+        ])
+        result = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01')
+        assert result is not None
+        action, packet = result
+        assert action == ARP_ACTION_REPLY_RECEIVED
+        assert packet.operation == arp.ARP_REPLY
+        assert packet.sender_ip == '192.168.0.2'
+        assert packet.sender_mac == '02:00:00:00:00:02'

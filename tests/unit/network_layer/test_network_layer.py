@@ -292,3 +292,16 @@ class TestNetworkLayerARP:
         ])
         layer._handle_incoming_arp_packet(bits, dummy_interface)
         assert dummy.calls == 0
+
+    def test_handle_arp_reply_returns_reply_packet(self, network_layer_with_dummy_lower, dummy_interface,
+                                                   make_mac_for, make_ip_for):
+        layer, dummy = network_layer_with_dummy_lower
+        bits = np.concatenate([
+            np.array([arp.ARP_REPLY], dtype=np.uint8),
+            make_mac_for(2), make_ip_for(2),
+            make_mac_for(1), make_ip_for(1)
+        ])
+        result = layer._handle_incoming_arp_packet(bits, dummy_interface)
+        assert result.operation == arp.ARP_REPLY
+        assert result.sender_ip == '192.168.0.2'
+        assert result.sender_mac == '02:00:00:00:00:02'

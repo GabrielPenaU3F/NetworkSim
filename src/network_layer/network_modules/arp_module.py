@@ -8,6 +8,9 @@ from utils import serialize_mac_address, serialize_ip_address, deserialize_mac_a
 logger = logging.getLogger(__name__)
 
 
+ARP_ACTION_SEND_REPLY = 'send_reply'
+ARP_ACTION_REPLY_RECEIVED = 'reply_received'
+
 class ARPModule:
 
     def __init__(self, mac_address_size, ip_address_size):
@@ -62,10 +65,11 @@ class ARPModule:
 
         self._arp_cache[packet.sender_ip] = packet.sender_mac # update cache
         if packet.operation == arp.ARP_REQUEST:
-            return self._build_reply(packet, my_mac)
+            reply = self._build_reply(packet, my_mac)
+            return ARP_ACTION_SEND_REPLY, reply
 
         elif packet.operation == arp.ARP_REPLY:
-            return None
+            return ARP_ACTION_REPLY_RECEIVED, packet
 
     def _build_reply(self, packet, my_mac):
         reply_packet = ARPPacket(
