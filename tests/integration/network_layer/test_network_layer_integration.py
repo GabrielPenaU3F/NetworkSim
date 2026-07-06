@@ -47,9 +47,23 @@ def test_total_serialized_packet_length(example_ip_module, tile_bits):
 
 class TestARPCircuit:
 
-    pass
-    # def test_arp_circuit(self, make_topo_two_hosts_with_switch):
-    #     host_a, host_b, switch = make_topo_two_hosts_with_switch('network')
-    #     network_layer = host_a._protocol_stack.top_layer
-    #     interface_a = host_a.interfaces[0]
-    #     network_layer.send_arp_request(target_ip='192.168.0.2', interface=interface_a)
+    def test_host_learns_mac_from_arp_request(self, make_topo_two_hosts_with_switch):
+        host_a, host_b, switch = make_topo_two_hosts_with_switch('network')
+        network_layer_a = host_a._protocol_stack.top_layer
+        network_layer_b = host_b._protocol_stack.top_layer
+        interface_a = host_a.interfaces[0]
+        network_layer_a.send_arp_request(target_ip='192.168.0.2', interface=interface_a)
+
+        # host_b should have learned host_a's MAC from the request
+        assert network_layer_b._arp_module._arp_cache.get('192.168.0.1') == interface_a.mac_address
+
+    def test_arp_reply_reaches_requester(self, make_topo_two_hosts_with_switch):
+        host_a, host_b, switch = make_topo_two_hosts_with_switch('network')
+        network_layer_a = host_a._protocol_stack.top_layer
+        interface_a = host_a.interfaces[0]
+        interface_b = host_b.interfaces[0]
+
+        network_layer_a.send_arp_request(target_ip='192.168.0.2', interface=interface_a)
+
+        # host_a should have learned host_b's MAC from the reply
+        assert network_layer_a._arp_module._arp_cache.get('192.168.0.2') == interface_b.mac_address

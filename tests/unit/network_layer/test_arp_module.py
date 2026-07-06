@@ -174,6 +174,29 @@ class TestARPHandleIncomingPacket:
         result = arp_module.handle_incoming_packet(bits, my_ip='192.168.0.2', my_mac='02:00:00:00:00:02') # node is .2
         assert result is None
 
+    def test_request_is_stored_in_arp_cache(self, arp_module, make_mac_for, make_ip_for):
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(None),
+            make_ip_for(1)  # target is us
+        ])
+        arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01')
+        assert arp_module._arp_cache['192.168.0.2'] == '02:00:00:00:00:02'
+
+    def test_arp_cache_is_updated_on_reception(self, arp_module, make_mac_for, make_ip_for):
+        arp_module._arp_cache['192.168.0.2'] = '02:00:00:00:00:10'
+        bits = np.concatenate([
+            np.array([arp.ARP_REQUEST], dtype=np.uint8),
+            make_mac_for(2),
+            make_ip_for(2),
+            make_mac_for(None),
+            make_ip_for(1)  # target is us
+        ])
+        arp_module.handle_incoming_packet(bits, my_ip='192.168.0.1', my_mac='02:00:00:00:00:01')
+        assert arp_module._arp_cache['192.168.0.2'] == '02:00:00:00:00:02'
+
     def test_request_for_this_node_returns_reply(self, arp_module, make_mac_for, make_ip_for):
         bits = np.concatenate([
             np.array([arp.ARP_REQUEST], dtype=np.uint8),

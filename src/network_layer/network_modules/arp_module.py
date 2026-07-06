@@ -60,11 +60,11 @@ class ARPModule:
             logger.debug(f"Packet for {packet.target_ip} discarded (not for this node)")
             return None  # It is not for this node
 
+        self._arp_cache[packet.sender_ip] = packet.sender_mac # update cache
         if packet.operation == arp.ARP_REQUEST:
             return self._build_reply(packet, my_mac)
 
         elif packet.operation == arp.ARP_REPLY:
-            self._arp_cache[packet.sender_ip] = packet.sender_mac
             return None
 
     def _build_reply(self, packet, my_mac):
